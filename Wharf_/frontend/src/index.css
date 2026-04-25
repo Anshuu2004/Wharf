@@ -12,6 +12,22 @@
   --color-wharf-orange: #FFDC8B;
   --color-wharf-purple: #B8A9FF;
   --color-wharf-teal: #00D1B2;
+
+  /* Darker Variants */
+  --color-wharf-pink-dark: #E06EC8;
+  --color-wharf-pink-darker: #C04AA8;
+  --color-wharf-cyan-dark: #8EDDE8;
+  --color-wharf-cyan-darker: #5AB3C4;
+  --color-wharf-green-dark: #6EC858;
+  --color-wharf-green-darker: #4A9E38;
+  --color-wharf-yellow-dark: #D4A82E;
+  --color-wharf-yellow-darker: #B3881A;
+  --color-wharf-orange-dark: #E8BC6A;
+  --color-wharf-orange-darker: #CC9648;
+  --color-wharf-purple-dark: #8B72E0;
+  --color-wharf-purple-darker: #6B4FC4;
+  --color-wharf-teal-dark: #00A898;
+  --color-wharf-teal-darker: #008074;
   
   --color-wharf-surface-primary: #FFFFFF;
   --color-wharf-surface-secondary: #F5F5F5;
@@ -27,6 +43,15 @@
   --color-wharf-success: #99E885;
   --color-wharf-warning: #F7CB46;
   --color-wharf-info: #B8A9FF;
+
+  /* Shadows - Using darker colors for depth */
+  --shadow-hard-pink: 6px 6px 0px 0px var(--color-wharf-pink-dark);
+  --shadow-hard-cyan: 6px 6px 0px 0px var(--color-wharf-cyan-dark);
+  --shadow-hard-green: 6px 6px 0px 0px var(--color-wharf-green-dark);
+  --shadow-hard-yellow: 6px 6px 0px 0px var(--color-wharf-yellow-dark);
+  --shadow-hard-orange: 6px 6px 0px 0px var(--color-wharf-orange-dark);
+  --shadow-hard-purple: 6px 6px 0px 0px var(--color-wharf-purple-dark);
+  --shadow-hard-teal: 6px 6px 0px 0px var(--color-wharf-teal-dark);
 
   --shadow-brutal: 6px 6px 0px 0px #000000;
   --shadow-brutal-sm: 3px 3px 0px 0px #000000;
@@ -76,6 +101,29 @@ body {
     padding-left: 3rem;
     padding-right: 3rem;
   }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-wharf-surface-secondary);
+  border-left: 2px solid var(--color-wharf-border-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-wharf-yellow);
+  border: 2px solid var(--color-wharf-border-primary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-wharf-pink);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--color-wharf-pink-dark);
 }
 
 
@@ -413,3 +461,5 @@ body {
 .shadow-brutal-lg {
   box-shadow: 10px 10px 0px 0px var(--color-wharf-border-primary);
 }
+
+
