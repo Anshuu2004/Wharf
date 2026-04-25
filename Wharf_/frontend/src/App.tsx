@@ -1,34 +1,28 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Header, Footer, PageWrapper, BottomNav } from './components/layout'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [currentPage, setCurrentPage] = useState('home')
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="min-h-screen flex flex-col bg-wharf-surface-primary">
+      <Header />
+      
+      <PageWrapper>
+        {/* Your page content here */}
+        <div className="pb-24"> {/* Padding for bottom nav */}
+          <h1 className="font-display font-black text-4xl">Welcome to WHARF</h1>
+          <p className="font-mono mt-4">Generate documentation for any GitHub repo.</p>
+        </div>
+      </PageWrapper>
+      
+      <Footer />
+      
+      <BottomNav 
+        currentPage={currentPage} 
+        onNavigate={setCurrentPage} 
+      />
+    </div>
   )
 }
 
