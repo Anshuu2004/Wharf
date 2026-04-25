@@ -1,0 +1,6 @@
+export { Hero } from './Hero'
+export { HowItWorks } from './HowItWorks'
+export { Features } from './Features'
+export { Comparison } from './Comparison'
+export { HealthScoreDemo } from './HealthScoreDemo'
+export { CTASection } from './CTASection'

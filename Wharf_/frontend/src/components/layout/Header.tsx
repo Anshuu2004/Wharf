@@ -278,8 +278,8 @@ export const Header = () => {
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
           scrolled
-            ? 'bg-wharf-surface-primary/95 backdrop-blur-sm border-b-3 border-wharf-border-primary'
-            : 'bg-wharf-surface-primary border-b-3 border-wharf-border-primary'
+            ? 'bg-wharf-surface-primary/95 backdrop-blur-sm border-b-2 border-wharf-border-primary'
+            : 'bg-wharf-surface-primary border-b-2 border-wharf-border-primary'
         }`}
       >
         <div className="container mx-auto px-4">
