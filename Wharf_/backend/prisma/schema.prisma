@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+// ─── Users ───────────────────────────────────────────────────────────────────
+model User {
+  id          String   @id @default(cuid())
+  githubId    String   @unique
+  username    String
+  avatar      String
+  email       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  repos       Repository[]
+  apiKey      UserApiKey?
+}
+
+
+// ─── Repositories ─────────────────────────────────────────────────────────────
+model Repository {
+  id          String   @id @default(cuid())
+  owner       String
+  name        String
+  description String?
+  stars       Int      @default(0)
+  language    String?
+  url         String
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  generations Generation[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([owner, name, userId])
+}
+
+
+// ─── Generations ──────────────────────────────────────────────────────────────
+model Generation {
+  id            String   @id @default(cuid())
+  type          String   // README, TREEMAP, CHANGELOG, etc.
+  content       String   @db.Text
+  options       Json?    // Store generation parameters
+  
+  repoId        String
+  repository    Repository @relation(fields: [repoId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+}
+
+
+// ─── BYOK — User's own API key ────────────────────────────────────────────────
+model UserApiKey {
+  id          String   @id @default(cuid())
+  provider    String   // OPENAI, ANTHROPIC, GEMINI
+  key         String   // Encrypted key
+  
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
