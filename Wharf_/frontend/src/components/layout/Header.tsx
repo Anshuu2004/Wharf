@@ -21,6 +21,8 @@ import {
   Settings,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { useAuthStore } from '../../stores/authStore';
+
 
 interface Notification {
   id: string;
@@ -33,11 +35,12 @@ interface Notification {
 
 export const Header = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string; avatar?: string } | null>(null);
+
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: '1',
@@ -77,12 +80,8 @@ export const Header = () => {
   const notificationRef = useRef<HTMLDivElement>(null);
   const notificationButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Mock User State
-  useEffect(() => {
-    // TODO: Replace with actual auth check
-    const mockUser = null;
-    setUser(mockUser);
-  }, []);
+  // User State is handled by authStore
+
 
   // Handle Scroll Effect
   useEffect(() => {
@@ -115,14 +114,15 @@ export const Header = () => {
   }, [showUserMenu, showNotifications]);
 
   const handleLogin = () => {
-    navigate('/login');
+    window.location.href = 'http://localhost:3000/api/auth/github';
   };
 
-  const handleLogout = async () => {
-    setUser(null);
+  const handleLogout = () => {
+    logout();
     setShowUserMenu(false);
     navigate('/');
   };
+
 
   const handleDashboard = () => {
     navigate('/dashboard');
@@ -166,16 +166,17 @@ export const Header = () => {
   };
 
   const getUserDisplay = () => {
-    if (user?.name) return user.name;
+    if (user?.username) return user.username;
     if (user?.email) return user.email.split('@')[0];
     return 'User';
   };
 
   const getUserInitial = () => {
-    if (user?.name) return user.name[0].toUpperCase();
+    if (user?.username) return user.username[0].toUpperCase();
     if (user?.email) return user.email[0].toUpperCase();
     return 'U';
   };
+
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -375,10 +376,10 @@ export const Header = () => {
                           <Calendar className="w-3 h-3" />
                           <span>Joined Jan 2024</span>
                         </div>
-                        {user.name && (
+                        {user.username && (
                           <div className="flex items-center gap-2 font-mono text-xs mt-1">
                             <User className="w-3 h-3" />
-                            <span>{user.name}</span>
+                            <span>{user.username}</span>
                           </div>
                         )}
                       </div>
