@@ -6,12 +6,16 @@ import dotenv from 'dotenv';
 
 import authRoutes from './routes/auth.routes';
 import repoRoutes from './routes/repo.routes';
+import { initCronJobs } from './utils/cron';
 
 // Load Environment Variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Initialize Background Jobs
+initCronJobs();
 
 // Middleware
 app.use(helmet());
