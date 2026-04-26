@@ -1,37 +1,12 @@
-import { useState } from 'react'
+import { Routes, Route } from 'react-router-dom'
 import { Header, Footer, BottomNav } from './components/layout'
 import { HomePage } from './pages/HomePage'
+import { AuthCallback } from './pages/AuthCallback'
 import { ToastProvider } from './components/ui/ToastProvider'
 
-// Future pages (to be created)
-// import { GeneratorPage } from './pages/GeneratorPage'
-// import { TreeMapPage } from './pages/TreeMapPage'
-// import { HealthPage } from './pages/HealthPage'
-// import { AnalyticsPage } from './pages/AnalyticsPage'
-// import { SettingsPage } from './pages/SettingsPage'
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('home')
-
-  // Render different pages based on currentPage
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'home':
-        return <HomePage />
-      // case 'generator':
-      //   return <GeneratorPage />
-      // case 'treemap':
-      //   return <TreeMapPage />
-      // case 'health':
-      //   return <HealthPage />
-      // case 'analytics':
-      //   return <AnalyticsPage />
-      // case 'settings':
-      //   return <SettingsPage />
-      default:
-        return <HomePage />
-    }
-  }
+  const pathname = window.location.pathname.replace('/', '') || 'home'
 
   return (
     <ToastProvider>
@@ -39,14 +14,19 @@ function App() {
         <Header />
         
         <main className="flex-1">
-          {renderPage()}
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            {/* <Route path="/generator" element={<GeneratorPage />} /> */}
+            <Route path="*" element={<HomePage />} />
+          </Routes>
         </main>
         
         <Footer />
         
         <BottomNav 
-          currentPage={currentPage} 
-          onNavigate={setCurrentPage} 
+          currentPage={pathname} 
+          onNavigate={(page) => window.location.href = `/${page === 'home' ? '' : page}`} 
         />
       </div>
     </ToastProvider>
