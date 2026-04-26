@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 
 import authRoutes from './routes/auth.routes';
+import repoRoutes from './routes/repo.routes';
 
 // Load Environment Variables
 dotenv.config();
@@ -23,6 +24,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/repo', repoRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

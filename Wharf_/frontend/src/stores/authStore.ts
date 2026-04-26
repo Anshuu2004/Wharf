@@ -6,6 +6,7 @@ interface User {
   username: string;
   avatar?: string;
   email?: string;
+  githubCreatedAt?: string;
 }
 
 interface AuthState {

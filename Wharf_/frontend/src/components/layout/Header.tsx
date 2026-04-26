@@ -374,7 +374,7 @@ export const Header = () => {
                       <div className="p-3 border-b-2 border-wharf-border-primary bg-wharf-surface-tertiary">
                         <div className="flex items-center gap-2 font-mono text-xs">
                           <Calendar className="w-3 h-3" />
-                          <span>Joined Jan 2024</span>
+                          <span>Joined {user?.githubCreatedAt ? new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(new Date(user.githubCreatedAt)) : 'Recent'}</span>
                         </div>
                         {user.username && (
                           <div className="flex items-center gap-2 font-mono text-xs mt-1">
