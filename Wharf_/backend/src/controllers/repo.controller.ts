@@ -11,22 +11,26 @@ export const analyzeRepo = async (req: Request, res: Response) => {
     return res.status(400).json({ success: false, error: 'Repository URL is required' });
   }
 
-  try {
+    try {
     let token: string | undefined;
+    let installationId: string | undefined;
 
     // If User Is Logged In, Try To Use Their Stored GitHub Token
     if (userId) {
-      const user = await prisma.user.findUnique({
+      const user = await (prisma.user.findUnique({
         where: { id: userId },
-          select: { githubAccessToken: true },
-      });
+        select: { githubAccessToken: true, installationId: true } as any,
+      }) as any);
 
       if (user?.githubAccessToken) {
         token = decrypt(user.githubAccessToken);
       }
+      if ((user as any)?.installationId) {
+        installationId = (user as any).installationId;
+      }
     }
 
-    const repoService = new RepoService(token);
+    const repoService = new RepoService({ token, installationId });
     const analysis = await repoService.analyzeRepo(repoUrl);
 
     res.json({

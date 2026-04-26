@@ -1,4 +1,5 @@
 import { Octokit } from '@octokit/rest';
+import { createAppAuth } from '@octokit/auth-app';
 
 export interface RepoMeta {
   owner: string;
@@ -20,10 +21,23 @@ export interface RepoTreeItem {
 export class GithubService {
   private octokit: Octokit;
 
-  constructor(token?: string) {
-    this.octokit = new Octokit({
-      auth: token || process.env.GITHUB_TOKEN,
-    });
+  constructor(options?: { token?: string; installationId?: string }) {
+    if (options?.installationId && process.env.GITHUB_APP_ID && process.env.GITHUB_PRIVATE_KEY) {
+      // Authenticate As A GitHub App Installation (High Rate Limits)
+      this.octokit = new Octokit({
+        authStrategy: createAppAuth,
+        auth: {
+          appId: process.env.GITHUB_APP_ID,
+          privateKey: process.env.GITHUB_PRIVATE_KEY,
+          installationId: options.installationId,
+        },
+      });
+    } else {
+      // Fallback To OAuth Token Or System Token
+      this.octokit = new Octokit({
+        auth: options?.token || process.env.GITHUB_TOKEN,
+      });
+    }
   }
 
   // Fetches Basic Repository Metadata

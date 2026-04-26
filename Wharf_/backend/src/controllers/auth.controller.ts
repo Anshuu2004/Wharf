@@ -15,7 +15,7 @@ export const githubLogin = (req: Request, res: Response) => {
 };
 
 export const githubCallback = async (req: Request, res: Response) => {
-  const { code } = req.query;
+  const { code, installation_id } = req.query;
 
   if (!code) {
     return res.status(400).json({ error: 'No code provided' });
@@ -59,7 +59,8 @@ export const githubCallback = async (req: Request, res: Response) => {
         email: githubUser.email,
         githubAccessToken: encryptedToken,
         githubCreatedAt: new Date(githubUser.created_at),
-      },
+        installationId: (installation_id ? installation_id.toString() : undefined) as any,
+      } as any,
       create: {
         githubId: githubUser.id.toString(),
         username: githubUser.login,
@@ -67,7 +68,8 @@ export const githubCallback = async (req: Request, res: Response) => {
         email: githubUser.email,
         githubAccessToken: encryptedToken,
         githubCreatedAt: new Date(githubUser.created_at),
-      },
+        installationId: (installation_id ? installation_id.toString() : undefined) as any,
+      } as any,
     });
 
     // 4. Create JWT

@@ -17,6 +17,7 @@ model User {
   email       String?
   githubAccessToken String?     // Encrypted OAuth token
   githubCreatedAt   DateTime? 
+  installationId    String?      // GitHub App installation ID
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

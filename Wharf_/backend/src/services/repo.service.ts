@@ -13,8 +13,8 @@ export interface RepoContext {
 export class RepoService {
   private githubService: GithubService;
 
-  constructor(token?: string) {
-    this.githubService = new GithubService(token);
+  constructor(options?: { token?: string; installationId?: string }) {
+    this.githubService = new GithubService(options);
   }
 
   async analyzeRepo(url: string): Promise<RepoContext> {
