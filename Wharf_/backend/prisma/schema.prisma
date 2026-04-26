@@ -22,7 +22,7 @@ model User {
   updatedAt   DateTime @updatedAt
 
   repos       Repository[]
-  apiKey      UserApiKey?
+  apiKeys     UserApiKey[]
 }
 
 
@@ -62,15 +62,34 @@ model Generation {
 }
 
 
-// ─── BYOK — User's own API key ────────────────────────────────────────────────
+// ─── BYOK — User's Own API Keys ───────────────────────────────────────────────
 model UserApiKey {
   id          String   @id @default(cuid())
-  provider    String   // OPENAI, ANTHROPIC, GEMINI
+  provider    String   // OPENAI, ANTHROPIC, GEMINI, GROQ, DEEPSEEK, etc.
   key         String   // Encrypted key
+  label       String   @default("Primary") // To distinguish multiple keys
+  isExhausted   Boolean  @default(false)
+  usageCount    Int      @default(0)
+  lastUsed      DateTime @default(now())
   
-  userId      String   @unique
+  userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@unique([userId, provider, label])
+}
+
+// ─── System Key Pool — Shared Keys For Rotation ──────────────────────────────
+model SystemKey {
+  id            String   @id @default(cuid())
+  provider      String   // GEMINI, ANTHROPIC, etc.
+  key           String   // Encrypted key
+  usageCount    Int      @default(0)
+  isExhausted   Boolean  @default(false)
+  lastUsed      DateTime @default(now())
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
