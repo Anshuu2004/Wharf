@@ -79,7 +79,8 @@ export const githubCallback = async (req: Request, res: Response) => {
         username: user.username,
         githubCreatedAt: (user as any).githubCreatedAt,
         email: user.email,
-        avatar: user.avatar
+        avatar: user.avatar,
+        githubAccessToken: user.githubAccessToken
       },
       JWT_SECRET,
       { expiresIn: '7d' }
