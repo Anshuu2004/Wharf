@@ -3,7 +3,7 @@ import { KeyRouterService } from '../services/keyRouter.service';
 
 const keyRouter = new KeyRouterService();
 
-// Initializes All Background Cron Jobs.
+// Initializes All Background Cron Jobs
 export function initCronJobs() {
   // Reset Exhausted Keys Every 30 Minutes
   cron.schedule('*/30 * * * *', async () => {
