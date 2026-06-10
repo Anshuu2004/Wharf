@@ -1,6 +1,7 @@
 import { GithubService, RepoMeta } from './github.service';
 import { detectFrameworks, getCommands } from '../utils/frameworkDetector';
 import { parseGithubUrl } from '../utils/parseGithubUrl';
+import { cacheService } from './cache.service';
 
 export interface RepoContext {
   meta: RepoMeta;
@@ -24,6 +25,13 @@ export class RepoService {
     }
 
     const { owner, repo } = parsed;
+
+    // Try To Get From Cache First
+    const cachedAnalysis = await cacheService.getAnalysis(owner, repo);
+    if (cachedAnalysis) {
+      console.log(`[Cache] Found cached analysis for ${owner}/${repo}`);
+      return cachedAnalysis;
+    }
 
     // 1. Fetch Metadata
     const meta = await this.githubService.fetchRepoMeta(owner, repo);
@@ -56,19 +64,25 @@ export class RepoService {
     const frameworks = detectFrameworks(filePaths, packageJson);
     const commands = getCommands(frameworks);
 
-    // 5. Build Tree Preview (limited depth)
+    // 5. Build Tree Preview (Limited Depth)
     const treePreview = tree
       .filter(item => !item.path.includes('node_modules') && !item.path.includes('.git'))
       .slice(0, 50)
       .map(item => item.path)
       .join('\n');
 
-    return {
+    const result = {
       meta,
       frameworks,
       commands,
       treePreview,
       keyFiles,
     };
+
+    // Cache The Result
+    await cacheService.setAnalysis(owner, repo, result);
+
+    return result;
   }
 }
+

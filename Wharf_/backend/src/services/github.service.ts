@@ -110,4 +110,26 @@ export class GithubService {
       date: commit.commit.author?.date,
     }));
   }
+
+  // Fetches Authenticated User's Repositories
+  async fetchUserRepos(page = 1, per_page = 100) {
+    const { data } = await this.octokit.repos.listForAuthenticatedUser({
+      sort: 'updated',
+      per_page,
+      page,
+    });
+
+    return data.map(repo => ({
+      id: repo.id,
+      name: repo.name,
+      full_name: repo.full_name,
+      description: repo.description,
+      stars: repo.stargazers_count,
+      forks: repo.forks_count,
+      language: repo.language,
+      url: repo.html_url,
+      owner: repo.owner.login,
+    }));
+  }
 }
+
