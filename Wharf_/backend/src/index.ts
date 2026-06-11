@@ -6,8 +6,6 @@ import dotenv from 'dotenv';
 
 import authRoutes from './routes/auth.routes';
 import repoRoutes from './routes/repo.routes';
-import userRoutes from './routes/user.routes';
-import generateRoutes from './routes/generate.routes';
 import { initCronJobs } from './utils/cron';
 
 // Load Environment Variables
@@ -31,10 +29,6 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/repo', repoRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/generate', generateRoutes);
-
-
 
 // Health Check
 app.get('/health', (req, res) => {
