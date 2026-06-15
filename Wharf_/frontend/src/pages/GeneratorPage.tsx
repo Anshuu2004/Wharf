@@ -8,7 +8,6 @@ import {
   ReadmePreview,
   ExportActions
 } from '../components/generator'
-// Remove ReadmeEditor and RepoStatsCard if they don't exist yet
 import { Tabs } from '../components/ui/Tabs'
 import type { TabItem } from '../components/ui/Tabs'
 
@@ -121,7 +120,6 @@ export const GeneratorPage = () => {
     }
   ]
 
-  const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 4))
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1))
 
   return (
@@ -129,7 +127,7 @@ export const GeneratorPage = () => {
       title="README Generator" 
       description="Create professional documentation for any GitHub repository"
     >
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="max-w-8xl mx-auto space-y-8">
         
         {/* Wizard Progress Bar */}
         <div className="flex items-center justify-between border-b-2 border-wharf-border-secondary pb-4">
