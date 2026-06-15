@@ -7,7 +7,9 @@ const sections = [
   { id: 'tech-stack', name: 'Tech Stack', default: true },
   { id: 'features', name: 'Features', default: false },
   { id: 'api-reference', name: 'API Reference', default: false },
-  { id: 'contributing', name: 'Contributing', default: true },
+  { id: 'contributing', name: 'Contributor Guidelines', default: true },
+  { id: 'project-structure', name: 'Project Structure', default: false },
+  { id: 'architecture', name: 'Architecture Diagram', default: false },
   { id: 'license', name: 'License', default: true },
 ]
 

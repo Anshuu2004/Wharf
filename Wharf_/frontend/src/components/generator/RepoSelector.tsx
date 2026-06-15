@@ -34,6 +34,8 @@ export const RepoSelector = ({ user, onSelect }: RepoSelectorProps) => {
   useEffect(() => {
     if (user) {
       fetchUserRepos()
+    } else {
+      setIsLoading(false)
     }
   }, [user])
 
@@ -90,6 +92,13 @@ export const RepoSelector = ({ user, onSelect }: RepoSelectorProps) => {
               <div className="p-8 text-center">
                 <div className="w-6 h-6 border-2 border-wharf-pink border-t-transparent rounded-full animate-spin mx-auto" />
                 <p className="font-mono text-xs text-wharf-text-tertiary mt-2">Loading repos...</p>
+              </div>
+            ) : !user ? (
+              <div className="p-8 text-center">
+                <p className="font-mono text-sm text-wharf-text-tertiary mb-4">Please connect your GitHub account to view repositories.</p>
+                <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/auth/github`} className="px-4 py-2 border-2 border-wharf-border-primary hover:bg-wharf-surface-secondary text-sm font-mono transition-colors">
+                   Connect GitHub
+                </a>
               </div>
             ) : filteredRepos.length === 0 ? (
               <div className="p-8 text-center">

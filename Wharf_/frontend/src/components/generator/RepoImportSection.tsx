@@ -67,7 +67,7 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
   }
 
   return (
-    <Card variant="hard" className="overflow-hidden">
+    <Card variant="hard" className="overflow-hidden h-[400px]">
       {/* Method Toggle */}
       <div className="flex border-b-2 border-wharf-border-primary">
         <button
@@ -103,7 +103,7 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
                 placeholder="https://github.com/owner/repo"
                 value={repoUrl}
                 onChange={(e) => setRepoUrl(e.target.value)}
-                className="flex-1"
+                className="flex-1 min-w-[600px]"
               />
               <Button 
                 variant="primary" 
@@ -121,7 +121,6 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
         ) : (
           <div className="space-y-4">
             <RepoSelector user={user} onSelect={handleRepoSelect} />
-            {/* <RecentReposList onSelect={onRepoSelect} /> */}
           </div>
 
         )}
