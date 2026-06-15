@@ -17,6 +17,7 @@ TONE: ${toneInstructions[tone]}
 
 REPOSITORY CONTEXT:
 Name: ${context.meta.name}
+Owner: ${context.meta.owner}
 Description: ${context.meta.description || 'Not provided'}
 Language: ${context.meta.language || 'Not specified'}
 Frameworks: ${context.frameworks.join(', ')}
@@ -35,11 +36,20 @@ SECTIONS TO INCLUDE: ${sections.join(', ')}
 
 RULES:
 - Return ONLY the raw markdown content. Do NOT wrap it in markdown code blocks like \`\`\`markdown ... \`\`\`.
-- Start directly with the repository title: "# ${context.meta.name}"
-- Auto-generate a beautiful badges row at the top using Shields.io urls (e.g. build standard shields.io badges for stars, forks, license, main language, and a badge linking to this project if possible).
-- Installation section must use the exact install/run commands provided above: \`${context.commands.install}\` and \`${context.commands.run}\`.
-- Ensure all sections mentioned in SECTIONS TO INCLUDE are represented clearly.
-- If there are no screenshots in the repo, add visual placeholder HTML comment blocks where screenshots should go.
-- End with a clean footer badge that links back to Wharf (markdown: [![Documented by Wharf](https://img.shields.io/badge/Documented_by-Wharf-blueviolet)](https://github.com/trywharf/wharf)).
-- Keep it highly structured and scannable with correct headings, lists, and code blocks.`;
+- Start with a descriptive, formatted repository title instead of just the repo name (e.g., "# 🧠 ${context.meta.name}: Project Overview").
+- Auto-generate a beautiful badges row at the top using Shields.io. The badges MUST be wrapped in \`<div align="center">\` and \`</div>\`. Use \`${context.meta.owner}\` instead of dummy users for GitHub repo stats.
+- Below the badges, add a rich badge row for the author's github profile wrapped in \`<div align="left" style="display: flex; flex-wrap: wrap;">\` containing \`https://github.com/${context.meta.owner}\` links.
+- After every section (e.g., Features, Preview, Project Structure), add a \`<br>\` tag to prevent cluttered text.
+- If a "Preview" section is included, output it in a tabular format showing image placeholders. Use \`![Placeholder](https://placehold.co/600x400?text=Screenshot+Placeholder)\` for the images.
+- If "Technologies Used" or "Tech Stack" is included, display it in a clean markdown table with columns for "Technology" and "Purpose".
+- If "System Architecture" is included, ALWAYS include a Mermaid.js diagram (\`\`\`mermaid\`) demonstrating the system logic and architecture.
+- For "Project Structure", generate a \`📁 Project Structure\` section containing the EXACT file tree as shown in FILE TREE PREVIEW. Preserve the exact unstructured format. Do NOT sort the files alphabetically. Use \`\`\`bash\` for the tree block and add short inline comments for the files/folders.
+- For "Getting Started", use a strict step-by-step numbered format. Add a thin horizontal rule (a single \`#\` or \`---\` line) separating steps like "1. Clone Repository", "2. Setup Backend", "3. Setup Frontend", etc. Use exactly the provided commands: \`${context.commands.install}\` and \`${context.commands.run}\`.
+- If "Internal API Services" is requested, list each service and add a thin horizontal rule separating each bullet point.
+- For "Contributing", follow a clean layout with "How To Contribute" and "Areas For Contribution" sub-headings.
+- For "License", use the user's Github username, \`${context.meta.owner}\`, as the copyright holder.
+- For "Credits" and "Author", construct the author sections using \`${context.meta.owner}\` for the github author link and badges, using placeholders for linkedin/website if unknown.
+- Include a "🌟 Support The Project" section near the end asking users to star and share the repository.
+- The LAST element of the markdown must be a clean, right-aligned footer badge that links back to Wharf (markdown: \`<div align="right">\n\n[![Documented by Wharf](https://img.shields.io/badge/Documented_by-Wharf-blueviolet)](https://github.com/trywharf/wharf)\n\n</div>\`).
+- Keep it highly structured and scannable.`;
 }
