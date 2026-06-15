@@ -21,6 +21,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { useToast } from '../ui/useToast';
 import { useAuthStore } from '../../stores/authStore';
 
 
@@ -81,7 +82,22 @@ export const Header = () => {
   const notificationButtonRef = useRef<HTMLButtonElement>(null);
 
   // User State is handled by authStore
+  const { showToast } = useToast();
 
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      showToast('Your session has expired. Please log in again.', 'warning');
+      logout();
+      setTimeout(() => {
+        if (window.location.pathname !== '/' && window.location.pathname !== '/login') {
+          navigate('/');
+        }
+      }, 2000);
+    };
+
+    window.addEventListener('auth:expired', handleAuthExpired);
+    return () => window.removeEventListener('auth:expired', handleAuthExpired);
+  }, [logout, showToast, navigate]);
 
   // Handle Scroll Effect
   useEffect(() => {

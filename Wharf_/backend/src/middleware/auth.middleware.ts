@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
-
 export const auth = (req: Request, res: Response, next: NextFunction) => {
+  const JWT_SECRET = process.env.JWT_SECRET || 'secret';
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -16,7 +15,8 @@ export const auth = (req: Request, res: Response, next: NextFunction) => {
     const decoded = jwt.verify(token, JWT_SECRET);
     (req as any).user = decoded;
     next();
-  } catch (error) {
+  } catch (error: any) {
+    console.error('[Auth Middleware] Invalid token error:', error.message);
     // If Token Is Invalid, We Still Proceed But Without A User
     next();
   }
