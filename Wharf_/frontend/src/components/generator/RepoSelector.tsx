@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
-import { Search, ChevronDown, Star, GitFork } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Search, ChevronDown, Star, GitFork, RefreshCw } from 'lucide-react'
 import { FaGithub } from 'react-icons/fa'
+import { Badge } from '../ui/Badge'
 import api from '../../lib/api'
 
 interface User {
@@ -18,6 +19,8 @@ interface Repo {
   language: string
   url?: string
   owner?: string
+  private?: boolean
+  updated_at?: string
 }
 
 interface RepoSelectorProps {
@@ -30,6 +33,9 @@ export const RepoSelector = ({ user, onSelect }: RepoSelectorProps) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [repos, setRepos] = useState<Repo[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (user) {
@@ -38,6 +44,24 @@ export const RepoSelector = ({ user, onSelect }: RepoSelectorProps) => {
       setIsLoading(false)
     }
   }, [user])
+
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (isOpen && searchInputRef.current) {
+      setTimeout(() => searchInputRef.current?.focus(), 100)
+    }
+  }, [isOpen])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const fetchUserRepos = async () => {
     setIsLoading(true)
@@ -53,85 +77,184 @@ export const RepoSelector = ({ user, onSelect }: RepoSelectorProps) => {
     }
   }
 
+  const refreshRepos = async () => {
+    setIsRefreshing(true)
+    await fetchUserRepos()
+    setIsRefreshing(false)
+  }
+
   const filteredRepos = repos.filter(repo => 
-    repo.full_name.toLowerCase().includes(searchQuery.toLowerCase())
+    repo.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (repo.language && repo.language.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
+  const getLanguageColor = (language: string) => {
+    const colors: Record<string, string> = {
+      'JavaScript': 'bg-wharf-yellow',
+      'TypeScript': 'bg-wharf-cyan',
+      'Python': 'bg-wharf-green',
+      'Java': 'bg-wharf-orange',
+      'Go': 'bg-wharf-cyan',
+      'Rust': 'bg-wharf-orange',
+      'C++': 'bg-wharf-purple',
+      'C#': 'bg-wharf-purple',
+      'Ruby': 'bg-wharf-pink',
+      'PHP': 'bg-wharf-purple',
+      'HTML': 'bg-wharf-orange',
+      'CSS': 'bg-wharf-pink',
+      'Swift': 'bg-wharf-orange',
+      'Kotlin': 'bg-wharf-purple',
+    }
+    return colors[language] || 'bg-wharf-border-secondary'
+  }
+
   return (
-    <div className="relative">
+    <div className="relative w-full" ref={dropdownRef}>
+      {/* Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-3 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-surface-secondary transition-colors"
+        disabled={!user}
+        className="w-full flex items-center justify-between p-3.5 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-surface-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <div className="flex items-center gap-2">
-          <FaGithub className="w-4 h-4" />
-          <span className="font-mono text-sm">Select a repository</span>
+        <div className="flex items-center gap-3 min-w-0">
+          <FaGithub className="w-4 h-4 flex-shrink-0" />
+          <span className="font-mono text-sm truncate capitalize">
+            {isLoading ? 'Loading repositories...' : user ? 'Select a repository' : 'Connect GitHub to continue'}
+          </span>
         </div>
-        <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {user && !isLoading && (
+            <Badge variant="default" size="sm" className="hidden sm:inline-flex">
+              {repos.length} repos
+            </Badge>
+          )}
+          <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        </div>
       </button>
 
+      {/* Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 z-20 border-2 border-wharf-border-primary bg-wharf-surface-primary shadow-brutal">
-          {/* Search */}
-          <div className="p-3 border-b-2 border-wharf-border-secondary">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-wharf-text-tertiary" />
-              <input
-                type="text"
-                placeholder="Search repositories..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 font-mono text-sm border border-wharf-border-secondary focus:outline-none focus:border-wharf-pink"
-              />
+        <div className="mt-4 w-full z-10 transition-all duration-300 animate-fadeInUp">
+          <div className="border-2 border-wharf-border-primary bg-wharf-surface-primary shadow-brutal">
+            {/* Search & Actions Bar */}
+            <div className="flex items-center gap-2 p-3 border-b-2 border-wharf-border-secondary bg-wharf-surface-secondary">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-wharf-text-tertiary" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search Repositories..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 font-mono text-sm border border-wharf-border-secondary bg-wharf-surface-primary focus:outline-none focus:border-wharf-pink"
+                />
+              </div>
+              <button
+                onClick={refreshRepos}
+                disabled={isRefreshing}
+                className="p-2 border border-wharf-border-secondary hover:border-wharf-pink hover:bg-wharf-pink/10 transition-colors disabled:opacity-50"
+                title="Refresh repositories"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </button>
             </div>
-          </div>
 
-          {/* Repo List */}
-          <div className="max-h-96 overflow-y-auto">
-            {isLoading ? (
-              <div className="p-8 text-center">
-                <div className="w-6 h-6 border-2 border-wharf-pink border-t-transparent rounded-full animate-spin mx-auto" />
-                <p className="font-mono text-xs text-wharf-text-tertiary mt-2">Loading repos...</p>
-              </div>
-            ) : !user ? (
-              <div className="p-8 text-center">
-                <p className="font-mono text-sm text-wharf-text-tertiary mb-4">Please connect your GitHub account to view repositories.</p>
-                <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/auth/github`} className="px-4 py-2 border-2 border-wharf-border-primary hover:bg-wharf-surface-secondary text-sm font-mono transition-colors">
-                   Connect GitHub
-                </a>
-              </div>
-            ) : filteredRepos.length === 0 ? (
-              <div className="p-8 text-center">
-                <p className="font-mono text-sm text-wharf-text-tertiary">No repositories found</p>
-              </div>
-            ) : (
-              filteredRepos.map((repo) => (
-                <button
-                  key={repo.id}
-                  onClick={() => {
-                    onSelect(repo)
-                    setIsOpen(false)
-                  }}
-                  className="w-full p-3 text-left hover:bg-wharf-surface-secondary transition-colors border-b border-wharf-border-secondary last:border-b-0"
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono font-bold text-sm">{repo.full_name}</span>
-                    <div className="flex items-center gap-3">
-                      <span className="flex items-center gap-1 text-xs text-wharf-text-tertiary">
-                        <Star className="w-3 h-3" />
-                        {repo.stars}
-                      </span>
-                      <span className="flex items-center gap-1 text-xs text-wharf-text-tertiary">
-                        <GitFork className="w-3 h-3" />
-                        {repo.forks}
-                      </span>
+            {/* Repo List */}
+            <div className="overflow-y-auto max-h-[320px]">
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center p-8 space-y-3">
+                  <div className="w-10 h-10 border-4 border-wharf-pink border-t-transparent animate-spin mx-auto" />
+                  <p className="font-mono text-xs text-wharf-text-tertiary capitalize">Loading repositories...</p>
+                </div>
+              ) : !user ? (
+                <div className="p-8 text-center space-y-4">
+                  <div className="w-16 h-16 border-2 border-wharf-border-primary flex items-center justify-center mx-auto">
+                    <FaGithub className="w-8 h-8 text-wharf-text-tertiary" />
+                  </div>
+                  <p className="font-mono text-sm text-wharf-text-tertiary">
+                    Please connect your GitHub account to view repositories.
+                  </p>
+                  <a 
+                    href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/auth/github`} 
+                    className="inline-flex items-center gap-2 px-6 py-2.5 border-2 border-wharf-border-primary bg-wharf-pink font-mono text-sm font-bold hover:bg-wharf-pink-dark transition-colors"
+                  >
+                    <FaGithub className="w-4 h-4" />
+                    Connect GitHub
+                  </a>
+                </div>
+              ) : filteredRepos.length === 0 ? (
+                <div className="p-8 text-center">
+                  <Search className="w-8 h-8 text-wharf-text-tertiary mx-auto mb-2 opacity-50" />
+                  <p className="font-mono text-sm text-wharf-text-tertiary">
+                    {searchQuery ? 'No repositories match your search' : 'No repositories found'}
+                  </p>
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="mt-2 font-mono text-xs text-wharf-pink hover:underline"
+                    >
+                      Clear search
+                    </button>
+                  )}
+                </div>
+              ) : (
+                filteredRepos.map((repo) => (
+                  <button
+                    key={repo.id}
+                    onClick={() => {
+                      onSelect(repo)
+                      setIsOpen(false)
+                    }}
+                    className="w-full p-3.5 text-left hover:bg-wharf-surface-secondary transition-colors border-b border-wharf-border-secondary last:border-b-0 group"
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-mono font-bold text-sm truncate">{repo.full_name}</span>
+                        {repo.private && (
+                          <Badge variant="default" size="sm" className="text-[8px]">
+                            Private
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span className="flex items-center gap-1 text-xs text-wharf-text-tertiary">
+                          <Star className="w-3 h-3" />
+                          {repo.stars}
+                        </span>
+                        <span className="flex items-center gap-1 text-xs text-wharf-text-tertiary">
+                          <GitFork className="w-3 h-3" />
+                          {repo.forks}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-wharf-text-tertiary">{repo.language}</span>
-                  </div>
-                </button>
-              ))
+                    <div className="flex items-center gap-3">
+                      {repo.language && (
+                        <div className="flex items-center gap-1.5">
+                          <span className={`w-2 h-2 ${getLanguageColor(repo.language)} border border-wharf-border-primary`} />
+                          <span className="font-mono text-xs text-wharf-text-tertiary">{repo.language}</span>
+                        </div>
+                      )}
+                      {repo.updated_at && (
+                        <span className="font-mono text-[10px] text-wharf-text-tertiary/60">
+                          Updated {new Date(repo.updated_at).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+
+            {/* Footer Stats */}
+            {!isLoading && user && filteredRepos.length > 0 && (
+              <div className="flex items-center justify-between px-3.5 py-2 border-t-2 border-wharf-border-secondary bg-wharf-surface-secondary">
+                <span className="font-mono text-[10px] text-wharf-text-tertiary capitalize">
+                  Showing {filteredRepos.length} of {repos.length} repositories
+                </span>
+                <span className="font-mono text-[10px] text-wharf-text-tertiary capitalize">
+                  {repos.reduce((acc, r) => acc + r.stars, 0).toLocaleString()} total stars
+                </span>
+              </div>
             )}
           </div>
         </div>
