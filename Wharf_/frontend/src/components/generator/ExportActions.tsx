@@ -1,4 +1,4 @@
-import { Copy, Download, Save, Check } from 'lucide-react'
+import { Copy, Download, Save, Check, ExternalLink, Sparkles } from 'lucide-react'
 import { FaGithub } from 'react-icons/fa'
 import { Button, Card } from '../ui'
 import { useState } from 'react'
@@ -6,10 +6,22 @@ import { useState } from 'react'
 interface ExportActionsProps {
   content: string
   repoName?: string
+  onSave?: () => void
+  onGist?: () => void
+  isSaved?: boolean
+  isGenerating?: boolean
 }
 
-export const ExportActions = ({ content, repoName }: ExportActionsProps) => {
+export const ExportActions = ({ 
+  content, 
+  repoName,
+  onSave,
+  onGist,
+  isSaved = false,
+  isGenerating = false
+}: ExportActionsProps) => {
   const [copied, setCopied] = useState(false)
+  const [isHovering, setIsHovering] = useState(false)
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(content)
@@ -28,32 +40,153 @@ export const ExportActions = ({ content, repoName }: ExportActionsProps) => {
   }
 
   const handleSave = () => {
-    // TODO: Save to dashboard
-    console.log('Save to dashboard')
+    onSave?.()
   }
 
   const handleGist = () => {
-    console.log('Create Gist')
+    onGist?.()
   }
 
   return (
-    <Card variant="hard-sm" className="flex flex-wrap gap-2 justify-center">
-      <Button size="sm" variant="secondary" onClick={handleCopy}>
-        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-        {copied ? 'Copied!' : 'Copy'}
-      </Button>
-      <Button size="sm" variant="secondary" onClick={handleDownload}>
-        <Download className="w-4 h-4" />
-        Download
-      </Button>
-      <Button size="sm" variant="secondary" onClick={handleSave}>
-        <Save className="w-4 h-4" />
-        Save
-      </Button>
-      <Button size="sm" variant="secondary" onClick={handleGist}>
-        <FaGithub className="w-4 h-4" />
-        Create Gist
-      </Button>
+    <Card variant="hard-sm" className="p-0 overflow-hidden border-2 border-wharf-border-primary">
+      {/* Header */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-wharf-primary/5 to-transparent" />
+        <div className="relative px-4 py-2 border-b-2 border-wharf-border-primary bg-wharf-surface-secondary flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-wharf-success" />
+              <div className="w-2.5 h-2.5 rounded-full bg-wharf-warning" />
+              <div className="w-2.5 h-2.5 rounded-full bg-wharf-error" />
+            </div>
+            <span className="font-mono text-xs font-bold text-wharf-text-secondary ml-2">
+              EXPORT ACTIONS
+            </span>
+            {isGenerating && (
+              <span className="flex items-center gap-1.5 font-mono text-[10px] text-wharf-text-tertiary bg-wharf-surface-primary px-2 py-0.5 border border-wharf-border-secondary">
+                <Sparkles className="w-3 h-3 animate-pulse text-wharf-primary" />
+                Generating...
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px] text-wharf-text-tertiary capitalize">
+              {content.split('\n').length} lines
+            </span>
+            <span className="font-mono text-[10px] text-wharf-text-secondary opacity-50">|</span>
+            <span className="font-mono text-[10px] text-wharf-text-tertiary capitalize">
+              {content.length} chars
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons Grid */}
+      <div className="p-4 bg-wharf-surface-primary">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2 mb-6">
+          {/* Copy Button */}
+          <Button
+            size="sm"
+            variant={copied ? 'success' : 'secondary'}
+            onClick={handleCopy}
+            className="relative group transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <div className="flex items-center gap-2 w-full justify-center">
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span className="font-mono text-xs font-bold">Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4 group-hover:rotate-[-5deg] transition-transform" />
+                  <span className="font-mono text-xs font-bold">Copy</span>
+                </>
+              )}
+            </div>
+          </Button>
+
+          {/* Download Button */}
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleDownload}
+            className="relative group transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <div className="flex items-center gap-2 w-full justify-center">
+              <Download className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
+              <span className="font-mono text-xs font-bold">Download</span>
+            </div>
+          </Button>
+
+          {/* Save Button */}
+          <Button
+            size="sm"
+            variant={isSaved ? 'success' : 'secondary'}
+            onClick={handleSave}
+            className={`relative group transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+              isSaved ? 'border-2 border-wharf-green/50' : ''
+            }`}
+            disabled={isSaved}
+          >
+            <div className="flex items-center gap-2 w-full justify-center">
+              {isSaved ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span className="font-mono text-xs font-bold">Saved</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  <span className="font-mono text-xs font-bold">Save</span>
+                </>
+              )}
+            </div>
+          </Button>
+
+          {/* Create Gist Button */}
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleGist}
+            className="relative group transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] hover:bg-[#24292f] hover:text-white hover:border-[#24292f]"
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
+          >
+            <div className="flex items-center gap-2 w-full justify-center">
+              {isHovering ? (
+                <ExternalLink className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+              ) : (
+                <FaGithub className="w-4 h-4" />
+              )}
+              <span className="font-mono text-xs font-bold">Create Gist</span>
+            </div>
+          </Button>
+        </div>
+
+        {/* Stats */}
+        {repoName && (
+          <div className="mt-3 pt-3 border-t-2 border-wharf-border-secondary">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-wharf-primary animate-pulse" />
+                <span className="font-mono text-[10px] text-wharf-text-tertiary">
+                  Repository: <span className="text-wharf-text-secondary font-bold">{repoName}</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[10px] text-wharf-text-tertiary">
+                  README.md
+                </span>
+                <span className="font-mono text-[10px] text-wharf-text-tertiary opacity-50">|</span>
+                <span className="font-mono text-[10px] text-wharf-text-tertiary">
+                  {new Date().toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </Card>
   )
 }
