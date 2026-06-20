@@ -116,10 +116,13 @@ export const generateReadme = async (req: Request, res: Response) => {
           },
         });
 
+        const wordCount = generatedMarkdown.split(/\s+/).filter(Boolean).length;
+
         await prisma.generation.create({
           data: {
             type: 'README',
             content: generatedMarkdown,
+            wordCount,
             options: { tone, sections },
             repoId: repository.id,
           },
@@ -135,5 +138,95 @@ export const generateReadme = async (req: Request, res: Response) => {
     console.error('README generation error:', error);
     res.write(`data: ${JSON.stringify({ error: error.message || 'Failed to generate README' })}\n\n`);
     res.end();
+  }
+};
+
+export const getHistory = async (req: Request, res: Response) => {
+  const userId = (req as any).user?.userId;
+
+  if (!userId) {
+    return res.status(401).json({ success: false, error: 'Authentication required' });
+  }
+
+  try {
+    const history = await prisma.generation.findMany({
+      where: {
+        repository: {
+          userId
+        }
+      },
+      select: {
+        id: true,
+        type: true,
+        wordCount: true,
+        createdAt: true,
+        repository: {
+          select: {
+            owner: true,
+            name: true,
+            url: true,
+            language: true,
+            stars: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    res.json({ success: true, data: history });
+  } catch (error: any) {
+    console.error('Failed to fetch generation history:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch generation history' });
+  }
+};
+
+export const getHistoryById = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const userId = (req as any).user?.userId;
+
+  if (!userId) return res.status(401).json({ success: false, error: 'Authentication required' });
+
+  try {
+    const record = await prisma.generation.findUnique({
+      where: { id },
+      include: {
+        repository: true
+      }
+    });
+
+    if (!record || record.repository.userId !== userId) {
+      return res.status(404).json({ success: false, error: 'Record not found' });
+    }
+
+    res.json({ success: true, data: record });
+  } catch (error: any) {
+    console.error('Failed to fetch generation by ID:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch generation' });
+  }
+};
+
+export const deleteHistoryItem = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const userId = (req as any).user?.userId;
+
+  if (!userId) return res.status(401).json({ success: false, error: 'Authentication required' });
+
+  try {
+    const record = await prisma.generation.findUnique({
+      where: { id },
+      include: { repository: true }
+    });
+
+    if (!record || record.repository.userId !== userId) {
+      return res.status(404).json({ success: false, error: 'Record not found' });
+    }
+
+    await prisma.generation.delete({ where: { id } });
+    res.json({ success: true, message: 'Deleted successfully' });
+  } catch (error: any) {
+    console.error('Failed to delete generation history:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete record' });
   }
 };
