@@ -15,18 +15,28 @@ export const analyzeRepo = async (req: Request, res: Response) => {
     let token: string | undefined;
     let installationId: string | undefined;
 
-    // If User Is Logged In, Try To Use Their Stored GitHub Token
-    if (userId) {
-      const user = await (prisma.user.findUnique({
-        where: { id: userId },
-        select: { githubAccessToken: true, installationId: true } as any,
-      }) as any);
+    // Try To Read Encrypted Token Directly From JWT First
+    let encryptedToken = (req as any).user?.githubAccessToken;
 
-      if (user?.githubAccessToken) {
-        token = decrypt(user.githubAccessToken);
-      }
-      if ((user as any)?.installationId) {
-        installationId = (user as any).installationId;
+    if (userId) {
+      if (encryptedToken) {
+        token = decrypt(encryptedToken);
+      } else {
+        try {
+          const user = await (prisma.user.findUnique({
+            where: { id: userId },
+            select: { githubAccessToken: true, installationId: true } as any,
+          }) as any);
+
+          if (user?.githubAccessToken) {
+            token = decrypt(user.githubAccessToken);
+          }
+          if (user?.installationId) {
+            installationId = user.installationId;
+          }
+        } catch (dbErr: any) {
+          console.warn('[DB Error] Failed to read user from DB in repo.controller:', dbErr.message);
+        }
       }
     }
 

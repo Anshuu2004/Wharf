@@ -1,5 +1,7 @@
-import prisma from '../db';
+import { PrismaClient } from '@prisma/client';
 import { decrypt } from '../utils/encryption';
+
+const prisma = new PrismaClient();
 
 export interface KeyInfo {
   id: string;
@@ -9,31 +11,23 @@ export interface KeyInfo {
 }
 
 export class KeyRouterService {
-  // Retrieves The Best Available Key For A Given Provider.
-  // Priority: User's BYOK (Rotated) > System Key Pool (Rotated)
-  
   async getAvailableKey(provider: string, userId?: string): Promise<KeyInfo | null> {
-    // 1. Try User's BYOK first (Rotating Through Their Keys)
+    const normalizedProvider = provider.toUpperCase();
+
     if (userId) {
-      const userKey = await (prisma as any).userApiKey.findFirst({
+      const userKey = await prisma.userApiKey.findFirst({
         where: {
           userId,
-          provider: provider.toUpperCase(),
+          provider: normalizedProvider,
           isExhausted: false,
         },
-        orderBy: {
-          lastUsed: 'asc', // Round-Robin Rotation For User Keys Too!
-        },
+        orderBy: { lastUsed: 'asc' },
       });
 
       if (userKey) {
-        // Update User Key Usage
-        await (prisma as any).userApiKey.update({
+        await prisma.userApiKey.update({
           where: { id: userKey.id },
-          data: { 
-            lastUsed: new Date(),
-            usageCount: { increment: 1 }
-          },
+          data: { lastUsed: new Date(), usageCount: { increment: 1 } },
         });
 
         return {
@@ -45,25 +39,18 @@ export class KeyRouterService {
       }
     }
 
-    // 2. Try System Key Pool
-    const systemKey = await (prisma as any).systemKey.findFirst({
+    const systemKey = await prisma.systemKey.findFirst({
       where: {
-        provider: provider.toUpperCase(),
+        provider: normalizedProvider,
         isExhausted: false,
       },
-      orderBy: {
-        lastUsed: 'asc', // Round-Robin Rotation
-      },
+      orderBy: { lastUsed: 'asc' },
     });
 
     if (systemKey) {
-      // Update lastUsed Timestamp
-      await (prisma as any).systemKey.update({
+      await prisma.systemKey.update({
         where: { id: systemKey.id },
-        data: { 
-          lastUsed: new Date(),
-          usageCount: { increment: 1 }
-        },
+        data: { lastUsed: new Date(), usageCount: { increment: 1 } },
       });
 
       return {
@@ -77,29 +64,27 @@ export class KeyRouterService {
     return null;
   }
 
-  // Marks A Key As Exhausted (Works For Both User And System Keys).
   async markAsExhausted(keyId: string, isSystem: boolean): Promise<void> {
     if (isSystem) {
-      await (prisma as any).systemKey.update({
+      await prisma.systemKey.update({
         where: { id: keyId },
         data: { isExhausted: true },
       });
     } else {
-      await (prisma as any).userApiKey.update({
+      await prisma.userApiKey.update({
         where: { id: keyId },
         data: { isExhausted: true },
       });
     }
   }
 
-  // Resets All Exhausted Keys In Both Pools.
   async resetAllExhaustedKeys(): Promise<void> {
-    await (prisma as any).systemKey.updateMany({
+    await prisma.systemKey.updateMany({
       where: { isExhausted: true },
       data: { isExhausted: false },
     });
 
-    await (prisma as any).userApiKey.updateMany({
+    await prisma.userApiKey.updateMany({
       where: { isExhausted: true },
       data: { isExhausted: false },
     });

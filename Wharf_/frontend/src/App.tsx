@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { Header, Footer, BottomNav } from './components/layout'
 import { HomePage } from './pages/HomePage'
+import { GeneratorPage } from './pages/GeneratorPage'
 import { AuthCallback } from './pages/AuthCallback'
 import { ToastProvider } from './components/ui/ToastProvider'
 
@@ -17,7 +18,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
-            {/* <Route path="/generator" element={<GeneratorPage />} /> */}
+            <Route path="/generator" element={<GeneratorPage />} />
             <Route path="*" element={<HomePage />} />
           </Routes>
         </main>

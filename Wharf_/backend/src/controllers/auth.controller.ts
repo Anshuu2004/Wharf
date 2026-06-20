@@ -6,7 +6,6 @@ import { encrypt } from '../utils/encryption';
 
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 export const githubLogin = (req: Request, res: Response) => {
@@ -73,13 +72,15 @@ export const githubCallback = async (req: Request, res: Response) => {
     });
 
     // 4. Create JWT
+    const JWT_SECRET = process.env.JWT_SECRET || 'secret';
     const token = jwt.sign(
       { 
         userId: user.id, 
         username: user.username,
         githubCreatedAt: (user as any).githubCreatedAt,
         email: user.email,
-        avatar: user.avatar
+        avatar: user.avatar,
+        githubAccessToken: user.githubAccessToken
       },
       JWT_SECRET,
       { expiresIn: '7d' }

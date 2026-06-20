@@ -12,7 +12,7 @@
   --color-wharf-orange: #FFDC8B;
   --color-wharf-purple: #B8A9FF;
   --color-wharf-teal: #00D1B2;
-
+  
   /* Darker Variants */
   --color-wharf-pink-dark: #E06EC8;
   --color-wharf-pink-darker: #C04AA8;
@@ -31,6 +31,7 @@
   
   --color-wharf-surface-primary: #FFFFFF;
   --color-wharf-surface-secondary: #F5F5F5;
+  --color-wharf-surface-tertiary: #E0E0E0;
   
   --color-wharf-text-primary: #000000;
   --color-wharf-text-secondary: #333333;
@@ -463,3 +464,106 @@ body {
 }
 
 
+/* Shimmer Animation For Progress Bar */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+/* Enhanced Pulse Animations */
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 1.5s ease-in-out infinite;
+}
+
+/* Scale Animation For Completion */
+@keyframes scale-up {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-up {
+  animation: scale-up 0.5s ease-out forwards;
+}
+
+
+/* GitHub README Preview */
+.markdown-body {
+  background: #ffffff;
+  color: #24292f;
+}
+
+/* Badges */
+.markdown-body p img {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0;
+}
+
+/* Inline Code */
+.markdown-body :not(pre) > code {
+  background-color: rgba(175, 184, 193, 0.2);
+  color: #24292f;
+  padding: 0.2em 0.4em;
+  border-radius: 6px;
+  font-size: 85%;
+}
+
+/* code Blocks */
+.markdown-body pre {
+  background: #f6f8fa;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+}
+
+/* Tables */
+.markdown-body table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow: auto;
+}
+
+.markdown-body th {
+  background: #f6f8fa;
+}
+
+/* Task Lists */
+.markdown-body .task-list-item {
+  list-style: none;
+}
+
+/* Mermaid */
+.markdown-body .mermaid {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+
+/* Images */
+.markdown-body img {
+  max-width: 100%;
+  height: auto;
+}

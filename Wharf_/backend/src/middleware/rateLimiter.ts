@@ -14,7 +14,7 @@ export const analysisLimiter = rateLimit({
 });
 
 // Strict Rate Limiter For AI Generation
-// Limit: 5 Generations per 30 Minutes per IP.
+// Limit: 5 Generations per 30 Minutes per IP
 export const generationLimiter = rateLimit({
   windowMs: 30 * 60 * 1000, 
   max: 5,
