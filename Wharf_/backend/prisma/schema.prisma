@@ -24,6 +24,7 @@ model User {
 
   repos       Repository[]
   apiKeys     UserApiKey[]
+  profileReadmes ProfileReadme[]
 }
 
 
@@ -94,4 +95,36 @@ model SystemKey {
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+// ─── Profile Generation ────────────────────────────────────────────────────────
+model ProfileReadme {
+  id            String   @id @default(cuid())
+  userId        String?
+  username      String   // GitHub username
+  content       String   @db.Text  // Generated README content
+  template      String   // minimal, developer, creative, professional, terminal
+  theme         String   // default, dark, ocean, sunset, forest, monochrome
+  badges        String[] // Selected badges
+  showStats     Boolean  @default(true)
+  showTopLanguages Boolean @default(true)
+  showContributions Boolean @default(true)
+  generatedAt   DateTime @default(now())
+  
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([username])
+  @@index([generatedAt])
+}
+
+model ProfileStats {
+  id              String   @id @default(cuid())
+  totalProfiles   Int      @default(0)
+  totalReadmes    Int      @default(0)
+  totalStars      Int      @default(0)
+  templatesUsed   Int      @default(0)
+  topTemplate     String   @default("--")
+  lastGenerated   DateTime?
+  updatedAt       DateTime @updatedAt
 }
