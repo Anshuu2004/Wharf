@@ -37,6 +37,36 @@ export class CacheService {
     await cacheSet(key, markdown, README_TTL);
   }
 
+  /* Get Cached Profile Data */
+  async getProfileData(username: string): Promise<any | null> {
+    const key = `profile:data:${username.toLowerCase()}`;
+    const cached = await cacheGet(key);
+    if (!cached) return null;
+    try {
+      return JSON.parse(cached);
+    } catch {
+      return null;
+    }
+  }
+
+  /* Set Cached Profile Data */
+  async setProfileData(username: string, data: any): Promise<void> {
+    const key = `profile:data:${username.toLowerCase()}`;
+    await cacheSet(key, JSON.stringify(data), ANALYSIS_TTL);
+  }
+
+  /* Get Cached Profile README */
+  async getProfileReadme(username: string, template: string, theme: string): Promise<string | null> {
+    const key = `profile:readme:${username.toLowerCase()}:${template}:${theme}`;
+    return await cacheGet(key);
+  }
+
+  /* Set Cached Profile README */
+  async setProfileReadme(username: string, template: string, theme: string, markdown: string): Promise<void> {
+    const key = `profile:readme:${username.toLowerCase()}:${template}:${theme}`;
+    await cacheSet(key, markdown, README_TTL);
+  }
+
   /* Hash Sections To Form A Short Unique Key */
   private hashSections(sections: string[]): string {
     const sorted = [...sections].sort();
