@@ -131,5 +131,60 @@ export class GithubService {
       owner: repo.owner.login,
     }));
   }
-}
 
+  // Fetches GitHub User Profile
+  async getUserProfile(username: string) {
+    const { data } = await this.octokit.users.getByUsername({ username });
+    return data;
+  }
+
+  // Fetches Top Starred Repos (Used For Tech Stack Analysis)
+  async getTopStarredRepos(username: string, limit = 10) {
+    try {
+      let isSelf = false;
+      try {
+        const { data: authUser } = await this.octokit.users.getAuthenticated();
+        if (authUser.login.toLowerCase() === username.toLowerCase()) {
+          isSelf = true;
+        }
+      } catch (authError) {
+        // Not Authenticated As User
+      }
+
+      let data;
+      if (isSelf) {
+        const res = await this.octokit.repos.listForAuthenticatedUser({
+          sort: 'updated',
+          per_page: 50,
+        });
+        data = res.data;
+      } else {
+        const res = await this.octokit.repos.listForUser({
+          username,
+          sort: 'updated',
+          per_page: 50,
+        });
+        data = res.data;
+      }
+      
+      // Sort By Stars Descending
+      return data.sort((a, b) => (b.stargazers_count || 0) - (a.stargazers_count || 0)).slice(0, limit);
+    } catch (error: any) {
+      if (error.status === 404) return [];
+      throw error;
+    }
+  }
+
+  // Fetches Languages For A Specific Repo
+  async getRepoLanguages(owner: string, repo: string) {
+    try {
+      const { data } = await this.octokit.repos.listLanguages({
+        owner,
+        repo,
+      });
+      return data as Record<string, number>;
+    } catch (error: any) {
+      return {};
+    }
+  }
+}
