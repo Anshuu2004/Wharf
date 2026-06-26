@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.routes';
 import repoRoutes from './routes/repo.routes';
 import userRoutes from './routes/user.routes';
 import generateRoutes from './routes/generate.routes';
+import profileRoutes from './routes/profile.routes';
 import { initCronJobs } from './utils/cron';
 
 // Load Environment Variables
@@ -33,6 +34,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/repo', repoRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/generate', generateRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {
