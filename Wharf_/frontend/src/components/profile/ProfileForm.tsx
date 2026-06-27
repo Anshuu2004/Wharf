@@ -1,34 +1,44 @@
-import { useState } from 'react'
-import { ArrowRight, User } from 'lucide-react'
-import { Badge, Button, Card, Input } from '../ui'
-import { FaGithub } from 'react-icons/fa'
+import { useState } from 'react';
+import { ArrowRight, User } from 'lucide-react';
+import { Badge, Button, Card, Input } from '../ui';
+import { FaGithub } from 'react-icons/fa';
+
+// Define The User Type
+interface GitHubUser {
+  id?: string | number;
+  login?: string;
+  username?: string;
+  name?: string;
+  email?: string;
+  avatar_url?: string;
+}
 
 interface ProfileFormProps {
-  user: any
-  onFetch: (username: string) => void
-  isLoading: boolean
+  user: GitHubUser | null;
+  onFetch: (username: string) => void;
+  isLoading: boolean;
 }
 
 export const ProfileForm = ({ user, onFetch, isLoading }: ProfileFormProps) => {
-  const [username, setUsername] = useState('')
+  const [username, setUsername] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (username.trim()) {
-      onFetch(username.trim())
+      onFetch(username.trim());
     }
-  }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleSubmit(e)
+      handleSubmit(e);
     }
-  }
+  };
 
   return (
     <Card variant="hard" className="overflow-visible">
       <div className="flex items-center gap-2 border-b-2 border-wharf-border-primary pb-3 mb-4">
-        <FaGithub className="w-5 h-5 text-wharf-pink" />
+        <FaGithub className="w-5 h-5 text-wharf-pink-dark" />
         <span className="font-mono font-bold text-sm uppercase tracking-wider">GitHub Profile</span>
         {user && (
           <Badge variant="cyan" size="sm" className="ml-auto">
@@ -44,19 +54,14 @@ export const ProfileForm = ({ user, onFetch, isLoading }: ProfileFormProps) => {
               <User className="w-4 h-4 text-wharf-text-tertiary" />
             </div>
             <Input
-              placeholder="Enter GitHub username"
+              placeholder="Enter GitHub Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               onKeyDown={handleKeyDown}
               className="pl-9 font-mono text-sm"
             />
           </div>
-          <Button 
-            variant="primary" 
-            type="submit"
-            loading={isLoading}
-            className="min-w-[120px]"
-          >
+          <Button variant="primary" type="submit" loading={isLoading} className="min-w-[120px]">
             {isLoading ? 'Fetching...' : 'Fetch Profile'}
             {!isLoading && <ArrowRight className="w-4 h-4" />}
           </Button>
@@ -70,8 +75,8 @@ export const ProfileForm = ({ user, onFetch, isLoading }: ProfileFormProps) => {
               key={example}
               type="button"
               onClick={() => {
-                setUsername(example)
-                onFetch(example)
+                setUsername(example);
+                onFetch(example);
               }}
               className="px-2 py-1 border border-wharf-border-secondary font-mono text-xs hover:border-wharf-pink hover:bg-wharf-pink/10 transition-colors"
             >
@@ -84,20 +89,21 @@ export const ProfileForm = ({ user, onFetch, isLoading }: ProfileFormProps) => {
           <div className="flex items-center gap-3 p-3 border border-wharf-border-secondary bg-wharf-surface-secondary">
             <FaGithub className="w-4 h-4 text-wharf-text-secondary" />
             <span className="font-mono text-xs text-wharf-text-tertiary">
-              Use your own profile: <button 
+              Use Your Own Profile:{' '}
+              <button
                 type="button"
                 onClick={() => {
-                  setUsername(user.login || user.username || '')
-                  onFetch(user.login || user.username || '')
+                  setUsername(user.login || user.username || '');
+                  onFetch(user.login || user.username || '');
                 }}
-                className="text-wharf-pink hover:underline font-bold"
+                className="text-wharf-pink-dark hover:underline font-bold"
               >
-                @{user.login || user.username}
+                {user.login || user.username}
               </button>
             </span>
           </div>
         )}
       </form>
     </Card>
-  )
-}
+  );
+};
