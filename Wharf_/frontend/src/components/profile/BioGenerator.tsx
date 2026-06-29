@@ -12,8 +12,7 @@ import {
   Smile,
   ChevronDown,
 } from 'lucide-react';
-import { Input } from '../ui';
-import { Button } from '../ui/Button';
+import { Input, Button } from '../ui';
 
 interface BioGeneratorProps {
   bio: string;
@@ -100,7 +99,7 @@ export const BioGenerator = ({ bio, onGenerate }: BioGeneratorProps) => {
           <button
             onClick={() => setIsToneOpen(!isToneOpen)}
             className={`
-              flex items-center justify-between w-full px-3 py-1.5 border-2 transition-all duration-200 text-[10px] font-mono font-bold
+              flex items-center justify-between w-full px-3 py-1.5 border-2 transition-all duration-200 text-[10px] font-mono font-bold cursor-pointer
               ${
                 isToneOpen
                   ? 'border-wharf-border-primary shadow-brutal-sm'
@@ -164,7 +163,7 @@ export const BioGenerator = ({ bio, onGenerate }: BioGeneratorProps) => {
           <button
             onClick={() => setIsLengthOpen(!isLengthOpen)}
             className={`
-              flex items-center justify-between w-full px-3 py-1.5 border-2 transition-all duration-200 text-[10px] font-mono font-bold
+              flex items-center justify-between w-full px-3 py-1.5 border-2 transition-all duration-200 text-[10px] font-mono font-bold cursor-pointer
               ${
                 isLengthOpen
                   ? 'border-wharf-border-primary shadow-brutal-sm'
@@ -230,7 +229,7 @@ export const BioGenerator = ({ bio, onGenerate }: BioGeneratorProps) => {
           <button
             onClick={() => setIsEditing(!isEditing)}
             className={`
-              p-1.5 border transition-all duration-200
+              p-1.5 border transition-all duration-200 cursor-pointer
               ${
                 isEditing
                   ? 'border-wharf-pink bg-wharf-pink/10'

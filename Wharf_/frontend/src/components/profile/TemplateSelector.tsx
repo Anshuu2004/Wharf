@@ -76,7 +76,7 @@ export const TemplateSelector = ({ selected, onChange }: TemplateSelectorProps) 
               key={template.id}
               onClick={() => onChange(template.id)}
               className={`
-                group relative flex flex-col items-center p-4 border transition-all duration-200
+                group relative flex flex-col items-center p-4 border transition-all duration-200 cursor-pointer
                 ${
                   isActive
                     ? `${template.activeBg} border-wharf-border-primary shadow-brutal-sm`

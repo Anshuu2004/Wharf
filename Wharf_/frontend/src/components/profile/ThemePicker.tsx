@@ -72,7 +72,7 @@ export const ThemePicker = ({ selected, onChange }: ThemePickerProps) => {
               key={theme.id}
               onClick={() => onChange(theme.id)}
               className={`
-                group relative flex items-center gap-3 p-3 border-2 transition-all duration-200
+                group relative flex items-center gap-3 p-3 border-2 transition-all duration-200 cursor-pointer
                 ${
                   isActive
                     ? 'border-wharf-border-primary bg-wharf-surface-secondary shadow-brutal-sm'
