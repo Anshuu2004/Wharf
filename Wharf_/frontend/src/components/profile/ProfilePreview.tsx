@@ -1,14 +1,39 @@
-import { Card } from '../ui/Card'
-import { FileText } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
-import rehypeRaw from 'rehype-raw'
-import remarkGfm from 'remark-gfm'
+import { Card } from '../ui/Card';
+import { FileText } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
+import remarkGfm from 'remark-gfm';
+
+// Define Proper Types For Profile Data
+interface ProfileData {
+  name?: string;
+  username?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+  company?: string;
+  skills?: string[];
+  interests?: string[];
+  github?: {
+    username?: string;
+    url?: string;
+  };
+  twitter?: {
+    username?: string;
+    url?: string;
+  };
+  linkedin?: {
+    username?: string;
+    url?: string;
+  };
+  [key: string]: unknown;
+}
 
 interface ProfilePreviewProps {
-  content: string
-  profileData: any
-  template: string
-  theme: string
+  content: string;
+  profileData: ProfileData;
+  template: string;
+  theme: string;
 }
 
 export const ProfilePreview = ({ content }: ProfilePreviewProps) => {
@@ -22,7 +47,7 @@ export const ProfilePreview = ({ content }: ProfilePreviewProps) => {
           <span className="font-mono text-xs ml-2">README.md</span>
         </div>
       </div>
-      
+
       <div className="p-6 max-h-[600px] overflow-y-auto">
         {content ? (
           <div className="markdown-preview prose prose-brutalist max-w-none">
@@ -33,12 +58,12 @@ export const ProfilePreview = ({ content }: ProfilePreviewProps) => {
         ) : (
           <div className="text-center py-12">
             <FileText className="w-12 h-12 text-wharf-text-tertiary mx-auto mb-3" />
-            <p className="font-mono text-sm text-wharf-text-tertiary">
+            <p className="font-mono text-sm text-wharf-text-tertiary capitalize">
               Your profile README will appear here
             </p>
           </div>
         )}
       </div>
     </Card>
-  )
-}
+  );
+};
