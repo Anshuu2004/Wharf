@@ -14,13 +14,19 @@ export interface ProfileData {
   techStack: string[];
   contributions: number;
   joinDate: string;
-  pinnedRepos?: { name: string; description: string; url: string; language: string; stars: number }[];
+  pinnedRepos?: {
+    name: string;
+    description: string;
+    url: string;
+    language: string;
+    stars: number;
+  }[];
 }
 
 export interface ProfileOptions {
   template: 'minimal' | 'developer' | 'creative' | 'professional' | 'terminal';
   theme: string;
-  githubBadges: string[]; // 'stars', 'followers', 'views'
+  githubBadges: string[];
   techStack: string[];
   social: { provider: string; url: string }[];
   showStats: boolean;
@@ -31,7 +37,259 @@ export interface ProfileOptions {
 }
 
 export const buildProfilePrompt = (profileData: ProfileData, options: ProfileOptions): string => {
-  const { template, theme, githubBadges, techStack, social, showStats, showTopLanguages, showContributions, showTrophies, showStreak } = options;
+  const {
+    template,
+    theme,
+    githubBadges,
+    techStack,
+    social,
+    showStats,
+    showTopLanguages,
+    showContributions,
+    showTrophies,
+    showStreak,
+  } = options;
+
+  const mapTechToIcon = (name: string): string => {
+    const map: Record<string, string> = {
+      // Frontend
+      'Alpine.js': 'alpinejs',
+      Angular: 'angular',
+      Astro: 'astro',
+      Bootstrap: 'bootstrap',
+      CSS3: 'css',
+      Electron: 'electron',
+      'Ember.js': 'ember',
+      Figma: 'figma',
+      Gatsby: 'gatsby',
+      HTML5: 'html',
+      HTMX: 'htmx',
+      JavaScript: 'js',
+      jQuery: 'jquery',
+      Lit: 'lit',
+      'Next.js': 'nextjs',
+      'Nuxt.js': 'nuxtjs',
+      'p5.js': 'p5js',
+      React: 'react',
+      Remix: 'remix',
+      Sass: 'sass',
+      'Solid.js': 'solidjs',
+      Svelte: 'svelte',
+      SVG: 'svg',
+      'Tailwind CSS': 'tailwind',
+      'Three.js': 'threejs',
+      TypeScript: 'ts',
+      'Vue.js': 'vue',
+      Vuetify: 'vuetify',
+      WebAssembly: 'wasm',
+      Webflow: 'webflow',
+      'Windi CSS': 'windicss',
+
+      // Backend & APIs
+      Actix: 'actix',
+      AdonisJS: 'adonis',
+      'Apollo GraphQL': 'apollo',
+      Deno: 'deno',
+      Django: 'django',
+      Elysia: 'elysia',
+      'Express.js': 'express',
+      FastAPI: 'fastapi',
+      Flask: 'flask',
+      GraphQL: 'graphql',
+      Hibernate: 'hibernate',
+      Ktor: 'ktor',
+      Laravel: 'laravel',
+      NestJS: 'nestjs',
+      'Node.js': 'nodejs',
+      PHP: 'php',
+      Rails: 'rails',
+      Rocket: 'rocket',
+      Spring: 'spring',
+      Symfony: 'symfony',
+
+      // Programming Languages
+      C: 'c',
+      'C#': 'cs',
+      'C++': 'cpp',
+      Clojure: 'clojure',
+      CoffeeScript: 'coffeescript',
+      Crystal: 'crystal',
+      Dart: 'dart',
+      Elixir: 'elixir',
+      Forth: 'forth',
+      Fortran: 'fortran',
+      Go: 'go',
+      Haskell: 'haskell',
+      Haxe: 'haxe',
+      Java: 'java',
+      Kotlin: 'kotlin',
+      Lua: 'lua',
+      MATLAB: 'matlab',
+      Mint: 'mint',
+      Nim: 'nim',
+      Nix: 'nix',
+      OCaml: 'ocaml',
+      Octave: 'octave',
+      Perl: 'perl',
+      'Plan 9': 'plan9',
+      Python: 'py',
+      R: 'r',
+      Ruby: 'ruby',
+      Rust: 'rust',
+      Scala: 'scala',
+      Solidity: 'solidity',
+      Swift: 'swift',
+      V: 'v',
+      Vala: 'vala',
+      Zig: 'zig',
+
+      // Databases & ORMs
+      Cassandra: 'cassandra',
+      DynamoDB: 'dynamodb',
+      Elasticsearch: 'elasticsearch',
+      MongoDB: 'mongodb',
+      MySQL: 'mysql',
+      PlanetScale: 'planetscale',
+      PostgreSQL: 'postgres',
+      Prisma: 'prisma',
+      Redis: 'redis',
+      Sequelize: 'sequelize',
+      SQLite: 'sqlite',
+      Supabase: 'supabase',
+
+      // DevOps & Cloud
+      Ansible: 'ansible',
+      AWS: 'aws',
+      Azure: 'azure',
+      Cloudflare: 'cloudflare',
+      Docker: 'docker',
+      GCP: 'gcp',
+      'GitHub Actions': 'githubactions',
+      Grafana: 'grafana',
+      Heroku: 'heroku',
+      Jenkins: 'jenkins',
+      Kafka: 'kafka',
+      Kubernetes: 'kubernetes',
+      Netlify: 'netlify',
+      Nginx: 'nginx',
+      OpenShift: 'openshift',
+      OpenStack: 'openstack',
+      Prometheus: 'prometheus',
+      RabbitMQ: 'rabbitmq',
+      'Red Hat': 'redhat',
+      Sentry: 'sentry',
+      Terraform: 'terraform',
+      Vercel: 'vercel',
+      Workers: 'workers',
+
+      // Mobile Development
+      Android: 'androidstudio',
+      Flutter: 'flutter',
+      iOS: 'apple',
+      'React Native': 'react',
+      Unity: 'unity',
+
+      // Game Development
+      Bevy: 'bevy',
+      'GameMaker Studio': 'gamemakerstudio',
+      Godot: 'godot',
+      OpenCV: 'opencv',
+      'Roblox Studio': 'robloxstudio',
+      'Unreal Engine': 'unreal',
+
+      // Data Science & ML
+      Anaconda: 'anaconda',
+      PyTorch: 'pytorch',
+      'Scikit-Learn': 'sklearn',
+      TensorFlow: 'tensorflow',
+
+      // Tools & IDEs
+      'Android Studio': 'androidstudio',
+      CLion: 'clion',
+      CMake: 'cmake',
+      CodePen: 'codepen',
+      Eclipse: 'eclipse',
+      Emacs: 'emacs',
+      Git: 'git',
+      GitHub: 'github',
+      GitLab: 'gitlab',
+      Gradle: 'gradle',
+      Gulp: 'gulp',
+      'IntelliJ IDEA': 'idea',
+      Maven: 'maven',
+      Neovim: 'neovim',
+      Notion: 'notion',
+      npm: 'npm',
+      PhpStorm: 'phpstorm',
+      pnpm: 'pnpm',
+      Postman: 'postman',
+      PyCharm: 'pycharm',
+      Replit: 'replit',
+      Rider: 'rider',
+      'Sublime Text': 'sublime',
+      Vim: 'vim',
+      'Visual Studio': 'visualstudio',
+      'VS Code': 'vscode',
+      VSCodium: 'vscodium',
+      WebStorm: 'webstorm',
+      Yarn: 'yarn',
+
+      // Build Tools & Bundlers
+      Babel: 'babel',
+      'Rollup.js': 'rollupjs',
+      Vite: 'vite',
+      Vitest: 'vitest',
+      Webpack: 'webpack',
+
+      // Frameworks & Libraries
+      'D3.js': 'd3',
+      'Discord.js': 'discordjs',
+      Emotion: 'emotion',
+      GTK: 'gtk',
+      HaxeFlixel: 'haxeflixel',
+      Jest: 'jest',
+      'Material-UI': 'materialui',
+      Pinia: 'pinia',
+      Pug: 'pug',
+      Qt: 'qt',
+      ReactiveX: 'reactivex',
+      Redux: 'redux',
+      Selenium: 'selenium',
+      'Styled Components': 'styledcomponents',
+      Tauri: 'tauri',
+      Yew: 'yew',
+
+      // Operating Systems
+      'Arch Linux': 'arch',
+      BSD: 'bsd',
+      Debian: 'debian',
+      'Kali Linux': 'kali',
+      Linux: 'linux',
+      macOS: 'apple',
+      'Raspberry Pi': 'raspberrypi',
+      Ubuntu: 'ubuntu',
+      Windows: 'windows',
+
+      // Social & Community
+      ActivityPub: 'activitypub',
+      'Dev.to': 'devto',
+      Discord: 'discord',
+      'Discord Bots': 'bots',
+      Fediverse: 'fediverse',
+      Instagram: 'instagram',
+      LinkedIn: 'linkedin',
+      Mastodon: 'mastodon',
+      Misskey: 'misskey',
+      'Stack Overflow': 'stackoverflow',
+      Twitter: 'twitter',
+    };
+
+    return map[name] || name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  };
+
+  const stackToUse = techStack.length > 0 ? techStack : profileData.techStack;
+  const slugs = stackToUse.map((tech: string) => mapTechToIcon(tech)).join(',');
+  const formattedStack = `  <img \n    src="https://skillicons.dev/icons?i=${slugs}&perline=18"\n    width="100%"\n  />`;
 
   return `
 You are an expert GitHub profile README designer and Markdown writer.
@@ -49,13 +307,13 @@ Total Stars Received: ${profileData.totalStars}
 Account Created Date: ${profileData.joinDate}
 
 TOP LANGUAGES:
-${profileData.topLanguages.map(l => `- ${l.name}: ${l.percentage}%`).join('\n')}
+${profileData.topLanguages.map((l) => `- ${l.name}: ${l.percentage}%`).join('\n')}
 
 DETECTED TECH STACK (Limit to what user selected or top stack):
 ${techStack.length > 0 ? techStack.join(', ') : profileData.techStack.join(', ')}
 
 PINNED REPOSITORIES:
-${profileData.pinnedRepos?.map(r => `- ${r.name}: ${r.description} (${r.language}, ${r.stars} stars)`).join('\n') || 'None'}
+${profileData.pinnedRepos?.map((r) => `- ${r.name}: ${r.description} (${r.language}, ${r.stars} stars)`).join('\n') || 'None'}
 
 ### REQUIRED OUTPUT FORMAT:
 
@@ -81,16 +339,22 @@ DO NOT wrap the response in a JSON block. Output raw markdown only.
 ##
 
 ### ⚙ Languages & Technologies <br><br>
+
 <p align="left">
   <!-- Generate skillicons.dev icons based off the DETECTED TECH STACK -->
-  <!-- Format: <a href="https://skillicons.dev" target="_blank" title="SkillName"><img src="https://skillicons.dev/icons?i=skillname" alt="SkillName" /></a> &nbsp;&nbsp; -->
-  <!-- Ensure you only use valid skillicons identifiers, use groups if needed. Ask user's options techstack where possible -->
-  ${(techStack.length > 0 ? techStack : profileData.techStack).map(tech => `<a href="https://skillicons.dev" target="_blank" title="${tech}"><img src="https://skillicons.dev/icons?i=${tech}" alt="${tech}" /></a> &nbsp;&nbsp;`).join('')}
+  <!-- Format: -->
+  <!-- <img -->
+  <!--   src="https://skillicons.dev/icons?i=slug1,slug2,slug3&perline=18" -->
+  <!--   width="100%" -->
+  <!-- /> -->
+${formattedStack}
 </p>
 
 ##
 
-${showStats ? `### 📊 GitHub Stats
+${
+  showStats
+    ? `### 📊 GitHub Stats
 <p align="center"> 
   <img height="180em" width="430" src="https://github-readme-stats-sigma-five.vercel.app/api?username=${profileData.username}&show_icons=true&theme=${theme}&include_all_commits=true&count_private=true"/> &nbsp;
   ${showTopLanguages ? `<img height="180em" width="386" src="https://github-readme-stats-sigma-five.vercel.app/api/top-langs/?username=${profileData.username}&layout=compact&theme=${theme}"/> <br>` : '<br>'}
@@ -108,16 +372,32 @@ ${showStats ? `### 📊 GitHub Stats
 
 | Name | Description | Stars | Links |
 |---|---|---|---|
-${profileData.pinnedRepos?.length ? profileData.pinnedRepos.slice(0, 5).map(r => `| ${r.name} | ${r.description?.replace(/\\|/g, '')?.replace(/\|/g, '-') || ''} | ${r.stars} ⭐ | [View Repository](${r.url}) |`).join('\\n') : '| None | No repositories found | 0 ⭐ | - |'}
+${
+  profileData.pinnedRepos?.length
+    ? profileData.pinnedRepos
+        .slice(0, 5)
+        .map(
+          (r) =>
+            `| ${r.name} | ${r.description?.replace(/\\|/g, '')?.replace(/\|/g, '-') || ''} | ${r.stars} ⭐ | [View Repository](${r.url}) |`
+        )
+        .join('\\n')
+    : '| None | No repositories found | 0 ⭐ | - |'
+}
 
-##` : ''}
+##`
+    : ''
+}
 
-${showTrophies ? `### 🏆 GitHub Trophies
+${
+  showTrophies
+    ? `### 🏆 GitHub Trophies
 <p align="center">
   <img src="https://github-trophies.vercel.app/?username=${profileData.username}&theme=${theme}&row=1&column=6" />
 </p>
 
-##` : ''}
+##`
+    : ''
+}
 
 <p align="right">
   <img align="right" src="https://res.cloudinary.com/dhn92qb61/image/upload/v1751383267/123_qcnao2.webp" height="180px" width="180px" />
@@ -126,11 +406,20 @@ ${showTrophies ? `### 🏆 GitHub Trophies
 ### 🔗 Let's Connect!
 I'd love to connect & explore new possibilities together. Send a spark my way! ⚡ <br>
 <div align="left">
-  ${social.map((s: any) => {
-    const colors: Record<string, string> = { linkedin: '0077B5', github: '181717', portfolio: '3a86ff', gmail: 'EA4335', discord: '5865F2', twitter: '1DA1F2' };
-    const color = colors[s.provider.toLowerCase()] || '181717';
-    return `<a href="${s.url}" target="_blank"><img src="https://img.shields.io/badge/-${s.provider}-${color}?style=for-the-badge&logo=${s.provider.toLowerCase()}&logoColor=white" alt="${s.provider}"/></a> &nbsp;`;
-  }).join('')}
+  ${social
+    .map((s: any) => {
+      const colors: Record<string, string> = {
+        linkedin: '0077B5',
+        github: '181717',
+        portfolio: '3a86ff',
+        gmail: 'EA4335',
+        discord: '5865F2',
+        twitter: '1DA1F2',
+      };
+      const color = colors[s.provider.toLowerCase()] || '181717';
+      return `<a href="${s.url}" target="_blank"><img src="https://img.shields.io/badge/-${s.provider}-${color}?style=for-the-badge&logo=${s.provider.toLowerCase()}&logoColor=white" alt="${s.provider}"/></a> &nbsp;`;
+    })
+    .join('')}
 </div>
 
 ##
@@ -138,18 +427,12 @@ I'd love to connect & explore new possibilities together. Send a spark my way! �
 <br>
 
 <!-- Minimal Documentation Badge -->
-<div align="right">
-  <a href="https://trywharf.vercel.app/" target="_blank" style="text-decoration:none;display:inline-block;">
-    <div style="display:inline-flex;align-items:center;gap:10px;padding:4px 12px;border:2px solid #eaeaea;border-radius:20px;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-      <div style="width:32px;height:32px;min-width:32px;border:1px solid #444444;border-radius:999px;display:flex;align-items:center;justify-content:center;background:#ffffff;">
-        <img src="https://res.cloudinary.com/dhn92qb61/image/upload/v1777107144/Wharf_Logo-Photoroom_upscaled_tgvwm2.webp" alt="Wharf" style="width:32px;height:32px;object-fit:contain;" />
-      </div>
-      <div style="width:1px;height:18px;background:#444444;"></div>
-      <span style="font-size:12px;color:#0f172a;font-weight:600;">Documented By Wharf</span>
-    </div>
+<p align="right">
+  <a href="https://trywharf.vercel.app/" target="_blank">
+    <img src="https://res.cloudinary.com/dhn92qb61/image/upload/v1782741355/wharf_badge__qguiv.png" alt="Documented By Wharf" width="200" height="auto" />
   </a>
-</div>
+</p>
 
 Generate the profile README now perfectly following the format above. Do not include markdown code block wrappers:
 `;
-}
+};
