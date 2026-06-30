@@ -1,66 +1,77 @@
-import { Sparkles, FileText, GitBranch, CheckCircle2, Loader2, Clock, Zap, Rocket } from 'lucide-react'
-import { Card } from '../ui/Card'
+import {
+  Sparkles,
+  FileText,
+  GitBranch,
+  CheckCircle2,
+  Loader2,
+  Clock,
+  Zap,
+  Rocket,
+} from 'lucide-react';
+import { Card } from '../ui/Card';
 
 interface Step {
-  id: string
-  label: string
-  icon: React.ElementType
-  description?: string
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  description?: string;
 }
 
 const steps: Step[] = [
-  { 
-    id: 'analyzing', 
-    label: 'Analyzing repository structure', 
+  {
+    id: 'analyzing',
+    label: 'Analyzing repository structure',
     icon: GitBranch,
-    description: 'Scanning your codebase and dependencies'
+    description: 'Scanning your codebase and dependencies',
   },
-  { 
-    id: 'generating', 
-    label: 'Generating documentation', 
+  {
+    id: 'generating',
+    label: 'Generating documentation',
     icon: Sparkles,
-    description: 'Creating comprehensive README content'
+    description: 'Creating comprehensive README content',
   },
-  { 
-    id: 'formatting', 
-    label: 'Formatting markdown', 
+  {
+    id: 'formatting',
+    label: 'Formatting markdown',
     icon: FileText,
-    description: 'Applying professional styling and structure'
+    description: 'Applying professional styling and structure',
   },
-]
+];
 
 interface GenerationProgressProps {
-  progress?: number
-  currentStep?: number
-  isComplete?: boolean
-  estimatedTime?: string
+  progress?: number;
+  currentStep?: number;
+  isComplete?: boolean;
+  estimatedTime?: string;
 }
 
-export const GenerationProgress = ({ 
+export const GenerationProgress = ({
   progress = 0,
   currentStep = 0,
   isComplete = false,
-  estimatedTime = '~2 minutes'
+  estimatedTime = '~2 minutes',
 }: GenerationProgressProps) => {
-  const activeStep = Math.min(currentStep, steps.length - 1)
-  const isFinished = progress >= 100 || isComplete
+  const activeStep = Math.min(currentStep, steps.length - 1);
+  const isFinished = progress >= 100 || isComplete;
 
   return (
     <Card variant="hard" className="relative overflow-hidden border-4 border-wharf-border-primary">
       {/* Background */}
       <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-wharf-teal via-wharf-cyan to-wharf-green" />
-      
+
       <div className="relative p-6 text-center">
         {/* Status Icon */}
         <div className="flex justify-center mb-4">
           <div className="relative">
             {/* Outer Ring */}
-            <div className={`
+            <div
+              className={`
               w-20 h-20 rounded-full border-4 border-wharf-border-primary 
               flex items-center justify-center
               ${isFinished ? 'bg-wharf-green' : 'bg-wharf-surface-secondary'}
               transition-all duration-500
-            `}>
+            `}
+            >
               {isFinished ? (
                 <CheckCircle2 className="w-10 h-10 text-wharf-text-primary" />
               ) : (
@@ -72,12 +83,15 @@ export const GenerationProgress = ({
                 </div>
               )}
             </div>
-            
+
             {/* Pulsing Ring Effect */}
             {!isFinished && (
               <>
                 <div className="absolute inset-0 rounded-full border-4 border-wharf-teal animate-ping opacity-30" />
-                <div className="absolute inset-0 rounded-full border-4 border-wharf-cyan animate-pulse opacity-20" style={{ animationDelay: '0.5s' }} />
+                <div
+                  className="absolute inset-0 rounded-full border-4 border-wharf-cyan animate-pulse opacity-20"
+                  style={{ animationDelay: '0.5s' }}
+                />
               </>
             )}
           </div>
@@ -87,7 +101,7 @@ export const GenerationProgress = ({
         <h3 className="font-display font-black text-2xl tracking-tight mb-1">
           {isFinished ? '✨ README Ready!' : 'Generating Your README'}
         </h3>
-        
+
         {!isFinished && (
           <p className="font-mono text-sm text-wharf-text-tertiary mb-3 capitalize">
             Please wait while we craft your documentation
@@ -114,7 +128,7 @@ export const GenerationProgress = ({
               </div>
             </div>
             <div className="w-full h-4 border-2 border-wharf-border-primary bg-wharf-surface-secondary overflow-hidden">
-              <div 
+              <div
                 className={`
                   h-full bg-gradient-to-r from-wharf-teal via-wharf-cyan to-wharf-green 
                   transition-all duration-700 ease-out
@@ -134,13 +148,13 @@ export const GenerationProgress = ({
         {/* Steps */}
         <div className="space-y-2.5 w-full max-w-sm mx-auto">
           {steps.map((step, index) => {
-            const isActive = index === activeStep && !isFinished
-            const isCompleted = index < activeStep || isFinished
-            const Icon = step.icon
-            
+            const isActive = index === activeStep && !isFinished;
+            const isCompleted = index < activeStep || isFinished;
+            const Icon = step.icon;
+
             return (
-              <div 
-                key={step.id} 
+              <div
+                key={step.id}
                 className={`
                   flex items-center gap-3 p-3 border-2 transition-all duration-300
                   ${isCompleted ? 'border-wharf-green bg-wharf-green/10' : ''}
@@ -149,13 +163,15 @@ export const GenerationProgress = ({
                 `}
               >
                 {/* Step Indicator */}
-                <div className={`
+                <div
+                  className={`
                   w-8 h-8 border-2 border-wharf-border-primary flex items-center justify-center flex-shrink-0
                   ${isCompleted ? 'bg-wharf-green' : ''}
                   ${isActive ? 'bg-wharf-teal animate-pulse' : ''}
                   ${!isCompleted && !isActive ? 'bg-wharf-surface-secondary' : ''}
                   transition-all duration-300
-                `}>
+                `}
+                >
                   {isCompleted ? (
                     <CheckCircle2 className="w-4 h-4 text-wharf-text-primary" />
                   ) : isActive ? (
@@ -168,12 +184,14 @@ export const GenerationProgress = ({
                 {/* Step Content */}
                 <div className="flex-1 text-left">
                   <div className="flex items-center gap-2">
-                    <span className={`
+                    <span
+                      className={`
                       font-mono font-bold text-sm
                       ${isCompleted ? 'text-wharf-text-primary' : ''}
                       ${isActive ? 'text-wharf-text-primary' : ''}
                       ${!isCompleted && !isActive ? 'text-wharf-text-tertiary' : ''}
-                    `}>
+                    `}
+                    >
                       {step.label}
                     </span>
                     {isCompleted && (
@@ -188,10 +206,12 @@ export const GenerationProgress = ({
                     )}
                   </div>
                   {step.description && (
-                    <p className={`
+                    <p
+                      className={`
                       font-mono text-[10px] mt-0.5
                       ${isCompleted || isActive ? 'text-wharf-text-secondary' : 'text-wharf-text-tertiary'}
-                    `}>
+                    `}
+                    >
                       {step.description}
                     </p>
                   )}
@@ -202,7 +222,7 @@ export const GenerationProgress = ({
                   {index + 1}/{steps.length}
                 </span>
               </div>
-            )
+            );
           })}
         </div>
 
@@ -232,5 +252,5 @@ export const GenerationProgress = ({
         )}
       </div>
     </Card>
-  )
-}
+  );
+};
