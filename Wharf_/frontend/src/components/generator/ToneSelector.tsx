@@ -53,7 +53,7 @@ export const ToneSelector = ({ value, onChange }: ToneSelectorProps) => {
             key={tone.id}
             onClick={() => onChange(tone.id as 'technical' | 'recruiter' | 'beginner')}
             className={`
-              group relative p-4 text-left border-2 transition-all duration-300
+              group relative p-4 text-left border-2 transition-all duration-300 cursor-pointer
               ${
                 isActive
                   ? `${tone.bgColor} border-wharf-border-primary shadow-brutal-sm`

@@ -92,19 +92,19 @@ export const RepoSelector = ({ user, onSelect }: RepoSelectorProps) => {
   const getLanguageColor = (language: string) => {
     const colors: Record<string, string> = {
       JavaScript: 'bg-wharf-yellow',
-      TypeScript: 'bg-wharf-cyan',
-      Python: 'bg-wharf-green',
-      Java: 'bg-wharf-orange',
-      Go: 'bg-wharf-cyan',
-      Rust: 'bg-wharf-orange',
-      'C++': 'bg-wharf-purple',
-      'C#': 'bg-wharf-purple',
-      Ruby: 'bg-wharf-pink',
-      PHP: 'bg-wharf-purple',
-      HTML: 'bg-wharf-orange',
-      CSS: 'bg-wharf-pink',
-      Swift: 'bg-wharf-orange',
-      Kotlin: 'bg-wharf-purple',
+      TypeScript: 'bg-wharf-cyan-darker',
+      Python: 'bg-wharf-cyan-darker',
+      Java: 'bg-wharf-error',
+      Go: 'bg-wharf-green-darker',
+      Rust: 'bg-wharf-purple-darker',
+      'C++': 'bg-wharf-cyan-darker',
+      'C#': 'bg-wharf-purple-darker',
+      Ruby: 'bg-wharf-error',
+      PHP: 'bg-wharf-purple-darker',
+      HTML: 'bg-wharf-error',
+      CSS: 'bg-wharf-cyan-darker',
+      Swift: 'bg-wharf-error',
+      Kotlin: 'bg-wharf-error',
     };
     return colors[language] || 'bg-wharf-border-secondary';
   };
@@ -115,7 +115,7 @@ export const RepoSelector = ({ user, onSelect }: RepoSelectorProps) => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={!user}
-        className="w-full flex items-center justify-between p-3.5 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-surface-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full flex items-center justify-between p-3.5 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-surface-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
         <div className="flex items-center gap-3 min-w-0">
           <FaGithub className="w-4 h-4 flex-shrink-0" />
@@ -159,7 +159,7 @@ export const RepoSelector = ({ user, onSelect }: RepoSelectorProps) => {
               <button
                 onClick={refreshRepos}
                 disabled={isRefreshing}
-                className="p-2 border border-wharf-border-secondary hover:border-wharf-pink hover:bg-wharf-pink/10 transition-colors disabled:opacity-50"
+                className="p-2 border border-wharf-border-secondary hover:border-wharf-pink hover:bg-wharf-pink/10 transition-colors disabled:opacity-50 cursor-pointer"
                 title="Refresh repositories"
               >
                 <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -180,8 +180,8 @@ export const RepoSelector = ({ user, onSelect }: RepoSelectorProps) => {
                   <div className="w-16 h-16 border-2 border-wharf-border-primary flex items-center justify-center mx-auto">
                     <FaGithub className="w-8 h-8 text-wharf-text-tertiary" />
                   </div>
-                  <p className="font-mono text-sm text-wharf-text-tertiary">
-                    Please connect your GitHub account to view repositories.
+                  <p className="font-mono text-sm text-wharf-text-secondary capitalize">
+                    Please connect your GitHub account to view repositories...
                   </p>
                   <a
                     href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/auth/github`}
@@ -194,13 +194,13 @@ export const RepoSelector = ({ user, onSelect }: RepoSelectorProps) => {
               ) : filteredRepos.length === 0 ? (
                 <div className="p-8 text-center">
                   <Search className="w-8 h-8 text-wharf-text-tertiary mx-auto mb-2 opacity-50" />
-                  <p className="font-mono text-sm text-wharf-text-tertiary">
+                  <p className="font-mono text-sm text-wharf-text-secondary capitalize">
                     {searchQuery ? 'No repositories match your search' : 'No repositories found'}
                   </p>
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="mt-2 font-mono text-xs text-wharf-pink hover:underline"
+                      className="mt-2 font-mono text-xs text-wharf-error hover:underline capitalize cursor-pointer"
                     >
                       Clear search
                     </button>
@@ -214,7 +214,7 @@ export const RepoSelector = ({ user, onSelect }: RepoSelectorProps) => {
                       onSelect(repo);
                       setIsOpen(false);
                     }}
-                    className="w-full p-3.5 text-left hover:bg-wharf-surface-secondary transition-colors border-b border-wharf-border-secondary last:border-b-0 group"
+                    className="w-full p-3.5 text-left hover:bg-wharf-surface-secondary transition-colors border-b border-wharf-border-secondary last:border-b-0 group cursor-pointer"
                   >
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2 min-w-0">

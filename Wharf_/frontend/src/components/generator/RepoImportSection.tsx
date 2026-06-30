@@ -126,7 +126,7 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
           </button>
           <button
             onClick={() => setImportMethod('github')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3.5 font-mono font-bold text-sm transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 font-mono font-bold text-sm transition-colors cursor-pointer ${
               importMethod === 'github'
                 ? 'bg-wharf-pink text-wharf-black'
                 : 'bg-wharf-surface-secondary hover:bg-wharf-surface-tertiary'
@@ -178,7 +178,7 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
                   <button
                     key={example}
                     onClick={() => setRepoUrl(`https://github.com/${example}`)}
-                    className="px-2 py-1 border border-wharf-border-secondary font-mono text-xs hover:border-wharf-pink hover:bg-wharf-pink/10 transition-colors"
+                    className="px-2 py-1 border border-wharf-border-secondary font-mono text-xs hover:border-wharf-pink hover:bg-wharf-pink/10 transition-colors cursor-pointer"
                   >
                     {example}
                   </button>

@@ -2,23 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { PageWrapper } from '../components/layout';
 import { Badge, Button, Card } from '../components/ui';
-import {
-  AlignLeft,
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle,
-  GitBranch,
-  Files,
-  FileText,
-  Zap,
-  LayoutTemplate,
-  Download,
-  History,
-  PlusCircle,
-  User,
-  Clock,
-  Code,
-} from 'lucide-react';
+import { AlignLeft, ArrowLeft, ArrowRight, CheckCircle, GitBranch, Files, FileText, Zap, LayoutTemplate, Download, History, PlusCircle, User, Clock, Code } from 'lucide-react';
 import {
   RepoImportSection,
   GeneratorOptions,

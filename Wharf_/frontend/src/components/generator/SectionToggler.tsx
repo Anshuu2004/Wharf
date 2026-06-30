@@ -49,7 +49,7 @@ export const SectionToggler = ({ selected, onChange }: SectionTogglerProps) => {
             key={section.id}
             onClick={() => toggleSection(section.id)}
             className={`
-              group relative flex items-center gap-2 px-3 py-2.5 border-2 transition-all duration-200
+              group relative flex items-center gap-2 px-3 py-2.5 border-2 transition-all duration-200 cursor-pointer
               ${
                 isSelected
                   ? 'bg-gradient-to-br from-wharf-yellow to-wharf-yellow-dark border-wharf-border-primary shadow-brutal-sm'
