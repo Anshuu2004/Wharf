@@ -1,25 +1,15 @@
-import { useState, useEffect } from 'react'
-import { useAuthStore } from '../stores/authStore'
-import { PageWrapper } from '../components/layout'
-import { 
-  RepoImportSection, 
-  GeneratorOptions, 
-  GenerationProgress,
-  ReadmePreview,
-  ExportActions,
-  GenerationHistory
-} from '../components/generator'
-import { Button } from '../components/ui/Button'
-import { Badge } from '../components/ui/Badge'
-import { Card } from '../components/ui/Card'
-import { 
+import { useState, useEffect } from 'react';
+import { useAuthStore } from '../stores/authStore';
+import { PageWrapper } from '../components/layout';
+import { Badge, Button, Card } from '../components/ui';
+import {
   AlignLeft,
-  ArrowLeft, 
-  ArrowRight, 
-  CheckCircle, 
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle,
   GitBranch,
-  Files, 
-  FileText, 
+  Files,
+  FileText,
   Zap,
   LayoutTemplate,
   Download,
@@ -27,54 +17,62 @@ import {
   PlusCircle,
   User,
   Clock,
-  Code
-} from 'lucide-react'
-import api from '../lib/api'
+  Code,
+} from 'lucide-react';
+import {
+  RepoImportSection,
+  GeneratorOptions,
+  GenerationProgress,
+  ReadmePreview,
+  ExportActions,
+  GenerationHistory,
+} from '../components/generator';
+import api from '../lib/api';
 
 // Define Proper Types
 interface RepoData {
-  url: string
-  owner: string
-  repo: string
-  description: string
-  stars: number
-  forks: number
-  language: string
-  framework: string[]
+  url: string;
+  owner: string;
+  repo: string;
+  description: string;
+  stars: number;
+  forks: number;
+  language: string;
+  framework: string[];
 }
 
 interface GeneratorOptionsType {
-  tone: 'technical' | 'recruiter' | 'beginner'
-  sections: string[]
+  tone: 'technical' | 'recruiter' | 'beginner';
+  sections: string[];
 }
 
 // User Stats Section
 const UserStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) => {
-  const { user } = useAuthStore()
-  const [isLoading, setIsLoading] = useState(true)
+  const { user } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({
     totalRepos: 0,
     readmesGenerated: 0,
     totalWords: 0,
     avgLength: 0,
     mostUsedFramework: '--',
-    lastGenerated: '--'
-  })
+    lastGenerated: '--',
+  });
 
   useEffect(() => {
-    if (!user) return
+    if (!user) return;
 
-    let isMounted = true
+    let isMounted = true;
 
     const fetchStats = async () => {
       try {
-        setIsLoading(true)
-        const res = await api.get('/generate/history')
-        if (!isMounted) return
+        setIsLoading(true);
+        const res = await api.get('/generate/history');
+        if (!isMounted) return;
 
         if (res.data?.success) {
-          const history = res.data.data
-          
+          const history = res.data.data;
+
           if (!history || history.length === 0) {
             setStats({
               totalRepos: 0,
@@ -82,49 +80,61 @@ const UserStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) => {
               totalWords: 0,
               avgLength: 0,
               mostUsedFramework: '--',
-              lastGenerated: '--'
-            })
-            setIsLoading(false)
-            return
+              lastGenerated: '--',
+            });
+            setIsLoading(false);
+            return;
           }
 
-          const uniqueRepos = new Set(history.map((r: any) => r.repository?.url))
-          let totalWords = 0
-          const frameworkCounts: Record<string, number> = {}
-          let latestDate = 0
+          const uniqueRepos = new Set(
+            history.map((r: { repository?: { url: string } }) => r.repository?.url)
+          );
+          let totalWords = 0;
+          const frameworkCounts: Record<string, number> = {};
+          let latestDate = 0;
 
-          history.forEach((r: any) => {
-            const wordCount = typeof r.wordCount === 'number' ? r.wordCount : (r.content?.split(/\s+/).filter(Boolean).length || 0)
-            totalWords += wordCount
-            
-            const lang = r.repository?.language || 'Unknown'
-            frameworkCounts[lang] = (frameworkCounts[lang] || 0) + 1
+          history.forEach(
+            (r: {
+              wordCount?: number;
+              content?: string;
+              repository?: { language: string };
+              createdAt: string;
+            }) => {
+              const wordCount =
+                typeof r.wordCount === 'number'
+                  ? r.wordCount
+                  : r.content?.split(/\s+/).filter(Boolean).length || 0;
+              totalWords += wordCount;
 
-            const date = new Date(r.createdAt).getTime()
-            if (date > latestDate) latestDate = date
-          })
+              const lang = r.repository?.language || 'Unknown';
+              frameworkCounts[lang] = (frameworkCounts[lang] || 0) + 1;
 
-          const sortedFrameworks = Object.entries(frameworkCounts).sort((a, b) => b[1] - a[1])
-          const mostUsed = sortedFrameworks.length > 0 ? sortedFrameworks[0][0] : '--'
-          
+              const date = new Date(r.createdAt).getTime();
+              if (date > latestDate) latestDate = date;
+            }
+          );
+
+          const sortedFrameworks = Object.entries(frameworkCounts).sort((a, b) => b[1] - a[1]);
+          const mostUsed = sortedFrameworks.length > 0 ? sortedFrameworks[0][0] : '--';
+
           const targetStats = {
             totalRepos: uniqueRepos.size,
             readmesGenerated: history.length,
             totalWords,
             avgLength: Math.round(totalWords / history.length),
             mostUsedFramework: mostUsed,
-            lastGenerated: new Date(latestDate).toLocaleDateString()
-          }
+            lastGenerated: new Date(latestDate).toLocaleDateString(),
+          };
 
-          const duration = 1500
-          const steps = 30
-          const interval = duration / steps
-          let currentStep = 0
-          
+          const duration = 1500;
+          const steps = 30;
+          const interval = duration / steps;
+          let currentStep = 0;
+
           const timer = setInterval(() => {
-            currentStep++
-            const progress = currentStep / steps
-            
+            currentStep++;
+            const progress = currentStep / steps;
+
             if (isMounted) {
               setStats({
                 totalRepos: Math.floor(targetStats.totalRepos * progress),
@@ -132,27 +142,29 @@ const UserStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) => {
                 totalWords: Math.floor(targetStats.totalWords * progress),
                 avgLength: Math.floor(targetStats.avgLength * progress),
                 mostUsedFramework: currentStep > steps / 2 ? targetStats.mostUsedFramework : '--',
-                lastGenerated: currentStep > steps / 2 ? targetStats.lastGenerated : '--'
-              })
+                lastGenerated: currentStep > steps / 2 ? targetStats.lastGenerated : '--',
+              });
             }
 
             if (currentStep >= steps) {
-              clearInterval(timer)
+              clearInterval(timer);
             }
-          }, interval)
+          }, interval);
 
-          setIsLoading(false)
-          return () => clearInterval(timer)
+          setIsLoading(false);
+          return () => clearInterval(timer);
         }
       } catch (err) {
-        console.error('Failed to fetch user stats:', err)
-        if (isMounted) setIsLoading(false)
+        console.error('Failed to fetch user stats:', err);
+        if (isMounted) setIsLoading(false);
       }
-    }
+    };
 
-    fetchStats()
-    return () => { isMounted = false }
-  }, [user, refreshTrigger])
+    fetchStats();
+    return () => {
+      isMounted = false;
+    };
+  }, [user, refreshTrigger]);
 
   const statItems = [
     {
@@ -160,44 +172,44 @@ const UserStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) => {
       value: isLoading ? '--' : stats.totalRepos.toLocaleString(),
       icon: GitBranch,
       color: 'bg-wharf-pink',
-      description: 'Total repos analyzed'
+      description: 'Total repos analyzed',
     },
     {
       label: 'READMEs Generated',
       value: isLoading ? '--' : stats.readmesGenerated.toLocaleString(),
       icon: Files,
       color: 'bg-wharf-cyan',
-      description: 'Docs created by you'
+      description: 'Docs created by you',
     },
     {
       label: 'Total Words',
       value: isLoading ? '--' : stats.totalWords.toLocaleString(),
       icon: FileText,
       color: 'bg-wharf-yellow',
-      description: 'Words generated by AI'
+      description: 'Words generated by AI',
     },
     {
       label: 'Avg Length',
       value: isLoading ? '--' : `${stats.avgLength} words`,
       icon: AlignLeft,
       color: 'bg-wharf-purple',
-      description: 'Words per README'
+      description: 'Words per README',
     },
     {
       label: 'Top Language',
       value: isLoading ? '--' : stats.mostUsedFramework,
       icon: Code,
       color: 'bg-wharf-green',
-      description: 'Your favorite tech'
+      description: 'Your favorite tech',
     },
     {
       label: 'Last Generated',
       value: isLoading ? '--' : stats.lastGenerated,
       icon: Clock,
       color: 'bg-wharf-orange',
-      description: 'Most recent activity'
-    }
-  ]
+      description: 'Most recent activity',
+    },
+  ];
 
   if (!user) {
     return (
@@ -208,21 +220,21 @@ const UserStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) => {
               <User className="w-3 h-3" />
               Your Stats
             </Badge>
-          <p className="font-mono text-sm text-wharf-text-tertiary mt-3 capitalize">
-            Sign in to see Your Personal Stats
-          </p>
-          <Button 
-            variant="primary" 
-            size="sm" 
-            className="mt-3"
-            onClick={() => window.location.href = '/login'}
-          >
-            Sign In
-          </Button>
-        </div>
+            <p className="font-mono text-sm text-wharf-text-tertiary mt-3 capitalize">
+              Sign in to see Your Personal Stats
+            </p>
+            <Button
+              variant="primary"
+              size="sm"
+              className="mt-3"
+              onClick={() => (window.location.href = '/login')}
+            >
+              Sign In
+            </Button>
+          </div>
         </div>
       </section>
-    )
+    );
   }
 
   return (
@@ -245,239 +257,258 @@ const UserStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) => {
           </p>
         </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-        {statItems.map((stat) => (
-          <Card
-            key={stat.label}
-            variant="hard-sm"
-            className="text-center group hover:translate-y-[-2px] transition-all duration-300"
-          >
-            <div className="flex flex-col items-center p-3">
-              <div className={`w-10 h-10 ${stat.color} border-2 border-wharf-border-primary flex items-center justify-center mb-3 shadow-brutal-sm group-hover:shadow-brutal transition-all`}>
-                <stat.icon className="w-5 h-5 text-wharf-black" />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+          {statItems.map((stat) => (
+            <Card
+              key={stat.label}
+              variant="hard-sm"
+              className="text-center group hover:translate-y-[-2px] transition-all duration-300"
+            >
+              <div className="flex flex-col items-center p-3">
+                <div
+                  className={`w-10 h-10 ${stat.color} border-2 border-wharf-border-primary flex items-center justify-center mb-3 shadow-brutal-sm group-hover:shadow-brutal transition-all`}
+                >
+                  <stat.icon className="w-5 h-5 text-wharf-black" />
+                </div>
+                <div className="font-display font-black text-2xl md:text-3xl tracking-tighter capitalize">
+                  {stat.value}
+                </div>
+                <div className="font-mono text-xs text-wharf-text-secondary mt-1 capitalize">
+                  {stat.label}
+                </div>
+                <div className="font-mono text-[10px] text-wharf-text-tertiary mt-0.5 capitalize">
+                  {stat.description}
+                </div>
               </div>
-              <div className="font-display font-black text-2xl md:text-3xl tracking-tighter">
-                {stat.value}
-              </div>
-              <div className="font-mono text-xs text-wharf-text-tertiary mt-1">
-                {stat.label}
-              </div>
-              <div className="font-mono text-[10px] text-wharf-text-tertiary/60 mt-0.5 capitalize">
-                {stat.description}
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-
+            </Card>
+          ))}
+        </div>
       </div>
     </section>
-  )
-}
+  );
+};
 
 // Main Generator Page
 export const GeneratorPage = () => {
-  const { user } = useAuthStore()
+  const { user } = useAuthStore();
   // Helper For LocalStorage State Initialization
   const initializeState = <T,>(key: string, defaultValue: T): T => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(`wharf_gen_${key}`)
+      const saved = localStorage.getItem(`wharf_gen_${key}`);
       if (saved) {
-        try { return JSON.parse(saved) } catch (e) { return defaultValue }
+        try {
+          return JSON.parse(saved);
+        } catch {
+          return defaultValue;
+        }
       }
     }
-    return defaultValue
-  }
+    return defaultValue;
+  };
 
-  const [appState, setAppState] = useState<'landing' | 'wizard' | 'history'>(() => initializeState('appState', 'landing'))
-  const [selectedRepo, setSelectedRepo] = useState<RepoData | null>(() => initializeState('selectedRepo', null))
-  const [generatedReadme, setGeneratedReadme] = useState(() => initializeState('generatedReadme', ''))
-  
+  const [appState, setAppState] = useState<'landing' | 'wizard' | 'history'>(() =>
+    initializeState('appState', 'landing')
+  );
+  const [selectedRepo, setSelectedRepo] = useState<RepoData | null>(() =>
+    initializeState('selectedRepo', null)
+  );
+  const [generatedReadme, setGeneratedReadme] = useState(() =>
+    initializeState('generatedReadme', '')
+  );
+
   // Re-initializations That Shouldn't Persist Active Network Loaders
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [generationProgress, setGenerationProgress] = useState(0)
-  const [refreshTrigger, setRefreshTrigger] = useState(0)
-  
-  const [options, setOptions] = useState<GeneratorOptionsType>(() => initializeState('options', { tone: 'recruiter', sections: ['description', 'installation', 'usage', 'tech-stack', 'contributing', 'license'] }))
-  const [currentStep, setCurrentStep] = useState(() => initializeState('currentStep', 1))
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const [options, setOptions] = useState<GeneratorOptionsType>(() =>
+    initializeState('options', {
+      tone: 'recruiter',
+      sections: ['description', 'installation', 'usage', 'tech-stack', 'contributing', 'license'],
+    })
+  );
+  const [currentStep, setCurrentStep] = useState(() => initializeState('currentStep', 1));
 
   // Persist state To Sync Across Page Refreshes
   useEffect(() => {
-    localStorage.setItem('wharf_gen_appState', JSON.stringify(appState))
-    localStorage.setItem('wharf_gen_selectedRepo', JSON.stringify(selectedRepo))
-    localStorage.setItem('wharf_gen_generatedReadme', JSON.stringify(generatedReadme))
-    localStorage.setItem('wharf_gen_options', JSON.stringify(options))
-    localStorage.setItem('wharf_gen_currentStep', JSON.stringify(currentStep))
-  }, [appState, selectedRepo, generatedReadme, options, currentStep])
+    localStorage.setItem('wharf_gen_appState', JSON.stringify(appState));
+    localStorage.setItem('wharf_gen_selectedRepo', JSON.stringify(selectedRepo));
+    localStorage.setItem('wharf_gen_generatedReadme', JSON.stringify(generatedReadme));
+    localStorage.setItem('wharf_gen_options', JSON.stringify(options));
+    localStorage.setItem('wharf_gen_currentStep', JSON.stringify(currentStep));
+  }, [appState, selectedRepo, generatedReadme, options, currentStep]);
 
   // Fallback Cleanup If A User Reloads During An Active Generation Step Without The Network Stream
   useEffect(() => {
     if (currentStep === 3 && !generatedReadme && !isGenerating) {
-      setCurrentStep(2) 
+      setCurrentStep(2);
     }
-  }, [currentStep, generatedReadme, isGenerating])
+  }, [currentStep, generatedReadme, isGenerating]);
 
   // Simulate Progress For Better UX
   useEffect(() => {
     if (isGenerating) {
       const interval = setInterval(() => {
-        setGenerationProgress(prev => {
+        setGenerationProgress((prev) => {
           if (prev >= 95) {
-            clearInterval(interval)
-            return 95
+            clearInterval(interval);
+            return 95;
           }
-          return prev + 5
-        })
-      }, 500)
-      return () => clearInterval(interval)
+          return prev + 5;
+        });
+      }, 500);
+      return () => clearInterval(interval);
     } else {
-      setGenerationProgress(0)
+      setGenerationProgress(0);
     }
-  }, [isGenerating])
+  }, [isGenerating]);
 
   const handleGenerate = async () => {
-    if (!selectedRepo) return
-    
-    setIsGenerating(true)
-    setGeneratedReadme('')
-    setGenerationProgress(0)
-    setCurrentStep(3)
-    
+    if (!selectedRepo) return;
+
+    setIsGenerating(true);
+    setGeneratedReadme('');
+    setGenerationProgress(0);
+    setCurrentStep(3);
+
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/generate/readme`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${useAuthStore.getState().token || ''}`
-        },
-        body: JSON.stringify({
-          repoUrl: selectedRepo.url,
-          tone: options.tone,
-          sections: options.sections
-        })
-      })
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/generate/readme`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${useAuthStore.getState().token || ''}`,
+          },
+          body: JSON.stringify({
+            repoUrl: selectedRepo.url,
+            tone: options.tone,
+            sections: options.sections,
+          }),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to start README generation')
+        throw new Error('Failed to start README generation');
       }
 
-      const reader = response.body?.getReader()
-      const decoder = new TextDecoder('utf-8')
-      if (!reader) return
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder('utf-8');
+      if (!reader) return;
 
-      let buffer = ''
+      let buffer = '';
 
       while (true) {
-        const { value, done } = await reader.read()
-        if (done) break
+        const { value, done } = await reader.read();
+        if (done) break;
 
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
 
-        buffer = lines.pop() || ''
+        buffer = lines.pop() || '';
 
         for (const line of lines) {
-          const cleanLine = line.trim()
-          if (!cleanLine.startsWith('data: ')) continue
-          
-          const dataStr = cleanLine.slice(6)
+          const cleanLine = line.trim();
+          if (!cleanLine.startsWith('data: ')) continue;
+
+          const dataStr = cleanLine.slice(6);
           if (dataStr === '[DONE]') {
-            setGenerationProgress(100)
-            setRefreshTrigger(prev => prev + 1)
-            break
+            setGenerationProgress(100);
+            setRefreshTrigger((prev) => prev + 1);
+            break;
           }
 
           try {
-            const parsed = JSON.parse(dataStr)
+            const parsed = JSON.parse(dataStr);
             if (parsed.error) {
-              console.error(parsed.error)
-              alert(parsed.error)
-              break
+              console.error(parsed.error);
+              alert(parsed.error);
+              break;
             }
             if (parsed.text) {
-              setGeneratedReadme((prev) => prev + parsed.text)
-              setGenerationProgress(prev => Math.min(prev + 0.5, 95))
+              setGeneratedReadme((prev) => prev + parsed.text);
+              setGenerationProgress((prev) => Math.min(prev + 0.5, 95));
             }
-          } catch (e) {
+          } catch {
             // Partial JSON
           }
         }
       }
     } catch (error) {
-      console.error('Generation failed:', error)
+      console.error('Generation failed:', error);
     } finally {
-      setIsGenerating(false)
+      setIsGenerating(false);
     }
-  }
+  };
 
-  const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1))
+  const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
   const steps = [
     { step: 1, label: 'Select Repository', icon: GitBranch },
     { step: 2, label: 'Configure Options', icon: LayoutTemplate },
     { step: 3, label: 'Generate', icon: Zap },
-    { step: 4, label: 'Export', icon: Download }
-  ]
+    { step: 4, label: 'Export', icon: Download },
+  ];
 
   const canProceedToStep = (step: number) => {
-    if (step === 1) return true
-    if (step === 2 && selectedRepo) return true
-    if (step === 3 && generatedReadme) return true
-    if (step === 4 && generatedReadme) return true
-    return false
-  }
+    if (step === 1) return true;
+    if (step === 2 && selectedRepo) return true;
+    if (step === 3 && generatedReadme) return true;
+    if (step === 4 && generatedReadme) return true;
+    return false;
+  };
 
   const LandingState = () => (
     <div className="space-y-12 animate-fadeInUp pb-12">
       {/* Hero Section */}
       <div className="container mx-auto px-4 pt-8">
         <div className="relative text-center max-w-4xl mx-auto py-8">
-        
-        <div className="space-y-6 relative">
-          <Badge variant="pink" className="gap-2 mx-auto w-fit">
-            <FileText className="w-3 h-3" />
-            AI-Powered Documentation
-          </Badge>
-          
-          <h2 className="font-display font-black text-5xl md:text-7xl tracking-tighter leading-[1.1]">
-            Generate Professional
-            <br />
-            <span className="bg-gradient-to-r from-wharf-pink to-wharf-pink-dark bg-clip-text text-transparent">
-              README Files
-            </span>
-          </h2>
-          
-          <p className="font-mono text-base md:text-lg text-wharf-text-secondary max-w-2xl mx-auto capitalize">
-            Create polished, well-structured README documents for your projects in minutes using AI assistance...
-          </p>
-        </div>
+          <div className="space-y-6 relative">
+            <Badge variant="pink" className="gap-2 mx-auto w-fit">
+              <FileText className="w-3 h-3" />
+              AI-Powered Documentation
+            </Badge>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-8 pt-8">
-          <Button 
-            variant="primary" 
-            size="lg" 
-            onClick={() => {
-              setSelectedRepo(null)
-              setGeneratedReadme('')
-              setCurrentStep(1)
-              setAppState('wizard')
-            }}
-            icon={<PlusCircle className="w-4 h-4" />}
-          >
-            Create New README
-          </Button>
-          <Button 
-            variant="outline" 
-            size="lg"
-            onClick={() => setAppState('history')}
-            disabled={!user}
-            icon={<History className="w-4 h-4" />}
-          >
-            {user ? 'View History' : 'Login to View History'}
-          </Button>
+            <h2 className="font-display font-black text-5xl md:text-7xl tracking-tighter leading-[1.1]">
+              Generate Professional
+              <br />
+              <span className="bg-gradient-to-r from-wharf-pink to-wharf-pink-dark bg-clip-text text-transparent">
+                README Files
+              </span>
+            </h2>
+
+            <p className="font-mono text-base md:text-lg text-wharf-text-secondary max-w-2xl mx-auto capitalize">
+              Create polished, well-structured README documents for your projects in minutes using
+              AI assistance...
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 pt-8">
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => {
+                setSelectedRepo(null);
+                setGeneratedReadme('');
+                setCurrentStep(1);
+                setAppState('wizard');
+              }}
+              icon={<PlusCircle className="w-4 h-4" />}
+            >
+              Create New README
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setAppState('history')}
+              disabled={!user}
+              icon={<History className="w-4 h-4" />}
+            >
+              {user ? 'View History' : 'Login to View History'}
+            </Button>
+          </div>
         </div>
-      </div>
       </div>
 
       {/* User Stats Section */}
@@ -502,87 +533,87 @@ export const GeneratorPage = () => {
               Three simple steps to transform your repository into beautiful documentation
             </p>
           </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16 mt-8 max-w-6xl mx-auto w-full">
-        
-        {[
-          { 
-            step: '01', 
-            title: 'Select Repository', 
-            desc: 'Choose a GitHub repo or paste a URL', 
-            icon: GitBranch,
-            color: 'bg-wharf-pink'
-          },
-          { 
-            step: '02', 
-            title: 'Configure Options', 
-            desc: 'Pick tone and sections to include', 
-            icon: LayoutTemplate,
-            color: 'bg-wharf-cyan'
-          },
-          { 
-            step: '03', 
-            title: 'Generate & Export', 
-            desc: 'Get your README in seconds', 
-            icon: Zap,
-            color: 'bg-wharf-green'
-          }
-        ].map((item, index) => (
-          <div key={item.step} className="relative w-full">
-            {index < 2 && (
-              <div className="hidden md:block absolute top-1/2 -right-16 w-16 h-0.75 bg-wharf-border-primary" />
-            )}
-            
-            <Card
-              variant="hard"
-              className="text-center h-full w-full hover:translate-y-[-4px] transition-all duration-300"
-            >
-              <div className="flex flex-col items-center p-4 md:p-6 w-full">
-                <div
-                  className={`w-12 h-12 ${item.color} border-2 border-wharf-border-primary flex items-center justify-center mb-4 shadow-brutal-sm flex-shrink-0`}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16 mt-8 max-w-6xl mx-auto w-full">
+            {[
+              {
+                step: '01',
+                title: 'Select Repository',
+                desc: 'Choose a GitHub repo or paste a URL',
+                icon: GitBranch,
+                color: 'bg-wharf-pink',
+              },
+              {
+                step: '02',
+                title: 'Configure Options',
+                desc: 'Pick tone and sections to include',
+                icon: LayoutTemplate,
+                color: 'bg-wharf-cyan',
+              },
+              {
+                step: '03',
+                title: 'Generate & Export',
+                desc: 'Get your README in seconds',
+                icon: Zap,
+                color: 'bg-wharf-green',
+              },
+            ].map((item, index) => (
+              <div key={item.step} className="relative w-full">
+                {index < 2 && (
+                  <div className="hidden md:block absolute top-1/2 -right-16 w-16 h-0.75 bg-wharf-border-primary" />
+                )}
+
+                <Card
+                  variant="hard"
+                  className="text-center h-full w-full hover:translate-y-[-4px] transition-all duration-300"
                 >
-                  <span className="font-mono font-black text-sm text-wharf-black">
-                    {item.step}
-                  </span>
-                </div>
+                  <div className="flex flex-col items-center p-2 w-full">
+                    <div
+                      className={`w-12 h-12 ${item.color} border-2 border-wharf-border-primary flex items-center justify-center mb-4 shadow-brutal-sm flex-shrink-0`}
+                    >
+                      <span className="font-mono font-black text-sm text-wharf-black">
+                        {item.step}
+                      </span>
+                    </div>
 
-                <div className="w-16 h-16 border-2 border-wharf-border-primary bg-wharf-surface-primary flex items-center justify-center mb-4 shadow-brutal-sm flex-shrink-0">
-                  <item.icon className="w-8 h-8 text-wharf-text-primary" />
-                </div>
+                    <div className="w-16 h-16 border-2 border-wharf-border-primary bg-wharf-surface-primary flex items-center justify-center mb-4 shadow-brutal-sm flex-shrink-0">
+                      <item.icon className="w-8 h-8 text-wharf-text-primary" />
+                    </div>
 
-                <h3 className="font-display font-black text-xl mb-2 text-center">{item.title}</h3>
-                <p className="font-mono text-sm text-wharf-text-secondary text-center max-w-xs capitalize">
-                  {item.desc}
-                </p>
+                    <h3 className="font-display font-black text-xl mb-2 text-center">
+                      {item.title}
+                    </h3>
+                    <p className="font-mono text-sm text-wharf-text-secondary text-center max-w-xs capitalize">
+                      {item.desc}
+                    </p>
+                  </div>
+                </Card>
               </div>
-            </Card>
+            ))}
           </div>
-        ))}
         </div>
-      </div>
-    </section>
-  </div>
-)
+      </section>
+    </div>
+  );
 
   if (appState === 'landing') {
     return (
       <main className="min-h-screen">
         <LandingState />
       </main>
-    )
+    );
   }
 
   return (
     <PageWrapper title="" description="">
       <div className="max-w-7xl mx-auto space-y-8">
-        
         {appState === 'history' && (
-          <GenerationHistory 
-            onBack={() => setAppState('landing')} 
+          <GenerationHistory
+            onBack={() => setAppState('landing')}
             onViewContent={(content: string) => {
-              setGeneratedReadme(content)
-              setCurrentStep(4)
-              setAppState('wizard')
-            }} 
+              setGeneratedReadme(content);
+              setCurrentStep(4);
+              setAppState('wizard');
+            }}
           />
         )}
 
@@ -590,8 +621,8 @@ export const GeneratorPage = () => {
           <div className="space-y-6">
             {/* Header With Back Button */}
             <div className="flex items-center justify-between">
-              <button 
-                onClick={() => setAppState('landing')} 
+              <button
+                onClick={() => setAppState('landing')}
                 className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink transition-colors group"
               >
                 <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
@@ -608,52 +639,59 @@ export const GeneratorPage = () => {
             {/* Step Progress Indicator */}
             <div className="relative">
               <div className="absolute top-5 left-0 right-0 h-0.5 bg-wharf-border-secondary -z-0" />
-              <div 
+              <div
                 className="absolute top-5 left-0 h-0.5 bg-wharf-pink transition-all duration-500 -z-0"
                 style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
               />
-              
+
               <div className="flex justify-between relative z-10">
                 {steps.map((s) => {
-                  const isActive = currentStep === s.step
-                  const isCompleted = currentStep > s.step
-                  const isAccessible = canProceedToStep(s.step)
-                  
+                  const isActive = currentStep === s.step;
+                  const isCompleted = currentStep > s.step;
+                  const isAccessible = canProceedToStep(s.step);
+
                   return (
                     <button
                       key={s.step}
                       onClick={() => {
                         if (canProceedToStep(s.step)) {
-                          setCurrentStep(s.step)
+                          setCurrentStep(s.step);
                         }
                       }}
                       disabled={!isAccessible}
                       className="flex flex-col items-center gap-2 group"
                     >
-                      <div className={`
+                      <div
+                        className={`
                         w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all
-                        ${isActive 
-                          ? 'bg-wharf-pink border-wharf-border-primary shadow-brutal-sm' 
-                          : isCompleted 
-                            ? 'bg-wharf-green border-wharf-border-primary' 
-                            : 'bg-wharf-surface-secondary border-wharf-border-secondary'
+                        ${
+                          isActive
+                            ? 'bg-wharf-pink border-wharf-border-primary shadow-brutal-sm'
+                            : isCompleted
+                              ? 'bg-wharf-green border-wharf-border-primary'
+                              : 'bg-wharf-surface-secondary border-wharf-border-secondary'
                         }
                         ${isAccessible && !isActive && !isCompleted ? 'hover:border-wharf-pink hover:bg-wharf-pink/10' : ''}
                         ${!isAccessible ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                      `}>
+                      `}
+                      >
                         {isCompleted ? (
                           <CheckCircle className="w-5 h-5 text-wharf-black" />
                         ) : (
-                          <s.icon className={`w-5 h-5 ${isActive ? 'text-wharf-black' : 'text-wharf-text-tertiary'}`} />
+                          <s.icon
+                            className={`w-5 h-5 ${isActive ? 'text-wharf-black' : 'text-wharf-text-tertiary'}`}
+                          />
                         )}
                       </div>
-                      <span className={`font-mono text-xs font-bold hidden sm:block ${
-                        isActive ? 'text-wharf-pink' : 'text-wharf-text-tertiary'
-                      }`}>
+                      <span
+                        className={`font-mono text-xs font-bold hidden sm:block ${
+                          isActive ? 'text-wharf-pink' : 'text-wharf-text-tertiary'
+                        }`}
+                      >
                         {s.label}
                       </span>
                     </button>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -661,21 +699,22 @@ export const GeneratorPage = () => {
             {/* Main Content Card */}
             <Card variant="hard" className="overflow-hidden">
               <div className="p-6 md:p-8">
-                
                 {/* Step 1: Select Repository */}
                 {currentStep === 1 && (
                   <div className="space-y-6 animate-fadeInUp">
                     <div className="text-center mb-4">
-                      <h3 className="font-display font-black text-2xl tracking-tighter">Choose a Repository</h3>
+                      <h3 className="font-display font-black text-2xl tracking-tighter">
+                        Choose a Repository
+                      </h3>
                       <p className="font-mono text-sm text-wharf-text-tertiary mt-1 capitalize">
                         Select from your GitHub repos or paste a public URL
                       </p>
                     </div>
-                    <RepoImportSection 
+                    <RepoImportSection
                       user={user}
                       onRepoSelect={(repo) => {
-                        setSelectedRepo(repo)
-                        setCurrentStep(2)
+                        setSelectedRepo(repo);
+                        setCurrentStep(2);
                       }}
                     />
                   </div>
@@ -685,26 +724,32 @@ export const GeneratorPage = () => {
                 {currentStep === 2 && (
                   <div className="space-y-6 animate-fadeInUp">
                     <div className="text-center mb-8">
-                      <h3 className="font-display font-black text-2xl tracking-tighter">Configure Your README</h3>
+                      <h3 className="font-display font-black text-2xl tracking-tighter">
+                        Configure Your README
+                      </h3>
                       <p className="font-mono text-sm text-wharf-text-secondary mt-2 capitalize">
                         Customize the tone & structure of your documentation
                       </p>
                     </div>
-                    
+
                     {selectedRepo ? (
                       <>
-                        <GeneratorOptions 
+                        <GeneratorOptions
                           options={options}
                           onChange={setOptions}
                           onGenerate={handleGenerate}
                           isGenerating={isGenerating}
                         />
                         <div className="flex justify-between mt-6 pt-4 border-t-2 border-wharf-border-secondary">
-                          <Button variant="ghost" onClick={prevStep} icon={<ArrowLeft className="w-4 h-4" />}>
+                          <Button
+                            variant="ghost"
+                            onClick={prevStep}
+                            icon={<ArrowLeft className="w-4 h-4" />}
+                          >
                             Back
                           </Button>
-                          <Button 
-                            variant="primary" 
+                          <Button
+                            variant="primary"
                             onClick={handleGenerate}
                             icon={<Zap className="w-4 h-4" />}
                           >
@@ -714,7 +759,9 @@ export const GeneratorPage = () => {
                       </>
                     ) : (
                       <div className="text-center py-12">
-                        <p className="font-mono text-wharf-text-tertiary">Please select a repository first.</p>
+                        <p className="font-mono text-wharf-text-tertiary">
+                          Please select a repository first.
+                        </p>
                         <Button variant="ghost" onClick={prevStep} className="mt-4">
                           Go Back
                         </Button>
@@ -731,25 +778,31 @@ export const GeneratorPage = () => {
                         {isGenerating ? 'Generating Your README' : 'Preview Your README'}
                       </h3>
                       <p className="font-mono text-sm text-wharf-text-tertiary mt-1 mb-8 capitalize">
-                        {isGenerating ? 'Our AI is analyzing your repository...' : 'Review & edit your generated documentation'}
+                        {isGenerating
+                          ? 'Our AI is analyzing your repository...'
+                          : 'Review & edit your generated documentation'}
                       </p>
                     </div>
-                    
+
                     {isGenerating && (
                       <div className="mb-6">
                         <GenerationProgress progress={generationProgress} />
                       </div>
                     )}
-                    
+
                     {generatedReadme && !isGenerating && (
                       <>
                         <ReadmePreview content={generatedReadme} />
                         <div className="flex justify-between mt-6 pt-4 border-t-2 border-wharf-border-secondary">
-                          <Button variant="ghost" onClick={prevStep} icon={<ArrowLeft className="w-4 h-4" />}>
+                          <Button
+                            variant="ghost"
+                            onClick={prevStep}
+                            icon={<ArrowLeft className="w-4 h-4" />}
+                          >
                             Back to Options
                           </Button>
-                          <Button 
-                            variant="primary" 
+                          <Button
+                            variant="primary"
                             onClick={() => setCurrentStep(4)}
                             iconPosition="right"
                             icon={<ArrowRight className="w-4 h-4" />}
@@ -759,7 +812,7 @@ export const GeneratorPage = () => {
                         </div>
                       </>
                     )}
-                    
+
                     {generatedReadme && isGenerating && (
                       <ReadmePreview content={generatedReadme} isGenerating={true} />
                     )}
@@ -770,18 +823,22 @@ export const GeneratorPage = () => {
                 {currentStep === 4 && (
                   <div className="space-y-6 animate-fadeInUp">
                     <div className="text-center mb-4">
-                      <h3 className="font-display font-black text-2xl tracking-tighter">Export Your README</h3>
+                      <h3 className="font-display font-black text-2xl tracking-tighter">
+                        Export Your README
+                      </h3>
                       <p className="font-mono text-sm text-wharf-text-tertiary mt-1 mb-8 capitalize">
                         Save, download, or share your documentation
                       </p>
                     </div>
-                    
+
                     {generatedReadme ? (
                       <>
                         <div className="bg-wharf-surface-secondary border-2 border-wharf-border-primary p-4 mb-4">
                           <div className="flex items-center gap-2 mb-2">
                             <FileText className="w-4 h-4 text-wharf-pink" />
-                            <span className="font-mono font-bold text-sm">{selectedRepo?.repo || 'README'}.md</span>
+                            <span className="font-mono font-bold text-sm">
+                              {selectedRepo?.repo || 'README'}.md
+                            </span>
                           </div>
                           <p className="font-mono text-xs text-wharf-text-tertiary capitalize">
                             {generatedReadme.split(' ').length} words | Ready to export
@@ -789,14 +846,20 @@ export const GeneratorPage = () => {
                         </div>
                         <ExportActions content={generatedReadme} repoName={selectedRepo?.repo} />
                         <div className="flex justify-start mt-6 pt-4 border-t-2 border-wharf-border-secondary">
-                          <Button variant="ghost" onClick={prevStep} icon={<ArrowLeft className="w-4 h-4" />}>
+                          <Button
+                            variant="ghost"
+                            onClick={prevStep}
+                            icon={<ArrowLeft className="w-4 h-4" />}
+                          >
                             Back to Preview
                           </Button>
                         </div>
                       </>
                     ) : (
                       <div className="text-center py-12">
-                        <p className="font-mono text-wharf-text-tertiary">Generate a README first.</p>
+                        <p className="font-mono text-wharf-text-tertiary">
+                          Generate a README first.
+                        </p>
                         <Button variant="ghost" onClick={() => setCurrentStep(1)} className="mt-4">
                           Start Over
                         </Button>
@@ -804,12 +867,11 @@ export const GeneratorPage = () => {
                     )}
                   </div>
                 )}
-
               </div>
             </Card>
           </div>
         )}
       </div>
     </PageWrapper>
-  )
-}
+  );
+};
