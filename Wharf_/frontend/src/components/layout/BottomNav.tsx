@@ -5,7 +5,7 @@ import {
   FileText,
   Activity,
   Settings,
-  GitBranch,
+  Users,
   BarChart3,
 } from "lucide-react";
 
@@ -25,8 +25,8 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentPage, onNavigate }) => {
 
   const navItems: NavItemData[] = [
     { id: 'home', icon: Home, label: 'Home' },
-    { id: 'generator', icon: FileText, label: 'Generator' },
-    { id: 'treemap', icon: GitBranch, label: 'Tree Map' },
+    { id: 'generator', icon: FileText, label: 'Repo README' },
+    { id: 'profile', icon: Users, label: 'Profile README' },
     { id: 'health', icon: Activity, label: 'Health' },
     { id: 'analytics', icon: BarChart3, label: 'Analytics' },
     { id: 'settings', icon: Settings, label: 'Settings' },

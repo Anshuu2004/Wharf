@@ -1,51 +1,51 @@
-import { Copy, Download, Save, Check, ExternalLink, Sparkles } from 'lucide-react'
-import { FaGithub } from 'react-icons/fa'
-import { Button, Card } from '../ui'
-import { useState } from 'react'
+import { Copy, Download, Save, Check, ExternalLink, Sparkles } from 'lucide-react';
+import { FaGithub } from 'react-icons/fa';
+import { Button, Card } from '../ui';
+import { useState } from 'react';
 
 interface ExportActionsProps {
-  content: string
-  repoName?: string
-  onSave?: () => void
-  onGist?: () => void
-  isSaved?: boolean
-  isGenerating?: boolean
+  content: string;
+  repoName?: string;
+  onSave?: () => void;
+  onGist?: () => void;
+  isSaved?: boolean;
+  isGenerating?: boolean;
 }
 
-export const ExportActions = ({ 
-  content, 
+export const ExportActions = ({
+  content,
   repoName,
   onSave,
   onGist,
   isSaved = false,
-  isGenerating = false
+  isGenerating = false,
 }: ExportActionsProps) => {
-  const [copied, setCopied] = useState(false)
-  const [isHovering, setIsHovering] = useState(false)
+  const [copied, setCopied] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(content)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    await navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleDownload = () => {
-    const blob = new Blob([content], { type: 'text/markdown' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${repoName || 'README'}.md`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
+    const blob = new Blob([content], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${repoName || 'README'}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleSave = () => {
-    onSave?.()
-  }
+    onSave?.();
+  };
 
   const handleGist = () => {
-    onGist?.()
-  }
+    onGist?.();
+  };
 
   return (
     <Card variant="hard-sm" className="p-0 overflow-hidden border-2 border-wharf-border-primary">
@@ -171,13 +171,12 @@ export const ExportActions = ({
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-wharf-primary animate-pulse" />
                 <span className="font-mono text-[10px] text-wharf-text-tertiary">
-                  Repository: <span className="text-wharf-text-secondary font-bold">{repoName}</span>
+                  Repository:{' '}
+                  <span className="text-wharf-text-secondary font-bold">{repoName}</span>
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] text-wharf-text-tertiary">
-                  README.md
-                </span>
+                <span className="font-mono text-[10px] text-wharf-text-tertiary">README.md</span>
                 <span className="font-mono text-[10px] text-wharf-text-tertiary opacity-50">|</span>
                 <span className="font-mono text-[10px] text-wharf-text-tertiary">
                   {new Date().toLocaleDateString()}
@@ -188,5 +187,5 @@ export const ExportActions = ({
         )}
       </div>
     </Card>
-  )
-}
+  );
+};

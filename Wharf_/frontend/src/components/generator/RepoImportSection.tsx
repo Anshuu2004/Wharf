@@ -1,30 +1,53 @@
-import { useState } from 'react'
-import { Link2, ArrowRight, Zap } from 'lucide-react'
-import { FaGithub } from 'react-icons/fa'
-import { Card, Button, Input } from '../ui'
-import { Badge } from '../ui/Badge'
-import { RepoSelector } from './RepoSelector'
-import api from '../../lib/api'
+import { useState } from 'react';
+import { Link2, ArrowRight, Zap } from 'lucide-react';
+import { FaGithub } from 'react-icons/fa';
+import { Badge, Button, Card, Input } from '../ui';
+import { RepoSelector } from './RepoSelector';
+import api from '../../lib/api';
+
+export interface RepoData {
+  url: string;
+  owner: string;
+  repo: string;
+  description: string;
+  stars: number;
+  forks: number;
+  language: string;
+  framework: string[];
+}
 
 interface RepoImportSectionProps {
-  user: any
-  onRepoSelect: (repo: any) => void
+  user: { id: string; name?: string; email?: string; username?: string } | null;
+  onRepoSelect: (repo: RepoData) => void;
 }
 
 export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps) => {
-  const [importMethod, setImportMethod] = useState<'url' | 'github'>('url')
-  const [repoUrl, setRepoUrl] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [recentRepos] = useState<any[]>([])
+  const [importMethod, setImportMethod] = useState<'url' | 'github'>('url');
+  const [repoUrl, setRepoUrl] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [recentRepos] = useState<
+    {
+      id: number;
+      name: string;
+      full_name: string;
+      stars: number;
+      forks: number;
+      language: string;
+      url?: string;
+      owner?: string;
+      private?: boolean;
+      updated_at?: string;
+    }[]
+  >([]);
 
   const handleUrlSubmit = async () => {
-    if (!repoUrl) return
-    
-    setIsLoading(true)
+    if (!repoUrl) return;
+
+    setIsLoading(true);
     try {
-      const response = await api.post('/repo/analyze', { repoUrl })
+      const response = await api.post('/repo/analyze', { repoUrl });
       if (response.data && response.data.success) {
-        const analysis = response.data.data
+        const analysis = response.data.data;
         onRepoSelect({
           url: repoUrl,
           owner: analysis.meta.owner,
@@ -33,23 +56,34 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
           stars: analysis.meta.stars || 0,
           forks: analysis.meta.forks || 0,
           language: analysis.meta.language || '',
-          framework: analysis.frameworks || []
-        })
+          framework: analysis.frameworks || [],
+        });
       }
     } catch (error) {
-      console.error('Failed to analyze repository:', error)
+      console.error('Failed to analyze repository:', error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const handleRepoSelect = async (repo: any) => {
-    setIsLoading(true)
-    const targetUrl = repo.url || `https://github.com/${repo.full_name}`
+  const handleRepoSelect = async (repo: {
+    id: number;
+    name: string;
+    full_name: string;
+    stars: number;
+    forks: number;
+    language: string;
+    url?: string;
+    owner?: string;
+    private?: boolean;
+    updated_at?: string;
+  }) => {
+    setIsLoading(true);
+    const targetUrl = repo.url || `https://github.com/${repo.full_name}`;
     try {
-      const response = await api.post('/repo/analyze', { repoUrl: targetUrl })
+      const response = await api.post('/repo/analyze', { repoUrl: targetUrl });
       if (response.data && response.data.success) {
-        const analysis = response.data.data
+        const analysis = response.data.data;
         onRepoSelect({
           url: targetUrl,
           owner: analysis.meta.owner,
@@ -58,21 +92,21 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
           stars: analysis.meta.stars || 0,
           forks: repo.forks || 0,
           language: analysis.meta.language || '',
-          framework: analysis.frameworks || []
-        })
+          framework: analysis.frameworks || [],
+        });
       }
     } catch (error) {
-      console.error('Failed to analyze selected repository:', error)
+      console.error('Failed to analyze selected repository:', error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleUrlSubmit()
+      handleUrlSubmit();
     }
-  }
+  };
 
   return (
     <div className="relative overflow-visible">
@@ -82,8 +116,8 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
           <button
             onClick={() => setImportMethod('url')}
             className={`flex-1 flex items-center justify-center gap-2 py-3.5 font-mono font-bold text-sm transition-colors ${
-              importMethod === 'url' 
-                ? 'bg-wharf-pink text-wharf-black' 
+              importMethod === 'url'
+                ? 'bg-wharf-pink text-wharf-black'
                 : 'bg-wharf-surface-secondary hover:bg-wharf-surface-tertiary'
             }`}
           >
@@ -92,9 +126,9 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
           </button>
           <button
             onClick={() => setImportMethod('github')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3.5 font-mono font-bold text-sm transition-colors ${
-              importMethod === 'github' 
-                ? 'bg-wharf-pink text-wharf-black' 
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 font-mono font-bold text-sm transition-colors cursor-pointer ${
+              importMethod === 'github'
+                ? 'bg-wharf-pink text-wharf-black'
                 : 'bg-wharf-surface-secondary hover:bg-wharf-surface-tertiary'
             }`}
             disabled={!user}
@@ -126,8 +160,8 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
                     className="pl-9 font-mono text-sm"
                   />
                 </div>
-                <Button 
-                  variant="primary" 
+                <Button
+                  variant="primary"
                   onClick={handleUrlSubmit}
                   loading={isLoading}
                   className="min-w-[120px]"
@@ -144,7 +178,7 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
                   <button
                     key={example}
                     onClick={() => setRepoUrl(`https://github.com/${example}`)}
-                    className="px-2 py-1 border border-wharf-border-secondary font-mono text-xs hover:border-wharf-pink hover:bg-wharf-pink/10 transition-colors"
+                    className="px-2 py-1 border border-wharf-border-secondary font-mono text-xs hover:border-wharf-pink hover:bg-wharf-pink/10 transition-colors cursor-pointer"
                   >
                     {example}
                   </button>
@@ -156,7 +190,9 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
                 <div className="flex items-center gap-4 p-3 border border-wharf-border-secondary bg-wharf-surface-secondary">
                   <div className="flex items-center gap-2">
                     <Zap className="w-3 h-3 text-wharf-teal" />
-                    <span className="font-mono text-xs text-wharf-text-tertiary capitalize">Ready to analyze</span>
+                    <span className="font-mono text-xs text-wharf-text-tertiary capitalize">
+                      Ready to analyze
+                    </span>
                   </div>
                   <div className="flex-1" />
                   <div className="flex items-center gap-1">
@@ -217,5 +253,5 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
         </div>
       </Card>
     </div>
-  )
-}
+  );
+};

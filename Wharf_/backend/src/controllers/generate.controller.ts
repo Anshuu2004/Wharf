@@ -57,17 +57,24 @@ export const generateReadme = async (req: Request, res: Response) => {
         try {
           const user = await prisma.user.findUnique({
             where: { id: userId },
-            select: { githubAccessToken: true, installationId: true } as any,
+            select: {
+              githubAccessToken: true,
+              installationId: true,
+            },
           });
-
-          if (user?.githubAccessToken) {
+        
+          if (typeof user?.githubAccessToken === 'string') {
             token = decrypt(user.githubAccessToken);
           }
-          if ((user as any)?.installationId) {
-            installationId = (user as any).installationId;
+        
+          if (user?.installationId) {
+            installationId = user.installationId;
           }
         } catch (dbErr: any) {
-          console.warn('[DB Error] Failed to read user from DB in generate.controller:', dbErr.message);
+          console.warn(
+            '[DB Error] Failed to read user from DB in generate.controller:',
+            dbErr.message
+          );
         }
       }
     }
@@ -86,7 +93,7 @@ export const generateReadme = async (req: Request, res: Response) => {
       }
     );
 
-    // Store In Cache
+    // Store In Cache - pass sections as array
     await cacheService.setReadme(owner, repo, tone, sections, generatedMarkdown);
 
     // Save To Database Repository List If User Is Logged In

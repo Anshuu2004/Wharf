@@ -1,26 +1,26 @@
-import { Zap, Layout, TrendingUp } from 'lucide-react'
-import { Card } from '../ui'
-import { ToneSelector, SectionToggler } from '../generator'
+import { Zap, Layout, TrendingUp } from 'lucide-react';
+import { Card } from '../ui';
+import { ToneSelector, SectionToggler } from '../generator';
 
 interface GeneratorOptionsProps {
   options: {
-    tone: 'technical' | 'recruiter' | 'beginner'
-    sections: string[]
-  }
-  onChange: (options: any) => void
-  onGenerate: () => void
-  isGenerating: boolean
+    tone: 'technical' | 'recruiter' | 'beginner';
+    sections: string[];
+  };
+  onChange: (options: { tone: 'technical' | 'recruiter' | 'beginner'; sections: string[] }) => void;
+  onGenerate: () => void;
+  isGenerating: boolean;
 }
 
-export const GeneratorOptions = ({ 
-  options, 
-  onChange, 
-  // onGenerate, 
-  isGenerating 
+export const GeneratorOptions = ({
+  options,
+  onChange,
+  // onGenerate,
+  isGenerating,
 }: GeneratorOptionsProps) => {
-  const selectedCount = options.sections.length
-  const totalSections = 10
-  const progress = (selectedCount / totalSections) * 100
+  const selectedCount = options.sections.length;
+  const totalSections = 10;
+  const progress = (selectedCount / totalSections) * 100;
 
   return (
     <Card variant="hard" className="space-y-6 overflow-hidden">
@@ -43,7 +43,7 @@ export const GeneratorOptions = ({
               <span className="font-mono text-xs text-wharf-text-tertiary">/{totalSections}</span>
             </div>
             <div className="w-20 h-2 border border-wharf-border-primary bg-wharf-surface-primary overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-wharf-text-secondary transition-all duration-700 ease-out"
                 style={{ width: `${progress}%` }}
               />
@@ -63,10 +63,7 @@ export const GeneratorOptions = ({
               Tone | Choose your audience
             </h4>
           </div>
-          <ToneSelector 
-            value={options.tone} 
-            onChange={(tone) => onChange({ ...options, tone })} 
-          />
+          <ToneSelector value={options.tone} onChange={(tone) => onChange({ ...options, tone })} />
         </div>
 
         {/* Divider */}
@@ -91,9 +88,9 @@ export const GeneratorOptions = ({
               Include Sections | Select what to include
             </h4>
           </div>
-          <SectionToggler 
-            selected={options.sections} 
-            onChange={(sections) => onChange({ ...options, sections })} 
+          <SectionToggler
+            selected={options.sections}
+            onChange={(sections) => onChange({ ...options, sections })}
           />
         </div>
 
@@ -122,7 +119,7 @@ export const GeneratorOptions = ({
               )}
             </span>
           </Button> */}
-          
+
           {/* Progress Hint */}
           {!isGenerating && (
             <div className="flex items-center justify-center gap-4 mt-3">
@@ -141,5 +138,5 @@ export const GeneratorOptions = ({
         </div>
       </div>
     </Card>
-  )
-}
+  );
+};

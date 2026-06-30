@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'react';
-import { FileText, Clock, Eye, Copy, ArrowLeft, Trash2, Search, Filter, ChevronDown, Download } from 'lucide-react';
+import {
+  FileText,
+  Clock,
+  Eye,
+  Copy,
+  ArrowLeft,
+  Trash2,
+  Search,
+  Filter,
+  ChevronDown,
+  Download,
+} from 'lucide-react';
 import { FaGithub } from 'react-icons/fa';
-import { Card } from '../ui/Card';
-import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
-import { Input } from '../ui/Input';
-import { useToast } from '../ui/useToast';
+import { Button, Badge, Card, Input, useToast } from '../ui';
 import api from '../../lib/api';
 
 interface GenerationRecord {
@@ -36,7 +43,7 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'alphabetical'>('newest');
   const [showFilters, setShowFilters] = useState(false);
-  const [ , ] = useState<GenerationRecord | null>(null);
+  const [,] = useState<GenerationRecord | null>(null);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -48,7 +55,7 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
           setHistory(data);
           setFilteredHistory(data);
         }
-      } catch (err) {
+      } catch {
         showToast('Failed to load history', 'error');
       } finally {
         setIsLoading(false);
@@ -64,10 +71,11 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
     // Search Filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(record => 
-        record.repository.name.toLowerCase().includes(query) ||
-        record.repository.owner.toLowerCase().includes(query) ||
-        record.repository.language?.toLowerCase().includes(query)
+      result = result.filter(
+        (record) =>
+          record.repository.name.toLowerCase().includes(query) ||
+          record.repository.owner.toLowerCase().includes(query) ||
+          record.repository.language?.toLowerCase().includes(query)
       );
     }
 
@@ -94,7 +102,7 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
         return res.data.data.content;
       }
       return null;
-    } catch (err) {
+    } catch {
       showToast('Failed to fetch content', 'error');
       return null;
     }
@@ -110,9 +118,9 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
   const handleDelete = async (id: string, repoName: string) => {
     try {
       await api.delete(`/generate/history/${id}`);
-      setHistory(prev => prev.filter(record => record.id !== id));
+      setHistory((prev) => prev.filter((record) => record.id !== id));
       showToast(`Deleted ${repoName} from history`, 'info');
-    } catch (err) {
+    } catch {
       showToast('Failed to delete record', 'error');
     }
   };
@@ -151,20 +159,20 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
 
   const getLanguageColor = (language: string) => {
     const colors: Record<string, string> = {
-      'JavaScript': 'bg-wharf-yellow',
-      'TypeScript': 'bg-wharf-cyan',
-      'Python': 'bg-wharf-green',
-      'Java': 'bg-wharf-orange',
-      'Go': 'bg-wharf-cyan',
-      'Rust': 'bg-wharf-orange',
+      JavaScript: 'bg-wharf-yellow',
+      TypeScript: 'bg-wharf-cyan',
+      Python: 'bg-wharf-green',
+      Java: 'bg-wharf-orange',
+      Go: 'bg-wharf-cyan',
+      Rust: 'bg-wharf-orange',
       'C++': 'bg-wharf-purple',
       'C#': 'bg-wharf-purple',
-      'Ruby': 'bg-wharf-pink',
-      'PHP': 'bg-wharf-purple',
-      'HTML': 'bg-wharf-orange',
-      'CSS': 'bg-wharf-pink',
-      'Swift': 'bg-wharf-orange',
-      'Kotlin': 'bg-wharf-purple',
+      Ruby: 'bg-wharf-pink',
+      PHP: 'bg-wharf-purple',
+      HTML: 'bg-wharf-orange',
+      CSS: 'bg-wharf-pink',
+      Swift: 'bg-wharf-orange',
+      Kotlin: 'bg-wharf-purple',
     };
     return colors[language] || 'bg-wharf-border-secondary';
   };
@@ -173,7 +181,7 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
     <div className="space-y-6 animate-fadeInUp">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <button 
+        <button
           onClick={onBack}
           className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink transition-colors group"
         >
@@ -214,7 +222,9 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
           >
             <Filter className="w-4 h-4" />
             Filter
-            <ChevronDown className={`w-3 h-3 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              className={`w-3 h-3 transition-transform ${showFilters ? 'rotate-180' : ''}`}
+            />
           </button>
           <select
             value={sortBy}
@@ -233,7 +243,7 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
         <div className="p-4 border-2 border-wharf-border-primary bg-wharf-surface-secondary animate-fadeInUp">
           <div className="flex flex-wrap gap-2">
             <span className="font-mono text-xs font-bold text-wharf-text-tertiary">Languages:</span>
-            {[...new Set(history.map(h => h.repository.language).filter(Boolean))].map(lang => (
+            {[...new Set(history.map((h) => h.repository.language).filter(Boolean))].map((lang) => (
               <button
                 key={lang}
                 onClick={() => {
@@ -244,7 +254,9 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
                   }
                 }}
                 className={`px-2 py-1 border border-wharf-border-secondary font-mono text-xs hover:border-wharf-pink transition-colors ${
-                  searchQuery.includes(lang || '') ? 'bg-wharf-pink border-wharf-border-primary' : ''
+                  searchQuery.includes(lang || '')
+                    ? 'bg-wharf-pink border-wharf-border-primary'
+                    : ''
                 }`}
               >
                 {lang}
@@ -265,18 +277,15 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
           <div className="w-20 h-20 bg-wharf-surface-secondary border-2 border-wharf-border-primary flex items-center justify-center mx-auto mb-4">
             <FileText className="w-10 h-10 text-wharf-text-tertiary opacity-50" />
           </div>
-          <h3 className="font-display font-black text-2xl tracking-tighter mb-2">No History Found</h3>
+          <h3 className="font-display font-black text-2xl tracking-tighter mb-2">
+            No History Found
+          </h3>
           <p className="font-mono text-sm text-wharf-text-tertiary max-w-md mx-auto">
             You Haven't Generated Any Documentation Yet...
             {searchQuery && ' Try Adjusting Your Search Filters.'}
           </p>
           {!searchQuery && (
-            <Button 
-              variant="primary" 
-              size="sm" 
-              className="mt-4"
-              onClick={onBack}
-            >
+            <Button variant="primary" size="sm" className="mt-4" onClick={onBack}>
               Create Your First README
             </Button>
           )}
@@ -285,9 +294,9 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
         /* History List */
         <div className="grid gap-4">
           {filteredHistory.map((record) => (
-            <Card 
-              key={record.id} 
-              variant="hard" 
+            <Card
+              key={record.id}
+              variant="hard"
               className="p-4 hover:translate-y-[-2px] transition-all duration-200 group"
             >
               <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -304,7 +313,9 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
                       <div className="flex flex-wrap items-center gap-3 mt-1">
                         {record.repository.language && (
                           <span className="flex items-center gap-1 font-mono text-xs">
-                            <span className={`w-2 h-2 ${getLanguageColor(record.repository.language)} border border-wharf-border-primary`} />
+                            <span
+                              className={`w-2 h-2 ${getLanguageColor(record.repository.language)} border border-wharf-border-primary`}
+                            />
                             {record.repository.language}
                           </span>
                         )}
@@ -324,35 +335,31 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
 
                 {/* Right - Actions */}
                 <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
-                  <Button 
-                    variant="secondary" 
-                    size="sm" 
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={() => handleCopy(record.id, record.repository.name)}
                     className="group/btn"
                   >
                     <Copy className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
                     <span className="hidden sm:inline">Copy</span>
                   </Button>
-                  <Button 
-                    variant="secondary" 
-                    size="sm" 
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={() => handleDownload(record.id, record.repository.name)}
                     className="group/btn"
                   >
                     <Download className="w-4 h-4 group-hover/btn:-translate-y-0.5 transition-transform" />
                     <span className="hidden sm:inline">Download</span>
                   </Button>
-                  <Button 
-                    variant="primary" 
-                    size="sm" 
-                    onClick={() => handleView(record.id)}
-                  >
+                  <Button variant="primary" size="sm" onClick={() => handleView(record.id)}>
                     <Eye className="w-4 h-4" />
                     <span className="hidden sm:inline">View</span>
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => handleDelete(record.id, record.repository.name)}
                     className="text-wharf-text-tertiary hover:text-wharf-orange hover:bg-transparent"
                   >
@@ -368,8 +375,12 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
       {/* Footer Stats */}
       {!isLoading && filteredHistory.length > 0 && (
         <div className="flex justify-between items-center my-8 pt-4 border-t-2 border-wharf-border-secondary font-mono text-xs text-wharf-text-tertiary capitalize">
-          <span>Showing {filteredHistory.length} of {history.length} records</span>
-          <span>{history.reduce((acc, r) => acc + (r.wordCount || 0), 0).toLocaleString()} total words</span>
+          <span>
+            Showing {filteredHistory.length} of {history.length} records
+          </span>
+          <span>
+            {history.reduce((acc, r) => acc + (r.wordCount || 0), 0).toLocaleString()} total words
+          </span>
         </div>
       )}
     </div>
