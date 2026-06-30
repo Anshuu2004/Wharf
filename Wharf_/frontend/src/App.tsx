@@ -1,13 +1,17 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import { Header, Footer, BottomNav } from './components/layout'
-import { HomePage } from './pages/HomePage'
-import { GeneratorPage } from './pages/GeneratorPage'
-import { ProfileGeneratorPage } from './pages/ProfileGeneratorPage'
-import { AuthCallback } from './pages/AuthCallback'
-import { ToastProvider } from './components/ui/ToastProvider'
+import { 
+  HomePage,
+  GeneratorPage,
+  ProfileGeneratorPage,
+  AuthCallback
+} from './pages'
+import { ToastProvider } from './components/ui'
 
 function App() {
-  const pathname = window.location.pathname.replace('/', '') || 'home'
+  const location = useLocation();
+  const navigate = useNavigate();
+  const pathname = location.pathname.replace(/^\/+/, '') || 'home';
 
   return (
     <ToastProvider>
@@ -28,7 +32,10 @@ function App() {
         
         <BottomNav 
           currentPage={pathname} 
-          onNavigate={(page) => window.location.href = `/${page === 'home' ? '' : page}`} 
+          onNavigate={(page) => {
+            navigate(`/${page === 'home' ? '' : page}`);
+            window.scrollTo(0, 0);
+          }} 
         />
       </div>
     </ToastProvider>
