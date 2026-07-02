@@ -1,17 +1,45 @@
-import { Zap, Code, Users, Shield, Lightbulb, Rocket, Search } from 'lucide-react'
+import { Zap, Code, Users, Shield, Lightbulb, Rocket, Search } from 'lucide-react';
 
 const quickPrompts = [
-  { label: 'What does this do?', icon: Search, prompt: 'Explain what this project does in simple terms' },
-  { label: 'How to run it?', icon: Rocket, prompt: 'Give me step-by-step instructions to run this project locally' },
-  { label: 'Architecture', icon: Code, prompt: 'Explain the architecture and design patterns used in this project' },
-  { label: 'Tech Stack', icon: Zap, prompt: 'What technologies, frameworks, and libraries are used?' },
-  { label: 'Improvements', icon: Lightbulb, prompt: 'What improvements would you suggest for this project?' },
-  { label: 'Interview Prep', icon: Users, prompt: 'Generate 5 interview questions about this codebase' },
-  { label: 'Security', icon: Shield, prompt: 'Are there any security vulnerabilities in this codebase?' },
-]
+  {
+    label: 'What does this do?',
+    icon: Search,
+    prompt: 'Explain what this project does in simple terms',
+  },
+  {
+    label: 'How to run it?',
+    icon: Rocket,
+    prompt: 'Give me step-by-step instructions to run this project locally',
+  },
+  {
+    label: 'Architecture',
+    icon: Code,
+    prompt: 'Explain the architecture and design patterns used in this project',
+  },
+  {
+    label: 'Tech Stack',
+    icon: Zap,
+    prompt: 'What technologies, frameworks, and libraries are used?',
+  },
+  {
+    label: 'Improvements',
+    icon: Lightbulb,
+    prompt: 'What improvements would you suggest for this project?',
+  },
+  {
+    label: 'Interview Prep',
+    icon: Users,
+    prompt: 'Generate 5 interview questions about this codebase',
+  },
+  {
+    label: 'Security',
+    icon: Shield,
+    prompt: 'Are there any security vulnerabilities in this codebase?',
+  },
+];
 
 interface QuickPromptsProps {
-  onSelect: (prompt: string) => void
+  onSelect: (prompt: string) => void;
 }
 
 export const QuickPrompts = ({ onSelect }: QuickPromptsProps) => {
@@ -36,5 +64,5 @@ export const QuickPrompts = ({ onSelect }: QuickPromptsProps) => {
         ))}
       </div>
     </div>
-  )
-}
+  );
+};

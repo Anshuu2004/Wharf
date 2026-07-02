@@ -1,45 +1,45 @@
-import { useState, useRef, useEffect } from 'react'
-import type { KeyboardEvent } from 'react'
-import { Send, Loader2, Zap } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react';
+import type { KeyboardEvent } from 'react';
+import { Send, Loader2, Zap } from 'lucide-react';
 
 interface ChatInputProps {
-  onSend: (message: string) => void
-  isLoading: boolean
-  persona?: string
+  onSend: (message: string) => void;
+  isLoading: boolean;
+  persona?: string;
 }
 
 export const ChatInput = ({ onSend, isLoading, persona = 'developer' }: ChatInputProps) => {
-  const [input, setInput] = useState('')
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [input, setInput] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = () => {
     if (input.trim() && !isLoading) {
-      onSend(input.trim())
-      setInput('')
+      onSend(input.trim());
+      setInput('');
       if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto'
+        textareaRef.current.style.height = 'auto';
       }
     }
-  }
+  };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
+      e.preventDefault();
+      handleSend();
     }
-  }
+  };
 
   const autoResize = () => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-      const newHeight = Math.min(Math.max(textareaRef.current.scrollHeight, 56), 150)
-      textareaRef.current.style.height = `${newHeight}px`
+      textareaRef.current.style.height = 'auto';
+      const newHeight = Math.min(Math.max(textareaRef.current.scrollHeight, 56), 150);
+      textareaRef.current.style.height = `${newHeight}px`;
     }
-  }
+  };
 
   useEffect(() => {
-    autoResize()
-  }, [input])
+    autoResize();
+  }, [input]);
 
   return (
     <div className="border-t-2 border-wharf-border-primary bg-wharf-surface-secondary p-4 pb-2">
@@ -86,5 +86,5 @@ export const ChatInput = ({ onSend, isLoading, persona = 'developer' }: ChatInpu
         </span>
       </div>
     </div>
-  )
-}
+  );
+};

@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { Download, Copy, Check, FileText } from 'lucide-react'
-import { useToast } from '../ui/useToast'
-import { Button } from '../ui/Button'
-import { Card } from '../ui/Card'
+import { Button, Card, useToast } from '../ui'
 
 interface Message {
   id: string

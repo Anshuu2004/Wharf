@@ -1,8 +1,8 @@
-import { Lightbulb, ArrowRight } from 'lucide-react'
+import { Lightbulb, ArrowRight } from 'lucide-react';
 
 interface SuggestedFollowupsProps {
-  suggestions: string[]
-  onSelect: (prompt: string) => void
+  suggestions: string[];
+  onSelect: (prompt: string) => void;
 }
 
 export const SuggestedFollowups = ({ suggestions, onSelect }: SuggestedFollowupsProps) => {
@@ -10,7 +10,7 @@ export const SuggestedFollowups = ({ suggestions, onSelect }: SuggestedFollowups
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <Lightbulb className="w-3.5 h-3.5 text-wharf-yellow" />
-        <span className="font-mono text-xs text-wharf-text-tertiary">Suggested follow-ups</span>
+        <span className="font-mono text-xs text-wharf-text-secondary capitalize">Suggested follow-ups</span>
       </div>
       <div className="flex flex-wrap gap-2">
         {suggestions.map((suggestion) => (
@@ -25,5 +25,5 @@ export const SuggestedFollowups = ({ suggestions, onSelect }: SuggestedFollowups
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
