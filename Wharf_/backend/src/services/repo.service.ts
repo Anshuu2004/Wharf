@@ -18,7 +18,7 @@ export class RepoService {
     this.githubService = new GithubService(options);
   }
 
-  async analyzeRepo(url: string): Promise<RepoContext> {
+  async analyzeRepo(url: string, options?: { bypassCache?: boolean }): Promise<RepoContext> {
     const parsed = parseGithubUrl(url);
     if (!parsed) {
       throw new Error('Invalid GitHub URL');
@@ -27,10 +27,12 @@ export class RepoService {
     const { owner, repo } = parsed;
 
     // Try To Get From Cache First
-    const cachedAnalysis = await cacheService.getAnalysis(owner, repo);
-    if (cachedAnalysis) {
-      console.log(`[Cache] Found cached analysis for ${owner}/${repo}`);
-      return cachedAnalysis;
+    if (!options?.bypassCache) {
+      const cachedAnalysis = await cacheService.getAnalysis(owner, repo);
+      if (cachedAnalysis) {
+        console.log(`[Cache] Found cached analysis for ${owner}/${repo}`);
+        return cachedAnalysis;
+      }
     }
 
     // 1. Fetch Metadata
@@ -38,12 +40,12 @@ export class RepoService {
 
     // 2. Fetch Tree
     const tree = await this.githubService.fetchRepoTree(owner, repo, meta.defaultBranch);
-    const filePaths = tree.map(item => item.path);
+    const filePaths = tree.map((item) => item.path);
 
     // 3. Fetch Key Files For Deeper Analysis
     const keyFiles: Record<string, string> = {};
     const filesToFetch = ['package.json', 'requirements.txt', 'README.md', 'docker-compose.yml'];
-    
+
     for (const file of filesToFetch) {
       if (filePaths.includes(file)) {
         const content = await this.githubService.fetchFileContent(owner, repo, file);
@@ -64,11 +66,11 @@ export class RepoService {
     const frameworks = detectFrameworks(filePaths, packageJson);
     const commands = getCommands(frameworks);
 
-    // 5. Build Tree Preview (Limited Depth)
+    // 5. Build Tree Preview
     const treePreview = tree
-      .filter(item => !item.path.includes('node_modules') && !item.path.includes('.git'))
+      .filter((item) => !item.path.includes('node_modules') && !item.path.includes('.git'))
       .slice(0, 50)
-      .map(item => item.path)
+      .map((item) => item.path)
       .join('\n');
 
     const result = {
@@ -85,4 +87,3 @@ export class RepoService {
     return result;
   }
 }
-
