@@ -1,28 +1,29 @@
-import { motion, AnimatePresence } from 'framer-motion'
-import { Bot } from 'lucide-react'
-import { ChatMessage } from './ChatMessage'
-import { QuickPrompts } from './QuickPrompts'
+import { motion, AnimatePresence } from 'framer-motion';
+import { Bot } from 'lucide-react';
+import { ChatMessage, QuickPrompts } from '../chat';
 
 interface Message {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  timestamp: Date
-  codeBlocks?: { code: string; language: string }[]
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  codeBlocks?: { code: string; language: string }[];
 }
 
 interface ChatMessagesProps {
-  messages: Message[]
-  isLoading: boolean
-  messagesEndRef: React.RefObject<HTMLDivElement>
-  onQuickPromptSelect?: (prompt: string) => void
+  messages: Message[];
+  isLoading: boolean;
+  messagesEndRef: React.RefObject<HTMLDivElement>;
+  onQuickPromptSelect?: (prompt: string) => void;
+  onEditMessage?: (msgId: string, newContent: string) => void;
 }
 
-export const ChatMessages = ({ 
-  messages, 
-  isLoading, 
+export const ChatMessages = ({
+  messages,
+  isLoading,
   messagesEndRef,
-  onQuickPromptSelect 
+  onQuickPromptSelect,
+  onEditMessage,
 }: ChatMessagesProps) => {
   if (messages.length === 0) {
     return (
@@ -33,13 +34,15 @@ export const ChatMessages = ({
             <div className="w-16 h-16 border-2 border-wharf-border-primary flex items-center justify-center mx-auto mb-4 bg-wharf-pink/10">
               <Bot className="w-8 h-8 text-wharf-pink" />
             </div>
-            <h2 className="font-display font-black text-2xl tracking-tighter mb-2">Welcome to WHARF Chat</h2>
+            <h2 className="font-display font-black text-2xl tracking-tighter mb-2">
+              Welcome to WHARF Chat
+            </h2>
             <p className="font-mono text-sm text-wharf-text-secondary capitalize">
               Paste a GitHub repository URL & ask anything about the codebase...
             </p>
           </div>
         </div>
-        
+
         {/* Quick Prompts */}
         {onQuickPromptSelect && (
           <div className="w-full">
@@ -47,7 +50,7 @@ export const ChatMessages = ({
           </div>
         )}
       </div>
-    )
+    );
   }
 
   return (
@@ -61,10 +64,12 @@ export const ChatMessages = ({
             transition={{ duration: 0.3, delay: idx * 0.05 }}
           >
             <ChatMessage
+              id={message.id}
               role={message.role}
               content={message.content}
               codeBlocks={message.codeBlocks}
               timestamp={message.timestamp}
+              onEdit={onEditMessage}
             />
           </motion.div>
         ))}
@@ -80,9 +85,18 @@ export const ChatMessages = ({
               </div>
               <div className="border-2 border-wharf-border-primary bg-wharf-surface-secondary p-4">
                 <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-wharf-pink animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 bg-wharf-pink animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 bg-wharf-pink animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <div
+                    className="w-2 h-2 bg-wharf-pink animate-bounce"
+                    style={{ animationDelay: '0ms' }}
+                  />
+                  <div
+                    className="w-2 h-2 bg-wharf-pink animate-bounce"
+                    style={{ animationDelay: '150ms' }}
+                  />
+                  <div
+                    className="w-2 h-2 bg-wharf-pink animate-bounce"
+                    style={{ animationDelay: '300ms' }}
+                  />
                 </div>
               </div>
             </div>
@@ -91,5 +105,5 @@ export const ChatMessages = ({
       </AnimatePresence>
       <div ref={messagesEndRef} />
     </div>
-  )
-}
+  );
+};
