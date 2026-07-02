@@ -1,22 +1,34 @@
-import { useState } from 'react'
-import { MessageSquare, Plus, Trash2, Home, FolderCode, LayoutDashboard, User, Pencil, Check, X, GitBranch } from 'lucide-react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useState } from 'react';
+import {
+  MessageSquare,
+  Plus,
+  Trash2,
+  Home,
+  FolderCode,
+  LayoutDashboard,
+  User,
+  Pencil,
+  Check,
+  X,
+  GitBranch,
+} from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface ChatSession {
-  id: string
-  title: string
-  timestamp: Date
-  preview: string
-  repoUrl?: string
+  id: string;
+  title: string;
+  timestamp: Date;
+  preview: string;
+  repoUrl?: string;
 }
 
 interface ChatSidebarProps {
-  sessions: ChatSession[]
-  currentSessionId: string | null
-  onNewChat: () => void
-  onSelectSession: (id: string) => void
-  onDeleteSession: (id: string) => void
-  onRenameSession?: (id: string, newTitle: string) => void
+  sessions: ChatSession[];
+  currentSessionId: string | null;
+  onNewChat: () => void;
+  onSelectSession: (id: string) => void;
+  onDeleteSession: (id: string) => void;
+  onRenameSession?: (id: string, newTitle: string) => void;
 }
 
 export const ChatSidebar = ({
@@ -25,40 +37,40 @@ export const ChatSidebar = ({
   onNewChat,
   onSelectSession,
   onDeleteSession,
-  onRenameSession
+  onRenameSession,
 }: ChatSidebarProps) => {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [editingSessionId, setEditingSessionId] = useState<string | null>(null)
-  const [editTitle, setEditTitle] = useState('')
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: FolderCode, label: 'Generator', path: '/generator' },
     { icon: User, label: 'Profile', path: '/profile' },
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-  ]
+  ];
 
   const handleRename = (session: ChatSession) => {
-    setEditingSessionId(session.id)
-    setEditTitle(session.title)
-  }
+    setEditingSessionId(session.id);
+    setEditTitle(session.title);
+  };
 
   const handleSaveRename = () => {
     if (editingSessionId && editTitle.trim() && onRenameSession) {
-      onRenameSession(editingSessionId, editTitle.trim())
+      onRenameSession(editingSessionId, editTitle.trim());
     }
-    setEditingSessionId(null)
-  }
+    setEditingSessionId(null);
+  };
 
   const handleCancelRename = () => {
-    setEditingSessionId(null)
-  }
+    setEditingSessionId(null);
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSaveRename()
-    if (e.key === 'Escape') handleCancelRename()
-  }
+    if (e.key === 'Enter') handleSaveRename();
+    if (e.key === 'Escape') handleCancelRename();
+  };
 
   return (
     <div className="h-full flex flex-col bg-wharf-surface-secondary">
@@ -98,7 +110,9 @@ export const ChatSidebar = ({
         {sessions.length === 0 ? (
           <div className="text-center py-8">
             <MessageSquare className="w-8 h-8 text-wharf-text-secondary mx-auto mb-2" />
-            <p className="text-xs font-mono text-wharf-text-secondary  capitalize">No chat history</p>
+            <p className="text-xs font-mono text-wharf-text-secondary  capitalize">
+              No chat history
+            </p>
           </div>
         ) : (
           sessions.map((session) => (
@@ -114,7 +128,9 @@ export const ChatSidebar = ({
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    {session.repoUrl && <GitBranch className="w-3 h-3 text-wharf-text-tertiary flex-shrink-0" />}
+                    {session.repoUrl && (
+                      <GitBranch className="w-3 h-3 text-wharf-text-tertiary flex-shrink-0" />
+                    )}
                     {editingSessionId === session.id ? (
                       <div className="flex-1 flex items-center gap-1">
                         <input
@@ -127,13 +143,19 @@ export const ChatSidebar = ({
                           autoFocus
                         />
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleSaveRename() }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSaveRename();
+                          }}
                           className="p-1 hover:bg-wharf-green/20 transition-colors"
                         >
                           <Check className="w-3 h-3 text-wharf-green" />
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleCancelRename() }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCancelRename();
+                          }}
                           className="p-1 hover:bg-wharf-orange/20 transition-colors"
                         >
                           <X className="w-3 h-3 text-wharf-orange" />
@@ -143,7 +165,9 @@ export const ChatSidebar = ({
                       <h3 className="text-xs font-mono font-bold truncate">{session.title}</h3>
                     )}
                   </div>
-                  <p className="text-[10px] font-mono text-wharf-text-tertiary truncate">{session.preview}</p>
+                  <p className="text-[10px] font-mono text-wharf-text-tertiary truncate">
+                    {session.preview}
+                  </p>
                   <p className="text-[9px] font-mono text-wharf-text-tertiary/60 mt-1">
                     {new Date(session.timestamp).toLocaleDateString()}
                   </p>
@@ -152,14 +176,20 @@ export const ChatSidebar = ({
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                   {editingSessionId !== session.id && onRenameSession && (
                     <button
-                      onClick={(e) => { e.stopPropagation(); handleRename(session) }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRename(session);
+                      }}
                       className="p-1 hover:bg-wharf-pink/10 transition-colors"
                     >
                       <Pencil className="w-3 h-3 text-wharf-text-tertiary hover:text-wharf-text-primary" />
                     </button>
                   )}
                   <button
-                    onClick={(e) => { e.stopPropagation(); onDeleteSession(session.id) }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteSession(session.id);
+                    }}
                     className="p-1 hover:bg-wharf-orange/10 transition-colors"
                   >
                     <Trash2 className="w-3 h-3 text-wharf-text-tertiary hover:text-wharf-orange" />
@@ -178,5 +208,5 @@ export const ChatSidebar = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
