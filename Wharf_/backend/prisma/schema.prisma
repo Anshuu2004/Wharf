@@ -25,6 +25,7 @@ model User {
   repos       Repository[]
   apiKeys     UserApiKey[]
   profileReadmes ProfileReadme[]
+  chatSessions ChatSession[]
 }
 
 
@@ -127,4 +128,49 @@ model ProfileStats {
   topTemplate     String   @default("--")
   lastGenerated   DateTime?
   updatedAt       DateTime @updatedAt
+}
+
+// ─── Chat ────────────────────────────────────────────────────────────────────
+model ChatSession {
+  id            String    @id @default(cuid())
+  userId        String
+  title         String
+  repoUrl       String?
+  repoData      Json?     // Cached repo metadata
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  isArchived    Boolean   @default(false)
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages      ChatMessage[]
+  analytics     ChatAnalytics[]
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model ChatMessage {
+  id            String    @id @default(cuid())
+  sessionId     String
+  role          String    // 'user' | 'assistant'
+  content       String    @db.Text
+  codeBlocks    Json?     // [{ language, code }]
+  tokens        Int?      
+  createdAt     DateTime  @default(now())
+
+  session       ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+model ChatAnalytics {
+  id              String    @id @default(cuid())
+  sessionId       String
+  totalTokens     Int
+  totalMessages   Int
+  avgResponseTime Float
+  createdAt       DateTime  @default(now())
+
+  session         ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
