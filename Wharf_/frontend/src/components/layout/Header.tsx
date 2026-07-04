@@ -306,7 +306,9 @@ export const Header = () => {
               <div className="flex items-center gap-1 md:-mx-3">
                 <div className="cursor-pointer group" onClick={handleLogoClick}>
                   <img
-                    src="https://res.cloudinary.com/dhn92qb61/image/upload/v1777107144/Wharf_Logo-Photoroom_upscaled_tgvwm2.webp"
+                    src="https://res.cloudinary.com/dhn92qb61/image/upload/w_200,q_auto,f_auto/v1777107144/Wharf_Logo-Photoroom_upscaled_tgvwm2.webp"
+                    width="64"
+                    height="64"
                     alt="Wharf logo"
                     className="w-14 h-14 md:w-16 md:h-16 object-contain transition-transform duration-300 group-hover:scale-105"
                   />

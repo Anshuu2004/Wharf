@@ -1,17 +1,42 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { PageWrapper } from '../components/layout';
 import { Badge, Button, Card } from '../components/ui';
-import { AlignLeft, ArrowLeft, ArrowRight, CheckCircle, GitBranch, Files, FileText, Zap, LayoutTemplate, Download, History, PlusCircle, User, Clock, Code } from 'lucide-react';
+import {
+  AlignLeft,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle,
+  GitBranch,
+  Files,
+  FileText,
+  Zap,
+  LayoutTemplate,
+  Download,
+  History,
+  PlusCircle,
+  User,
+  Clock,
+  Code,
+} from 'lucide-react';
 import {
   RepoImportSection,
   GeneratorOptions,
   GenerationProgress,
-  ReadmePreview,
   ExportActions,
   GenerationHistory,
 } from '../components/generator';
 import api from '../lib/api';
+
+// Lazy-load The Heavy Markdown Preview
+const ReadmePreview = lazy(() =>
+  import('../components/generator/ReadmePreview').then((m) => ({ default: m.ReadmePreview }))
+);
+const MarkdownFallback = () => (
+  <div className="flex items-center justify-center min-h-[200px] font-mono text-sm text-wharf-text-secondary">
+    Loading Preview...
+  </div>
+);
 
 // Define Proper Types
 interface RepoData {
@@ -313,7 +338,7 @@ export const GeneratorPage = () => {
   );
   const [currentStep, setCurrentStep] = useState(() => initializeState('currentStep', 1));
 
-  // Persist state To Sync Across Page Refreshes
+  // Persist State To Sync Across Page Refreshes
   useEffect(() => {
     localStorage.setItem('wharf_gen_appState', JSON.stringify(appState));
     localStorage.setItem('wharf_gen_selectedRepo', JSON.stringify(selectedRepo));
@@ -776,7 +801,9 @@ export const GeneratorPage = () => {
 
                     {generatedReadme && !isGenerating && (
                       <>
-                        <ReadmePreview content={generatedReadme} />
+                        <Suspense fallback={<MarkdownFallback />}>
+                          <ReadmePreview content={generatedReadme} />
+                        </Suspense>
                         <div className="flex justify-between mt-6 pt-4 border-t-2 border-wharf-border-secondary">
                           <Button
                             variant="ghost"
@@ -798,7 +825,9 @@ export const GeneratorPage = () => {
                     )}
 
                     {generatedReadme && isGenerating && (
-                      <ReadmePreview content={generatedReadme} isGenerating={true} />
+                      <Suspense fallback={<MarkdownFallback />}>
+                        <ReadmePreview content={generatedReadme} isGenerating={true} />
+                      </Suspense>
                     )}
                   </div>
                 )}

@@ -19,11 +19,27 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import tsx from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
+import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
+import javascript from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
+import jsx from 'react-syntax-highlighter/dist/esm/languages/prism/jsx';
+import json from 'react-syntax-highlighter/dist/esm/languages/prism/json';
+import bash from 'react-syntax-highlighter/dist/esm/languages/prism/bash';
+import markdown from 'react-syntax-highlighter/dist/esm/languages/prism/markdown';
+import python from 'react-syntax-highlighter/dist/esm/languages/prism/python';
 import 'github-markdown-css/github-markdown.css';
 import 'katex/dist/katex.min.css';
 
+SyntaxHighlighter.registerLanguage('tsx', tsx);
+SyntaxHighlighter.registerLanguage('typescript', typescript);
+SyntaxHighlighter.registerLanguage('javascript', javascript);
+SyntaxHighlighter.registerLanguage('jsx', jsx);
+SyntaxHighlighter.registerLanguage('json', json);
+SyntaxHighlighter.registerLanguage('bash', bash);
+SyntaxHighlighter.registerLanguage('markdown', markdown);
+SyntaxHighlighter.registerLanguage('python', python);
 // Mermaid Support
 import mermaid from 'mermaid';
 
@@ -138,9 +154,12 @@ export const ReadmePreview = ({
         let index = 0;
 
         for (const element of mermaidElements) {
-          const code = element.textContent || '';
+          let code = element.textContent || '';
 
           if (!code.trim()) continue;
+
+          // Auto-fix unquoted node labels with parentheses e.g. A[Label (Extra)] -> A["Label (Extra)"]
+          code = code.replace(/\[([^"\]\[]*?\([^)]*?\)[^"\]\[]*?)\]/g, '["$1"]');
 
           try {
             element.removeAttribute('data-processed');

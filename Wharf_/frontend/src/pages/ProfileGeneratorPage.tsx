@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { PageWrapper } from '../components/layout';
 import {
@@ -33,7 +33,15 @@ import {
   SocialBadgesInput,
   WidgetsCustomizer,
 } from '../components/profile';
-import { ReadmePreview } from '../components/generator/ReadmePreview';
+// Lazy-load The Heavy Markdown Preview 
+const ReadmePreview = lazy(() =>
+  import('../components/generator/ReadmePreview').then((m) => ({ default: m.ReadmePreview }))
+);
+const MarkdownFallback = () => (
+  <div className="flex items-center justify-center min-h-[200px] font-mono text-sm text-wharf-text-tertiary">
+    Loading preview...
+  </div>
+);
 import { generatePreviewMarkdown } from '../utils/previewGenerator';
 import { Badge, Button, Card } from '../components/ui';
 import api from '../lib/api';
@@ -1136,9 +1144,11 @@ export const ProfileGeneratorPage = () => {
                                   See how your profile will look with the current settings...
                                 </p>
                                 <div className="border-2 border-wharf-border-primary overflow-hidden">
-                                  <ReadmePreview
-                                    content={generatePreviewMarkdown(profileData, options)}
-                                  />
+                                  <Suspense fallback={<MarkdownFallback />}>
+                                    <ReadmePreview
+                                      content={generatePreviewMarkdown(profileData, options)}
+                                    />
+                                  </Suspense>
                                 </div>
                               </div>
                             )}
@@ -1405,10 +1415,12 @@ export const ProfileGeneratorPage = () => {
 
                     {generatedReadme && !isGenerating && (
                       <>
-                        <ReadmePreview
-                          content={generatedReadme}
-                          onContentChange={setGeneratedReadme}
-                        />
+                        <Suspense fallback={<MarkdownFallback />}>
+                          <ReadmePreview
+                            content={generatedReadme}
+                            onContentChange={setGeneratedReadme}
+                          />
+                        </Suspense>
                         <div className="flex justify-between mt-6 pt-4 border-t-2 border-wharf-border-secondary">
                           <Button
                             variant="ghost"
@@ -1430,7 +1442,9 @@ export const ProfileGeneratorPage = () => {
                     )}
 
                     {generatedReadme && isGenerating && (
-                      <ReadmePreview content={generatedReadme} isGenerating={true} />
+                      <Suspense fallback={<MarkdownFallback />}>
+                        <ReadmePreview content={generatedReadme} isGenerating={true} />
+                      </Suspense>
                     )}
                   </div>
                 )}
