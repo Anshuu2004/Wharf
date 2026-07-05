@@ -24,7 +24,6 @@ import { Button } from '../ui/Button';
 import { useToast } from '../ui/useToast';
 import { useAuthStore } from '../../stores/authStore';
 
-
 interface Notification {
   id: string;
   title: string;
@@ -139,7 +138,6 @@ export const Header = () => {
     navigate('/');
   };
 
-
   const handleDashboard = () => {
     navigate('/dashboard');
     setShowUserMenu(false);
@@ -192,7 +190,6 @@ export const Header = () => {
     if (user?.email) return user.email[0].toUpperCase();
     return 'U';
   };
-
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -293,7 +290,7 @@ export const Header = () => {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 rounded-3xl ${
           scrolled
             ? 'bg-wharf-surface-primary/95 backdrop-blur-sm border-b-2 border-wharf-border-primary'
             : 'bg-wharf-surface-primary border-b-2 border-wharf-border-primary'
@@ -331,7 +328,7 @@ export const Header = () => {
                 <button
                   ref={notificationButtonRef}
                   onClick={toggleNotifications}
-                  className="relative w-10 h-10 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-pink transition-all flex items-center justify-center shadow-brutal-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+                  className="relative w-10 h-10 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-pink/50 transition-all flex items-center justify-center shadow-brutal-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none rounded-lg cursor-pointer"
                   aria-label="Notifications"
                 >
                   {unreadCount > 0 ? (
@@ -355,7 +352,7 @@ export const Header = () => {
                 <div className="relative hidden md:block" ref={userMenuRef}>
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 px-2 py-1.5 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-surface-secondary transition-all group"
+                    className="flex items-center gap-2 px-2 py-1.5 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-surface-secondary transition-all group rounded-lg cursor-pointer"
                   >
                     <div className="w-8 h-8 bg-wharf-purple border border-wharf-border-primary flex items-center justify-center">
                       <span className="text-sm font-bold text-wharf-black">{getUserInitial()}</span>
@@ -392,7 +389,15 @@ export const Header = () => {
                       <div className="p-3 border-b-2 border-wharf-border-primary bg-wharf-surface-tertiary">
                         <div className="flex items-center gap-2 font-mono text-xs">
                           <Calendar className="w-3 h-3" />
-                          <span>Joined {user?.githubCreatedAt ? new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(new Date(user.githubCreatedAt)) : 'Recent'}</span>
+                          <span>
+                            Joined{' '}
+                            {user?.githubCreatedAt
+                              ? new Intl.DateTimeFormat('en-US', {
+                                  month: 'short',
+                                  year: 'numeric',
+                                }).format(new Date(user.githubCreatedAt))
+                              : 'Recent'}
+                          </span>
                         </div>
                         {user.username && (
                           <div className="flex items-center gap-2 font-mono text-xs mt-1">
