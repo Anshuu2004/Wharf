@@ -394,6 +394,32 @@ export const ChatPage = () => {
     setSessions((prev) => prev.map((s) => (s.id === id ? { ...s, pinned: false } : s)));
   };
 
+  const handleExportChat = () => {
+    if (!currentSession || currentSession.messages.length === 0) return;
+
+    const title = currentSession.title || 'Chat Export';
+    let markdownContent = `# ${title}\n\n`;
+
+    currentSession.messages.forEach((msg, index) => {
+      const role = msg.role === 'user' ? 'User' : 'Wharf AI';
+      markdownContent += `### ${role}\n${msg.content}\n\n`;
+
+      // Add A '#' Divider After Assistant Messages
+      if (msg.role === 'assistant' && index < currentSession.messages.length - 1) {
+        markdownContent += `#\n\n`;
+      }
+    });
+
+    const blob = new Blob([markdownContent], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const safeTitle = title.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    a.download = `wharf-chat-${safeTitle}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const suggestedFollowups = [
     'How do I run this locally?',
     'What are the main features?',
@@ -432,7 +458,7 @@ export const ChatPage = () => {
 
           {/* Header */}
           <ChatHeader
-            onExport={() => {}}
+            onExport={handleExportChat}
             selectedPersona={selectedPersona}
             personas={personas}
             onPersonaChange={setSelectedPersona}

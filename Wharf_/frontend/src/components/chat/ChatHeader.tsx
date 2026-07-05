@@ -36,7 +36,7 @@ export const ChatHeader = ({
       <div className="flex items-center gap-2">
         <button
           onClick={onExport}
-          className="flex items-center gap-1 px-3 py-1.5 border-2 border-wharf-border-secondary font-mono text-xs font-bold hover:border-wharf-border-primary hover:bg-wharf-surface-primary transition-colors"
+          className="flex items-center gap-1 px-3 py-1.5 border-2 border-wharf-border-secondary font-mono text-xs font-bold hover:border-wharf-border-primary hover:bg-wharf-surface-primary transition-colors cursor-pointer"
         >
           <Download className="w-3 h-3" />
           Export
@@ -46,7 +46,7 @@ export const ChatHeader = ({
         <div className="relative">
           <button
             onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-            className="p-1.5 border-2 border-wharf-border-secondary hover:border-wharf-border-primary hover:bg-wharf-surface-primary transition-colors"
+            className="p-1.5 border-2 border-wharf-border-secondary hover:border-wharf-border-primary hover:bg-wharf-surface-primary transition-colors cursor-pointer"
           >
             <Settings className="w-4 h-4" />
           </button>
