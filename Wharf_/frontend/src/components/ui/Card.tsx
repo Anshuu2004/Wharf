@@ -1,39 +1,82 @@
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react'
-import { cn } from '../../lib/cn'
+import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
+import { cn } from '../../lib/cn';
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'hard' | 'hard-sm'
-  hoverable?: boolean
-  header?: ReactNode
-  footer?: ReactNode
+  variant?: 'default' | 'hard' | 'hard-sm';
+  hoverable?: boolean;
+  rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | 'full';
+  header?: ReactNode;
+  footer?: ReactNode;
 }
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ children, variant = 'default', hoverable = false, header, footer, className, ...props }, ref) => {
+  (
+    {
+      children,
+      variant = 'default',
+      hoverable = false,
+      rounded = 'none',
+      header,
+      footer,
+      className,
+      ...props
+    },
+    ref
+  ) => {
     const variantStyles = {
       default: 'card',
       hard: 'card card-hard',
       'hard-sm': 'card card-hard-sm',
-    }
+    };
+
+    const roundedStyles = {
+      none: 'rounded-none',
+      sm: 'rounded-sm',
+      md: 'rounded-md',
+      lg: 'rounded-lg',
+      xl: 'rounded-xl',
+      '2xl': 'rounded-2xl',
+      '3xl': 'rounded-3xl',
+      full: 'rounded-full',
+    };
 
     return (
       <div
         ref={ref}
         className={cn(
           variantStyles[variant],
-          hoverable && 'card-hoverable cursor-pointer',
+          roundedStyles[rounded],
+          hoverable && 'card-hoverable rounded-sm cursor-pointer',
           className
         )}
         {...props}
       >
-        {header && <div className="border-b-2 border-wharf-border-primary pb-4 mb-4">{header}</div>}
+        {header && (
+          <div
+            className={cn(
+              'border-b-2 border-wharf-border-primary pb-4 mb-4',
+              rounded !== 'none' && `rounded-t-${rounded}`
+            )}
+          >
+            {header}
+          </div>
+        )}
         <div className="card-body">{children}</div>
-        {footer && <div className="border-t-2 border-wharf-border-primary pt-4 mt-4">{footer}</div>}
+        {footer && (
+          <div
+            className={cn(
+              'border-t-2 border-wharf-border-primary pt-4 mt-4',
+              rounded !== 'none' && `rounded-b-${rounded}`
+            )}
+          >
+            {footer}
+          </div>
+        )}
       </div>
-    )
+    );
   }
-)
+);
 
-Card.displayName = 'Card'
+Card.displayName = 'Card';
 
-export { Card }
+export { Card };

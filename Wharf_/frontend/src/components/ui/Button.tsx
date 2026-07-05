@@ -1,14 +1,25 @@
-import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
-import { cn } from '../../lib/cn'
-import { Loader2 } from 'lucide-react'
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { cn } from '../../lib/cn';
+import { Loader2 } from 'lucide-react';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'ghost' | 'outline' | 'gradient' | 'dark'
-  size?: 'sm' | 'md' | 'lg'
-  loading?: boolean
-  icon?: ReactNode
-  iconPosition?: 'left' | 'right'
-  fullWidth?: boolean
+  variant?:
+    | 'primary'
+    | 'secondary'
+    | 'success'
+    | 'danger'
+    | 'warning'
+    | 'info'
+    | 'ghost'
+    | 'outline'
+    | 'gradient'
+    | 'dark';
+  size?: 'sm' | 'md' | 'lg';
+  rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  loading?: boolean;
+  icon?: ReactNode;
+  iconPosition?: 'left' | 'right';
+  fullWidth?: boolean;
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -17,6 +28,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       children,
       variant = 'primary',
       size = 'md',
+      rounded = 'md',
       loading = false,
       icon,
       iconPosition = 'left',
@@ -27,6 +39,16 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
+    const roundedStyles = {
+      none: 'rounded-none',
+      sm: 'rounded-sm',
+      md: 'rounded-md',
+      lg: 'rounded-lg',
+      xl: 'rounded-xl',
+      '2xl': 'rounded-2xl',
+      full: 'rounded-full',
+    };
+
     const baseStyles = cn(
       'btn',
       variant === 'primary' && 'btn-primary',
@@ -43,16 +65,12 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       size === 'md' && 'btn-md',
       size === 'lg' && 'btn-lg',
       fullWidth && 'btn-full-width',
+      roundedStyles[rounded],
       className
-    )
+    );
 
     return (
-      <button
-        ref={ref}
-        className={baseStyles}
-        disabled={disabled || loading}
-        {...props}
-      >
+      <button ref={ref} className={baseStyles} disabled={disabled || loading} {...props}>
         {loading ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -66,10 +84,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           </>
         )}
       </button>
-    )
+    );
   }
-)
+);
 
-Button.displayName = 'Button'
+Button.displayName = 'Button';
 
-export { Button }
+export { Button };
