@@ -1409,7 +1409,7 @@ export const ProfileGeneratorPage = () => {
                         <p className="font-mono text-wharf-text-tertiary capitalize">
                           Please enter a username first...
                         </p>
-                        <Button variant="ghost" onClick={prevStep} className="mt-4">
+                        <Button variant="outline" onClick={prevStep} className="mt-4">
                           Go Back
                         </Button>
                       </div>
@@ -1419,7 +1419,7 @@ export const ProfileGeneratorPage = () => {
                     {profileData && (
                       <div className="flex justify-between items-center mt-8 pt-6 border-t-2 border-wharf-border-secondary">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           rounded="2xl"
                           onClick={prevStep}
                           icon={<ArrowLeft className="w-4 h-4" />}
@@ -1495,7 +1495,7 @@ export const ProfileGeneratorPage = () => {
                         </Suspense>
                         <div className="flex justify-between mt-6 pt-4 border-t-2 border-wharf-border-secondary">
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             onClick={prevStep}
                             icon={<ArrowLeft className="w-4 h-4" />}
                           >
@@ -1556,7 +1556,7 @@ export const ProfileGeneratorPage = () => {
                         />
                         <div className="flex justify-start mt-6 pt-4 border-t-2 border-wharf-border-secondary">
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             onClick={prevStep}
                             icon={<ArrowLeft className="w-4 h-4" />}
                           >
@@ -1569,7 +1569,7 @@ export const ProfileGeneratorPage = () => {
                         <p className="font-mono text-wharf-text-tertiary">
                           Generate a profile README first.
                         </p>
-                        <Button variant="ghost" onClick={() => setCurrentStep(1)} className="mt-4">
+                        <Button variant="outline" onClick={() => setCurrentStep(1)} className="mt-4">
                           Start Over
                         </Button>
                       </div>
