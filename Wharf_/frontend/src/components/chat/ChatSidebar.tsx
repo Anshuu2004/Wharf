@@ -184,10 +184,10 @@ export const ChatSidebar = ({
             <button
               key={item.label}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center gap-1 pt-1 pb-[0.3rem] border-2 transition-all ${
+              className={`flex flex-col items-center gap-1 pt-1 pb-[0.3rem] border-2 transition-all cursor-pointer ${
                 location.pathname === item.path
                   ? 'bg-wharf-pink border-wharf-border-primary shadow-brutal-sm'
-                  : 'border-transparent hover:border-wharf-border-secondary hover:bg-wharf-surface-primary'
+                  : 'border-transparent hover:scale-115'
               }`}
             >
               <item.icon className="w-4.5 h-4.5" />
@@ -201,7 +201,7 @@ export const ChatSidebar = ({
       <div className="py-2 px-4 border-b-2 border-wharf-border-primary">
         <button
           onClick={onNewChat}
-          className="w-full flex items-center justify-center gap-2 py-2 mb-[0.28rem] border-2 border-wharf-border-primary bg-wharf-pink font-mono font-bold text-sm hover:bg-wharf-pink-dark transition-colors shadow-brutal-sm hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5"
+          className="w-full flex items-center justify-center gap-2 py-2 mb-[0.28rem] border-2 border-wharf-border-primary bg-wharf-pink font-mono font-bold text-sm hover:bg-wharf-pink-dark transition-colors shadow-brutal-sm hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 rounded-xl cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           New Chat
@@ -221,7 +221,7 @@ export const ChatSidebar = ({
           sortedSessions.map((session) => (
             <div
               key={session.id}
-              className={`group relative p-3 border-2 transition-all cursor-pointer ${
+              className={`group relative p-3 border-2 transition-all rounded-xl cursor-pointer ${
                 currentSessionId === session.id
                   ? 'border-wharf-border-primary bg-wharf-pink/20 shadow-brutal-sm'
                   : 'border-wharf-border-primary/60 hover:border-wharf-border-primary'

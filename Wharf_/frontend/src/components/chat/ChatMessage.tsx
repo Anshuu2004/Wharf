@@ -228,7 +228,7 @@ export const ChatMessage = ({
       {/* Message */}
       <div className={`flex-1 max-w-[80%] ${role === 'user' ? 'order-1' : 'order-2'}`}>
         <div
-          className={`border-2 border-wharf-border-primary p-4 ${
+          className={`border-2 border-wharf-border-primary p-4 rounded-lg ${
             role === 'user' ? 'bg-wharf-pink/20' : 'bg-wharf-surface-secondary'
           }`}
         >
