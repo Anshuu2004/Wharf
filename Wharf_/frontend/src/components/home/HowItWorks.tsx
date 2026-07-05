@@ -31,7 +31,7 @@ const steps = [
 
 export const HowItWorks = () => {
   return (
-    <section className="py-20 bg-wharf-surface-secondary border-y-4 border-wharf-border-primary">
+    <section className="py-20 bg-wharf-background-primary border-y-4 border-wharf-border-primary rounded-3xl">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
@@ -61,6 +61,7 @@ export const HowItWorks = () => {
 
               <Card
                 variant="hard"
+                rounded="3xl"
                 className="text-center h-full hover:translate-y-[-4px] transition-all"
               >
                 <div className="flex flex-col items-center">

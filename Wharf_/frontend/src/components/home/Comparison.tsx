@@ -16,7 +16,7 @@ const comparisons = [
 
 export const Comparison = () => {
   return (
-    <section className="py-20 bg-wharf-surface-secondary border-y-4 border-wharf-border-primary">
+    <section className="py-20 bg-wharf-background-primary border-y-4 border-wharf-border-primary rounded-3xl">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
@@ -36,39 +36,43 @@ export const Comparison = () => {
         </div>
 
         {/* Comparison Table */}
-        <Card variant="hard" className="max-w-4xl mx-auto overflow-hidden p-0">
+        <Card variant="hard" rounded="xl" className="max-w-4xl mx-auto overflow-hidden p-0">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full border-2 border-wharf-border-primary">
               <thead>
-                <tr className="border-b-2 border-wharf-border-primary bg-wharf-surface-tertiary">
-                  <th className="text-left p-4 font-mono font-bold text-sm">Feature</th>
-                  <th className="text-center p-4 font-mono font-bold text-sm bg-wharf-pink">
+                <tr className="border-b-2 border-wharf-border-primary bg-wharf-pink/80">
+                  <th className="text-left p-4 font-mono font-bold text-sm border-x-2 border-wharf-border-primary">
+                    Feature
+                  </th>
+                  <th className="text-center p-4 font-mono font-bold text-sm border-x-2 border-wharf-border-primary">
                     WHARF
                   </th>
-                  <th className="text-center p-4 font-mono font-bold text-sm">Others</th>
+                  <th className="text-center p-4 font-mono font-bold text-sm border-x-2 border-wharf-border-primary">
+                    Others
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {comparisons.map((item, index) => (
                   <tr
                     key={item.feature}
-                    className={`border-b border-wharf-border-secondary ${
+                    className={`border-b-2 border-wharf-border-primary ${
                       index % 2 === 0 ? 'bg-wharf-surface-primary' : 'bg-wharf-surface-secondary'
                     }`}
                   >
                     <td className="p-4 font-mono text-sm">{item.feature}</td>
-                    <td className="text-center p-4">
+                    <td className="text-center p-4 border-x-2 border-wharf-border-primary">
                       {item.wharf ? (
                         <Check className="w-5 h-5 text-wharf-green-darker mx-auto" />
                       ) : (
-                        <X className="w-5 h-5 text-wharf-orange-darker mx-auto" />
+                        <X className="w-5 h-5 text-wharf-error mx-auto" />
                       )}
                     </td>
-                    <td className="text-center p-4">
+                    <td className="text-center p-4 border-x-2 border-wharf-border-primary">
                       {item.others ? (
                         <Check className="w-5 h-5 text-wharf-green-darker mx-auto" />
                       ) : (
-                        <X className="w-5 h-5 text-wharf-orange-darker mx-auto" />
+                        <X className="w-5 h-5 text-wharf-error mx-auto" />
                       )}
                     </td>
                   </tr>
@@ -79,8 +83,9 @@ export const Comparison = () => {
         </Card>
 
         {/* Note */}
-        <p className="text-center font-mono text-xs text-wharf-text-tertiary mt-6">
-          * Based On Comparison With readme-ai, GitDocify & Other README Generators
+        <p className="text-center font-mono text-sm text-wharf-text-secondary mt-8">
+          * Based On Comparison With readme-ai, GitDocify & Other README Generators (To The Best Of
+          Our Knowledge) *
         </p>
       </div>
     </section>

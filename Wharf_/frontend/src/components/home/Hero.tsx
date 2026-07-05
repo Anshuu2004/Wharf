@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
-import { ArrowRight, Zap } from 'lucide-react';
-import { FaGithub } from 'react-icons/fa';
+import { Zap } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 
 export const Hero = () => {
-  const [typedText, setTypedText] = useState('');
+  const [, setTypedText] = useState('');
   const [isTyping, setIsTyping] = useState(true);
   const [videoLoaded, setVideoLoaded] = useState(false);
 
@@ -40,6 +39,8 @@ export const Hero = () => {
         >
           <source
             // src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260319_015952_e1deeb12-8fb7-4071-a42a-60779fc64ab6.mp4"
+            // src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260703_053131_1ec3dd1c-d627-44fb-ab20-6e1fce41b0d5.mp4"
+            // src=""
             type="video/mp4"
           />
         </video>
@@ -49,7 +50,7 @@ export const Hero = () => {
       </div>
 
       {/* Loading Placeholder */}
-      {!videoLoaded && <div className="absolute inset-0 bg-wharf-black/80 animate-pulse z-0" />}
+      {!videoLoaded && <div className="absolute inset-0 bg-wharf-surface-primary z-0" />}
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto">
@@ -104,22 +105,14 @@ export const Hero = () => {
                   documentation in seconds. No setup required.
                 </p>
 
-                {/* URL Input Bar */}
+                {/* CTA Buttons */}
                 <div className="max-w-2xl mx-auto mb-8">
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="flex-1 relative">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                        <FaGithub className="w-5 h-5 text-wharf-text-tertiary" />
-                      </div>
-                      <input
-                        type="text"
-                        placeholder={typedText}
-                        className="w-full pl-10 pr-4 py-3 font-mono text-sm border-2 border-wharf-border-primary bg-wharf-surface-primary focus:outline-none focus:shadow-brutal-sm focus:border-wharf-pink transition-all"
-                      />
-                    </div>
-                    <Button variant="primary" size="lg" className="gap-2 group">
-                      Generate README
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <div className="flex flex-col sm:flex-row gap-8 justify-center">
+                    <Button variant="primary" size="lg" rounded="2xl" className="gap-2 group">
+                      Generate Repository README
+                    </Button>
+                    <Button variant="outline" size="lg" rounded="2xl" className="group">
+                      Generate Profile README
                     </Button>
                   </div>
                 </div>

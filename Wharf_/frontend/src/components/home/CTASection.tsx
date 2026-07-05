@@ -13,6 +13,7 @@ export const CTASection = () => {
       <div className="container mx-auto px-4 relative z-10">
         <Card
           variant="hard"
+          rounded="3xl"
           className="max-w-4xl mx-auto text-center bg-gradient-to-br from-wharf-surface-secondary to-wharf-surface-primary p-8 md:p-12 hover:shadow-brutal-xl transition-all"
         >
           {/* Badge */}
@@ -40,14 +41,14 @@ export const CTASection = () => {
 
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-8 justify-center mb-8">
-            <Button variant="primary" size="lg" className="gap-2 group">
+            <Button variant="primary" size="lg" rounded="2xl" className="gap-2 group">
               <Rocket className="w-4 h-4 group-hover:translate-y-[-2px] transition-transform" />
               Start Generating Now
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button variant="outline" size="lg" className="group">
+            <Button variant="outline" size="lg" rounded="2xl" className="group">
               View Documentation
-              <ArrowRight className="w-4 h-4 ml-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+              <ArrowRight className="w-4 h-4 ml-2 opacity-100 group-hover:translate-x-1 transition-all" />
             </Button>
           </div>
 
