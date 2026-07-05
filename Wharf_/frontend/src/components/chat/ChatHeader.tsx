@@ -1,19 +1,6 @@
-import { Download, GitBranch, Settings } from 'lucide-react';
-import { Badge } from '../ui/Badge';
+import { Download, Settings } from 'lucide-react';
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
-
-interface ChatSession {
-  id: string;
-  title: string;
-  repoData?: {
-    name: string;
-    owner: string;
-    language: string;
-    stars: number;
-    forks: number;
-  };
-}
 
 interface Persona {
   id: string;
@@ -23,7 +10,6 @@ interface Persona {
 }
 
 interface ChatHeaderProps {
-  session?: ChatSession | null;
   onExport: () => void;
   selectedPersona?: string;
   personas?: Persona[];
@@ -31,7 +17,6 @@ interface ChatHeaderProps {
 }
 
 export const ChatHeader = ({
-  session,
   onExport,
   selectedPersona = 'developer',
   personas = [],
@@ -46,23 +31,6 @@ export const ChatHeader = ({
         <h1 className="font-display font-black text-xl tracking-tighter">
           WHARF <span className="text-wharf-pink">Chat</span>
         </h1>
-        {session?.repoData && (
-          <>
-            <div className="w-px h-6 bg-wharf-border-secondary" />
-            <div className="flex items-center gap-2">
-              <GitBranch className="w-4 h-4 text-wharf-text-tertiary" />
-              <span className="font-mono text-sm font-bold">
-                {session.repoData.owner}/{session.repoData.name}
-              </span>
-              <Badge variant="cyan" size="sm">
-                {session.repoData.language}
-              </Badge>
-              <Badge variant="pink" size="sm">
-                {session.repoData.stars}⭐
-              </Badge>
-            </div>
-          </>
-        )}
       </div>
 
       <div className="flex items-center gap-2">

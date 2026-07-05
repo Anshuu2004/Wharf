@@ -50,7 +50,7 @@ export const RepoContextBar = ({
       {isLocked ? (
         <div className="flex items-center gap-1.5 px-3 h-8 border-2 border-wharf-border-secondary bg-wharf-surface-primary whitespace-nowrap">
           <Lock className="w-3 h-3 text-wharf-text-tertiary" />
-          <span className="font-mono text-[10px] text-wharf-text-tertiary">New chat to change</span>
+          <span className="font-mono text-[10px] text-wharf-text-tertiary">New Chat To Change</span>
         </div>
       ) : (
         <Button

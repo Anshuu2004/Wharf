@@ -26,6 +26,32 @@ interface ChatSession {
   preview: string;
   messages: Message[];
   repoUrl?: string;
+  pinned?: boolean;
+  repoData?: {
+    name: string;
+    owner: string;
+    language: string;
+    stars: number;
+    forks: number;
+    description: string;
+  };
+}
+
+// Type For Stored Session In LocalStorage
+interface StoredSession {
+  id: string;
+  title: string;
+  timestamp: string;
+  preview: string;
+  messages: Array<{
+    id: string;
+    role: 'user' | 'assistant';
+    content: string;
+    timestamp: string;
+    codeBlocks?: { code: string; language: string }[];
+  }>;
+  repoUrl?: string;
+  pinned?: boolean;
   repoData?: {
     name: string;
     owner: string;
@@ -47,11 +73,25 @@ export const ChatPage = () => {
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
     try {
       const saved = localStorage.getItem('wharf_chat_sessions');
-      return saved ? JSON.parse(saved) : [];
+      if (saved) {
+        const parsed: StoredSession[] = JSON.parse(saved);
+        // Ensure All Sessions Have Pinned Property & Proper Date Objects
+        return parsed.map((s: StoredSession) => ({
+          ...s,
+          pinned: s.pinned || false,
+          timestamp: new Date(s.timestamp),
+          messages: s.messages.map((m) => ({
+            ...m,
+            timestamp: new Date(m.timestamp),
+          })),
+        }));
+      }
+      return [];
     } catch {
       return [];
     }
   });
+
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(() => {
     return localStorage.getItem('wharf_current_session_id') || null;
   });
@@ -68,7 +108,7 @@ export const ChatPage = () => {
       localStorage.removeItem('wharf_current_session_id');
     }
   }, [currentSessionId]);
-  
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [isAnalyzingRepo, setIsAnalyzingRepo] = useState(false);
@@ -106,6 +146,7 @@ export const ChatPage = () => {
       preview: 'Start a new conversation',
       messages: [],
       repoUrl: repoUrl || undefined,
+      pinned: false,
     };
     setSessions([newSession, ...sessions]);
     setCurrentSessionId(newSession.id);
@@ -128,12 +169,12 @@ export const ChatPage = () => {
           activeSessionId = Date.now().toString();
           const newSession: ChatSession = {
             id: activeSessionId,
-            // Title Will Be Set To Owner/Repo Below Via The Map
             title: `${meta.owner}/${meta.name}`,
             timestamp: new Date(),
             preview: 'Start a conversation...',
             messages: [],
             repoUrl: repoUrl,
+            pinned: false,
           };
           newState = [newSession, ...newState];
           setCurrentSessionId(activeSessionId);
@@ -142,26 +183,25 @@ export const ChatPage = () => {
         return newState.map((s) =>
           s.id === activeSessionId
             ? {
-              ...s,
-              // Always Update Title To Owner/Repo When Analyzed
-              title: `${meta.owner}/${meta.name}`,
-              repoUrl: repoUrl,
-              repoData: {
-                name: meta.name,
-                owner: meta.owner,
-                language: meta.language || 'Unknown',
-                stars: meta.stars,
-                forks: 0,
-                description: meta.description || 'No description provided.',
-              },
-            }
+                ...s,
+                title: `${meta.owner}/${meta.name}`,
+                repoUrl: repoUrl,
+                pinned: s.pinned || false,
+                repoData: {
+                  name: meta.name,
+                  owner: meta.owner,
+                  language: meta.language || 'Unknown',
+                  stars: meta.stars,
+                  forks: 0,
+                  description: meta.description || 'No Description Provided',
+                },
+              }
             : s
         );
       });
       setIsRepoAnalyzed(true);
     } catch (error) {
       console.error('Failed to analyze repository:', error);
-      // Fallback Behavior Or Error Toast Could Go Here
     } finally {
       setIsAnalyzingRepo(false);
     }
@@ -170,7 +210,6 @@ export const ChatPage = () => {
   const handleSendMessage = async (content: string) => {
     let activeSessionId = currentSessionId;
     if (!activeSessionId) {
-      // Synchronously Create Placeholder If Starting Raw
       const newSession: ChatSession = {
         id: Date.now().toString(),
         title: content.slice(0, 30) + (content.length > 30 ? '...' : ''),
@@ -178,6 +217,7 @@ export const ChatPage = () => {
         preview: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
         messages: [],
         repoUrl: repoUrl || undefined,
+        pinned: false,
       };
       setSessions([newSession, ...sessions]);
       setCurrentSessionId(newSession.id);
@@ -196,17 +236,17 @@ export const ChatPage = () => {
       prev.map((s) =>
         s.id === activeSessionId
           ? {
-            ...s,
-            messages: [...s.messages, userMessage],
-            // Only Set Preview From The Very First User Message
-            preview: s.messages.length === 0
-              ? content.slice(0, 60) + (content.length > 60 ? '...' : '')
-              : s.preview,
-            // Only Set Title If No RepoData (RepoData Sessions Already Have Owner/Repo As Title)
-            title: !s.repoData && s.messages.length === 0
-              ? content.slice(0, 30) + (content.length > 30 ? '...' : '')
-              : s.title,
-          }
+              ...s,
+              messages: [...s.messages, userMessage],
+              preview:
+                s.messages.length === 0
+                  ? content.slice(0, 60) + (content.length > 60 ? '...' : '')
+                  : s.preview,
+              title:
+                !s.repoData && s.messages.length === 0
+                  ? content.slice(0, 30) + (content.length > 30 ? '...' : '')
+                  : s.title,
+            }
           : s
       )
     );
@@ -214,41 +254,57 @@ export const ChatPage = () => {
     setIsSendingMessage(true);
 
     try {
-      const activeSession = sessions.find(s => s.id === activeSessionId) || { repoUrl, messages: [], repoData: undefined };
+      const activeSession = sessions.find((s) => s.id === activeSessionId) || {
+        repoUrl,
+        messages: [],
+        repoData: undefined,
+      };
       const token = useAuthStore.getState().token;
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/chat/message`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          sessionId: activeSessionId,
-          question: content,
-          persona: selectedPersona,
-          repoUrl: activeSession.repoUrl || repoUrl,
-          repoData: activeSession.repoData,
-          history: activeSession.messages.map(m => ({
-            role: m.role,
-            content: m.content
-          }))
-        })
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/chat/message`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            sessionId: activeSessionId,
+            question: content,
+            persona: selectedPersona,
+            repoUrl: activeSession.repoUrl || repoUrl,
+            repoData: activeSession.repoData,
+            history: activeSession.messages.map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+          }),
+        }
+      );
 
       if (!response.body) throw new Error('ReadableStream not supported.');
 
       const reader = response.body.getReader();
-      const decoder = new TextDecoder("utf-8");
+      const decoder = new TextDecoder('utf-8');
 
       const assistantMessageId = (Date.now() + 1).toString();
-      let fullResponse = "";
-      let buffer = "";
+      let fullResponse = '';
+      let buffer = '';
 
-      // Attach Blank Assistant Message Placeholder
-      setSessions((prev) => prev.map(s => s.id === activeSessionId
-        ? { ...s, messages: [...s.messages, { id: assistantMessageId, role: 'assistant', content: '', timestamp: new Date() }] }
-        : s));
+      setSessions((prev) =>
+        prev.map((s) =>
+          s.id === activeSessionId
+            ? {
+                ...s,
+                messages: [
+                  ...s.messages,
+                  { id: assistantMessageId, role: 'assistant', content: '', timestamp: new Date() },
+                ],
+              }
+            : s
+        )
+      );
 
       while (true) {
         const { done, value } = await reader.read();
@@ -256,8 +312,7 @@ export const ChatPage = () => {
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
-        // Keep The Last Segment In Buffer If It Doesn't End With A Newline
-        buffer = lines.pop() || "";
+        buffer = lines.pop() || '';
 
         for (const line of lines) {
           const trimmed = line.trim();
@@ -271,23 +326,23 @@ export const ChatPage = () => {
                 const parsed = JSON.parse(dataStr);
                 if (parsed.text) fullResponse += parsed.text;
               } catch {
-                // Removed The 'E' Parameter Since It's Unused
                 console.warn('Failed to parse SSE line JSON', dataStr);
               }
             }
           }
         }
 
-        // Incrementally Update UI
-        setSessions((prev) => prev.map(s => {
-          if (s.id === activeSessionId) {
-            const msgs = [...s.messages];
-            const botMsgIdx = msgs.findIndex(m => m.id === assistantMessageId);
-            if (botMsgIdx !== -1) msgs[botMsgIdx].content = fullResponse;
-            return { ...s, messages: msgs };
-          }
-          return s;
-        }));
+        setSessions((prev) =>
+          prev.map((s) => {
+            if (s.id === activeSessionId) {
+              const msgs = [...s.messages];
+              const botMsgIdx = msgs.findIndex((m) => m.id === assistantMessageId);
+              if (botMsgIdx !== -1) msgs[botMsgIdx].content = fullResponse;
+              return { ...s, messages: msgs };
+            }
+            return s;
+          })
+        );
       }
     } catch (error) {
       console.error('Failed to get AI response:', error);
@@ -297,20 +352,24 @@ export const ChatPage = () => {
   };
 
   const handleEditMessage = (msgId: string, newContent: string) => {
-    const activeSession = sessions.find(s => s.id === currentSessionId);
+    const activeSession = sessions.find((s) => s.id === currentSessionId);
     if (!activeSession) return;
-    const msgIndex = activeSession.messages.findIndex(m => m.id === msgId);
+    const msgIndex = activeSession.messages.findIndex((m) => m.id === msgId);
     if (msgIndex === -1) return;
 
-    // Truncate Messages Above The Edited Message
     const historyToKeep = activeSession.messages.slice(0, msgIndex);
 
-    setSessions(prev => prev.map(s => s.id === currentSessionId ? {
-      ...s,
-      messages: historyToKeep
-    } : s));
+    setSessions((prev) =>
+      prev.map((s) =>
+        s.id === currentSessionId
+          ? {
+              ...s,
+              messages: historyToKeep,
+            }
+          : s
+      )
+    );
 
-    // Wait A Brief Moment For State To Settle, Then Resend
     setTimeout(() => {
       handleSendMessage(newContent);
     }, 50);
@@ -325,6 +384,14 @@ export const ChatPage = () => {
 
   const handleRenameSession = (id: string, newTitle: string) => {
     setSessions((prev) => prev.map((s) => (s.id === id ? { ...s, title: newTitle } : s)));
+  };
+
+  const handlePinSession = (id: string) => {
+    setSessions((prev) => prev.map((s) => (s.id === id ? { ...s, pinned: true } : s)));
+  };
+
+  const handleUnpinSession = (id: string) => {
+    setSessions((prev) => prev.map((s) => (s.id === id ? { ...s, pinned: false } : s)));
   };
 
   const suggestedFollowups = [
@@ -348,6 +415,8 @@ export const ChatPage = () => {
             onSelectSession={setCurrentSessionId}
             onDeleteSession={handleDeleteSession}
             onRenameSession={handleRenameSession}
+            onPinSession={handlePinSession}
+            onUnpinSession={handleUnpinSession}
           />
         </div>
 
@@ -363,8 +432,7 @@ export const ChatPage = () => {
 
           {/* Header */}
           <ChatHeader
-            session={currentSession}
-            onExport={() => { }}
+            onExport={() => {}}
             selectedPersona={selectedPersona}
             personas={personas}
             onPersonaChange={setSelectedPersona}
@@ -374,7 +442,7 @@ export const ChatPage = () => {
           <div className="border-y-2 border-wharf-border-primary bg-wharf-surface-secondary">
             <div className="grid grid-cols-2 divide-x-2 divide-wharf-border-primary">
               {/* Col 1: URL Input */}
-              <div className="py-2 px-6">
+              <div className="py-3.5 px-6">
                 <RepoContextBar
                   repoUrl={repoUrl}
                   setRepoUrl={setRepoUrl}
@@ -387,7 +455,7 @@ export const ChatPage = () => {
               </div>
 
               {/* Col 2: Repo Description */}
-              <div className="py-2 px-6 flex items-center min-w-0">
+              <div className="py-1 px-6 flex items-center min-w-0">
                 {currentSession?.repoData ? (
                   <div className="w-full min-w-0">
                     {/* Repo Name */}
@@ -400,7 +468,7 @@ export const ChatPage = () => {
                         {/* Language */}
                         {currentSession.repoData.language && (
                           <span className="font-mono text-[10px] text-wharf-text-secondary">
-                           [ {currentSession.repoData.language} ]
+                            [ {currentSession.repoData.language} ]
                           </span>
                         )}
 
@@ -430,8 +498,8 @@ export const ChatPage = () => {
                     )}
                   </div>
                 ) : (
-                  <p className="font-mono text-[10px] text-wharf-text-secondary italic capitalize">
-                    Analyze a repository to see its details here
+                  <p className="font-mono text-[12px] text-wharf-text-secondary italic capitalize">
+                    Analyze a repository to see its details here...
                   </p>
                 )}
               </div>
@@ -448,7 +516,7 @@ export const ChatPage = () => {
               onEditMessage={handleEditMessage}
             />
 
-            {/* Suggested Follow-ups - Only Show When Messages Exist */}
+            {/* Suggested Follow-ups */}
             {messages.length > 0 && !isSendingMessage && (
               <div className="mt-4">
                 <SuggestedFollowups suggestions={suggestedFollowups} onSelect={handleSendMessage} />
@@ -457,7 +525,11 @@ export const ChatPage = () => {
           </div>
 
           {/* Input */}
-          <ChatInput onSend={handleSendMessage} isLoading={isSendingMessage} persona={selectedPersona} />
+          <ChatInput
+            onSend={handleSendMessage}
+            isLoading={isSendingMessage}
+            persona={selectedPersona}
+          />
         </div>
       </div>
     </div>
