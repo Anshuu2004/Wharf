@@ -130,6 +130,16 @@ body {
   background: var(--color-wharf-pink-dark);
 }
 
+/* Hide Scrollbar */
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
 
 /* Button System */
 .btn {
@@ -499,7 +509,7 @@ body {
 @keyframes scale-up {
   0% {
     transform: scale(0.8);
-    opacity: 0;
+    opacity: 0; 
   }
   100% {
     transform: scale(1);
