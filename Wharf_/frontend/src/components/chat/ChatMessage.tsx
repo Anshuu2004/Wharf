@@ -39,7 +39,7 @@ function parseInline(text: string): React.ReactNode[] {
       parts.push(
         <code
           key={match.index}
-          className="font-mono bg-wharf-surface-primary border border-wharf-border-secondary px-1 py-0.5 text-xs text-wharf-pink rounded-none"
+          className="font-mono bg-wharf-surface-primary border border-wharf-border-secondary px-1 py-0.5 text-xs text-wharf-green-darker rounded-none"
         >
           {match[4]}
         </code>
@@ -63,6 +63,24 @@ function formatContent(text: string): React.ReactNode[] {
   while (i < lines.length) {
     const line = lines[i];
     const trimmed = line.trim();
+
+    // Multiline Code Block
+    if (trimmed.startsWith('```')) {
+      const language = trimmed.slice(3).trim();
+      const codeLines = [];
+      i++;
+      while (i < lines.length && !lines[i].trim().startsWith('```')) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      result.push(
+        <div key={i} className="my-4">
+          <CodeBlock code={codeLines.join('\n')} language={language || 'text'} />
+        </div>
+      );
+      i++; // Skip Closing ```
+      continue;
+    }
 
     // Empty Line
     if (!trimmed) {
@@ -129,7 +147,7 @@ function formatContent(text: string): React.ReactNode[] {
       const indent = numberedMatch[1].length;
       result.push(
         <div key={i} className="flex gap-2 mb-0.5" style={{ marginLeft: `${indent * 8 + 12}px` }}>
-          <span className="font-mono text-sm font-bold text-wharf-pink flex-shrink-0">
+          <span className="font-mono text-sm font-bold text-wharf-pink-dark flex-shrink-0">
             {numberedMatch[2]}.
           </span>
           <span className="font-mono text-sm text-wharf-text-secondary leading-relaxed">
@@ -211,7 +229,7 @@ export const ChatMessage = ({
       <div className={`flex-1 max-w-[80%] ${role === 'user' ? 'order-1' : 'order-2'}`}>
         <div
           className={`border-2 border-wharf-border-primary p-4 ${
-            role === 'user' ? 'bg-wharf-pink' : 'bg-wharf-surface-secondary'
+            role === 'user' ? 'bg-wharf-pink/20' : 'bg-wharf-surface-secondary'
           }`}
         >
           {isEditing ? (

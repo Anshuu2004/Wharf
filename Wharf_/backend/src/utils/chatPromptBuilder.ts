@@ -13,6 +13,7 @@ Persona: ${params.persona}
 
 Repository Context:
 - Name: ${meta.name}
+- URL: https://github.com/${meta.owner}/${meta.name}
 - Description: ${meta.description || 'No description provided.'}
 - Tech Stack: ${frameworks.join(', ')}
 - File Structure Snapshot: 
@@ -23,6 +24,11 @@ ${keyFiles['README.md'] ? keyFiles['README.md'].slice(0, 2000) : 'Not available'
 Question: ${params.question}
 
 Provide a clear, detailed, and helpful response based on the repository context.
+
+Important Rules:
+- When generating clone commands or setup instructions, ALWAYS use the explicit Repository URL provided above instead of placeholders like <repository-url>.
+- Use proper markdown formatting. Ensure blocks of code are enclosed in backticks.
+
 ${getPersonaInstructions(params.persona)}
 `;
 }
