@@ -1,4 +1,15 @@
-import { Check, Trophy, Flame, BarChart2, Star, Eye, Users, Zap, Code, TrendingUp } from 'lucide-react';
+import {
+  Check,
+  Trophy,
+  Flame,
+  BarChart2,
+  Star,
+  Eye,
+  Users,
+  Zap,
+  Code,
+  TrendingUp,
+} from 'lucide-react';
 import { FaGithub } from 'react-icons/fa';
 import { useState } from 'react';
 
@@ -152,7 +163,7 @@ export const WidgetsCustomizer = ({ options, onChange }: WidgetsCustomizerProps)
           placeholder="Search widgets and badges..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2.5 pl-9 border-2 border-wharf-border-primary bg-wharf-surface-primary font-mono text-sm outline-none focus:shadow-brutal-sm transition-shadow"
+          className="w-full px-4 py-2.5 pl-9 border-2 border-wharf-border-primary bg-wharf-surface-primary font-mono text-sm outline-none focus:shadow-brutal-sm transition-shadow rounded-xl"
         />
         <svg
           className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-wharf-text-tertiary"
@@ -200,7 +211,7 @@ export const WidgetsCustomizer = ({ options, onChange }: WidgetsCustomizerProps)
                 key={badge.id}
                 onClick={() => toggleBadge(badge.id)}
                 className={`
-                  group relative flex items-center gap-3 p-3.5 border-2 transition-all duration-200 text-left cursor-pointer
+                  group relative flex items-center gap-3 p-3.5 border-2 transition-all duration-200 text-left rounded-xl cursor-pointer
                   ${
                     isSelected
                       ? `${badge.bgColor} border-wharf-border-primary shadow-brutal-sm -translate-y-0.5`
@@ -268,7 +279,7 @@ export const WidgetsCustomizer = ({ options, onChange }: WidgetsCustomizerProps)
                 key={widget.id}
                 onClick={() => toggleOption(widget.id)}
                 className={`
-                  group relative flex items-center gap-3 p-3.5 border-2 transition-all duration-200 text-left cursor-pointer
+                  group relative flex items-center gap-3 p-3.5 border-2 transition-all duration-200 text-left rounded-xl cursor-pointer
                   ${
                     isSelected
                       ? `${widget.bgColor} border-wharf-border-primary shadow-brutal-sm -translate-y-0.5`
@@ -339,7 +350,7 @@ export const WidgetsCustomizer = ({ options, onChange }: WidgetsCustomizerProps)
               newOptions.showContributions = true;
               onChange(newOptions);
             }}
-            className="px-3 py-1.5 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-surface-secondary transition-colors font-mono text-[10px] font-bold cursor-pointer"
+            className="px-3 py-1.5 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-surface-secondary rounded-lg transition-colors font-mono text-[10px] font-bold cursor-pointer"
           >
             Select All
           </button>
@@ -358,7 +369,7 @@ export const WidgetsCustomizer = ({ options, onChange }: WidgetsCustomizerProps)
               newOptions.showContributions = false;
               onChange(newOptions);
             }}
-            className="px-3 py-1.5 border-2 border-wharf-border-secondary bg-wharf-surface-primary hover:bg-wharf-error/10 hover:border-wharf-error transition-colors font-mono text-[10px] font-bold text-wharf-text-tertiary hover:text-wharf-error cursor-pointer"
+            className="px-3 py-1.5 border-2 border-wharf-border-secondary bg-wharf-surface-primary hover:bg-wharf-error/10 hover:border-wharf-error transition-colors font-mono text-[10px] font-bold text-wharf-text-tertiary hover:text-wharf-error cursor-pointer rounded-lg"
           >
             Clear All
           </button>

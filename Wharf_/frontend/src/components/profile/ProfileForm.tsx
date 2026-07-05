@@ -61,7 +61,13 @@ export const ProfileForm = ({ user, onFetch, isLoading }: ProfileFormProps) => {
               className="pl-9 font-mono text-sm"
             />
           </div>
-          <Button variant="primary" type="submit" loading={isLoading} className="min-w-[120px]">
+          <Button
+            variant="primary"
+            rounded="2xl"
+            type="submit"
+            loading={isLoading}
+            className="min-w-[120px]"
+          >
             {isLoading ? 'Fetching...' : 'Fetch Profile'}
             {!isLoading && <ArrowRight className="w-4 h-4" />}
           </Button>
