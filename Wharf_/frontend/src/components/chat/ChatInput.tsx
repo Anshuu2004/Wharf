@@ -49,10 +49,10 @@ export const ChatInput = ({ onSend, isLoading, persona = 'developer' }: ChatInpu
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask about the repository..."
+          placeholder="Ask About The Repository..."
           disabled={isLoading}
           rows={1}
-          className="w-full px-4 py-3 font-mono text-sm border-2 border-wharf-border-primary bg-wharf-surface-primary resize-none focus:outline-none focus:border-wharf-pink transition-colors disabled:opacity-50 overflow-y-auto min-h-[56px] max-h-[150px] rounded-xl"
+          className="w-full px-4 py-3 font-mono text-sm border-2 border-wharf-border-primary bg-wharf-surface-primary resize-none focus:outline-none focus:border-wharf-pink transition-colors disabled:opacity-50 overflow-y-auto min-h-[56px] max-h-[150px] rounded-xl scrollbar-hidden"
           style={{ height: 'auto' }}
         />
 

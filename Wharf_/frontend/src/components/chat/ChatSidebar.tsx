@@ -209,7 +209,7 @@ export const ChatSidebar = ({
       </div>
 
       {/* Chat List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      <div className="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-hidden">
         {sortedSessions.length === 0 ? (
           <div className="text-center py-8">
             <MessageSquare className="w-8 h-8 text-wharf-text-secondary mx-auto mb-2" />

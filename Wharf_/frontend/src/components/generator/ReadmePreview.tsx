@@ -158,7 +158,7 @@ export const ReadmePreview = ({
 
           if (!code.trim()) continue;
 
-          // Auto-fix unquoted node labels with parentheses e.g. A[Label (Extra)] -> A["Label (Extra)"]
+          // Auto-Fix Unquoted Node Labels With Parentheses e.g. A[Label (Extra)] -> A["Label (Extra)"]
           code = code.replace(/\[([^"\]\[]*?\([^)]*?\)[^"\]\[]*?)\]/g, '["$1"]');
 
           try {
@@ -465,13 +465,14 @@ export const ReadmePreview = ({
     <div className={`${isFullscreen ? 'fixed inset-0 z-[999]' : ''}`} ref={containerRef}>
       <Card
         variant="hard"
+        rounded="xl"
         className={`
-        overflow-x-hidden flex flex-col border-4 border-wharf-border-primary
+        overflow-x-hidden flex flex-col 
         ${isFullscreen ? 'h-screen rounded-none border-0' : ''}
       `}
       >
         {/* Toolbar */}
-        <div className="border-b-4 border-wharf-border-primary p-3 bg-wharf-surface-secondary flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <div className="border-2 border-wharf-border-primary p-3 bg-wharf-surface-secondary flex flex-wrap items-center justify-between gap-2 shrink-0">
           <div className="flex items-center gap-3">
             {/* Window Controls */}
             <div className="flex items-center gap-1.5">
@@ -557,7 +558,7 @@ export const ReadmePreview = ({
         {/* Content Area */}
         <div
           ref={contentAreaRef}
-          className="flex overflow-hidden relative"
+          className="flex overflow-hidden relative border-x-2 border-wharf-border-primary"
           style={getHeightStyle()}
         >
           {/* Editor */}
@@ -568,7 +569,7 @@ export const ReadmePreview = ({
             `}
             >
               <textarea
-                className="w-full flex-1 p-4 bg-wharf-surface-primary outline-none resize-none font-mono text-sm text-wharf-text-primary custom-scrollbar"
+                className="w-full flex-1 p-4 bg-wharf-surface-primary outline-none resize-none font-mono text-sm text-wharf-text-primary scrollbar-hidden"
                 value={content}
                 onChange={(e) => handleContentChange(e.target.value)}
                 placeholder="# Your README content will appear here..."
@@ -582,11 +583,11 @@ export const ReadmePreview = ({
             <>
               <div
                 className={`
-                flex flex-col relative w-1/2 h-full border-r-4 border-wharf-border-primary
+                flex flex-col relative w-1/2 h-full border-r-2 border-wharf-border-primary
               `}
               >
                 <textarea
-                  className="w-full flex-1 p-4 bg-wharf-surface-primary outline-none resize-none font-mono text-sm text-wharf-text-primary custom-scrollbar"
+                  className="w-full flex-1 p-4 bg-wharf-surface-primary outline-none resize-none font-mono text-sm text-wharf-text-primary scrollbar-hidden"
                   value={content}
                   onChange={(e) => handleContentChange(e.target.value)}
                   placeholder="# Your README content will appear here..."
@@ -597,7 +598,7 @@ export const ReadmePreview = ({
               <div className="w-1/2 h-full bg-white relative">
                 <div
                   ref={previewRef}
-                  className="markdown-body github-readme-preview overflow-y-auto h-full"
+                  className="markdown-body github-readme-preview overflow-y-auto h-full scrollbar-hidden"
                   style={{
                     backgroundColor: '#ffffff',
                     color: '#24292f',
@@ -632,7 +633,7 @@ export const ReadmePreview = ({
             <div className="w-full h-full bg-white relative">
               <div
                 ref={previewRef}
-                className="markdown-body github-readme-preview overflow-y-auto h-full"
+                className="markdown-body github-readme-preview overflow-y-auto h-full scrollbar-hidden"
                 style={{
                   backgroundColor: '#ffffff',
                   color: '#24292f',
@@ -679,7 +680,7 @@ export const ReadmePreview = ({
         )} */}
 
         {/* Status Bar */}
-        <div className="border-t-4 border-wharf-border-primary p-2 bg-wharf-surface-secondary flex justify-between items-center shrink-0">
+        <div className="border-2 border-wharf-border-primary p-2 bg-wharf-surface-secondary flex justify-between items-center shrink-0">
           <div className="flex items-center gap-4">
             <span className="font-mono text-[10px] text-wharf-text-secondary whitespace-nowrap flex items-center gap-1.5">
               <FileText className="w-3 h-3" />

@@ -1213,7 +1213,7 @@ export const ProfileGeneratorPage = () => {
                                 <p className="font-mono text-sm text-wharf-text-secondary mb-4 capitalize">
                                   See how your profile will look with the current settings...
                                 </p>
-                                <div className="border-2 border-wharf-border-primary overflow-hidden">
+                                <div className="overflow-hidden">
                                   <Suspense fallback={<MarkdownFallback />}>
                                     <ReadmePreview
                                       content={generatePreviewMarkdown(profileData, options)}
