@@ -185,17 +185,6 @@ export const ProfileHistoryView = ({
     return username.charAt(0).toUpperCase();
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="p-16 text-center border-2 border-wharf-border-primary">
-          <div className="w-10 h-10 border-4 border-wharf-pink border-t-transparent animate-spin mx-auto" />
-          <p className="font-mono text-sm text-wharf-text-tertiary mt-4">Loading Your History...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6 animate-fadeInUp">
       {/* Header */}
@@ -285,8 +274,13 @@ export const ProfileHistoryView = ({
         </div>
       )}
 
-      {/* Empty State */}
-      {filteredHistory.length === 0 ? (
+      {/* Loading & Empty State */}
+      {loading ? (
+        <div className="p-16 text-center border-2 border-wharf-border-primary rounded-3xl">
+          <div className="w-10 h-10 border-4 border-wharf-pink border-t-transparent animate-spin mx-auto" />
+          <p className="font-mono text-sm text-wharf-text-tertiary mt-4">Loading Your History...</p>
+        </div>
+      ) : filteredHistory.length === 0 ? (
         <Card variant="hard" className="p-16 text-center">
           <div className="w-20 h-20 bg-wharf-surface-secondary border-2 border-wharf-border-primary flex items-center justify-center mx-auto mb-4">
             <FileText className="w-10 h-10 text-wharf-text-tertiary opacity-50" />
