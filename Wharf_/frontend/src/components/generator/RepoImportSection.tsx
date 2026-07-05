@@ -110,7 +110,7 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
 
   return (
     <div className="relative overflow-visible">
-      <Card variant="hard" className="overflow-visible">
+      <Card variant="hard" rounded="3xl" className="overflow-visible">
         {/* Method Toggle */}
         <div className="flex border-b-2 border-wharf-border-primary">
           <button
@@ -162,6 +162,7 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
                 </div>
                 <Button
                   variant="primary"
+                  rounded="2xl"
                   onClick={handleUrlSubmit}
                   loading={isLoading}
                   className="min-w-[120px]"

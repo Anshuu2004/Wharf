@@ -212,13 +212,13 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
             placeholder="Search by repo name, owner, or language..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 font-mono text-sm"
+            className="pl-9 font-mono text-sm rounded-2xl"
           />
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-4 py-2 border-2 border-wharf-border-primary font-mono text-sm font-bold hover:bg-wharf-surface-secondary transition-colors"
+            className="flex items-center gap-2 px-4 py-2 border-2 border-wharf-border-primary font-mono text-sm font-bold hover:bg-wharf-surface-secondary transition-colors rounded-2xl cursor-pointer"
           >
             <Filter className="w-4 h-4" />
             Filter
@@ -229,7 +229,7 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="px-4 py-2 border-2 border-wharf-border-primary font-mono text-sm font-bold bg-wharf-surface-primary focus:outline-none focus:border-wharf-pink"
+            className="px-4 py-2 border-2 border-wharf-border-primary font-mono text-sm font-bold bg-wharf-surface-primary focus:outline-none focus:border-wharf-pink rounded-2xl cursor-pointer"
           >
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
@@ -240,7 +240,7 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
 
       {/* Filter Tags */}
       {showFilters && (
-        <div className="p-4 border-2 border-wharf-border-primary bg-wharf-surface-secondary animate-fadeInUp">
+        <div className="p-4 border-2 border-wharf-border-primary bg-wharf-surface-secondary animate-fadeInUp rounded-2xl">
           <div className="flex flex-wrap gap-2">
             <span className="font-mono text-xs font-bold text-wharf-text-tertiary">Languages:</span>
             {[...new Set(history.map((h) => h.repository.language).filter(Boolean))].map((lang) => (
@@ -253,7 +253,7 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
                     setSearchQuery(lang || '');
                   }
                 }}
-                className={`px-2 py-1 border border-wharf-border-secondary font-mono text-xs hover:border-wharf-pink transition-colors ${
+                className={`px-2 border border-wharf-border-secondary font-mono text-xs hover:border-wharf-pink transition-colors cursor-pointer ${
                   searchQuery.includes(lang || '')
                     ? 'bg-wharf-pink border-wharf-border-primary'
                     : ''
@@ -268,7 +268,7 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
 
       {/* Loading State */}
       {isLoading ? (
-        <div className="p-16 text-center border-2 border-wharf-border-primary">
+        <div className="p-16 text-center border-2 border-wharf-border-primary rounded-3xl">
           <div className="w-10 h-10 border-4 border-wharf-pink border-t-transparent animate-spin mx-auto" />
           <p className="font-mono text-sm text-wharf-text-tertiary mt-4">Loading Your History...</p>
         </div>
@@ -292,11 +292,12 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
         </Card>
       ) : (
         /* History List */
-        <div className="grid gap-4">
+        <div className="grid gap-6">
           {filteredHistory.map((record) => (
             <Card
               key={record.id}
               variant="hard"
+              rounded="3xl"
               className="p-4 hover:translate-y-[-2px] transition-all duration-200 group"
             >
               <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -358,12 +359,12 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
                     <span className="hidden sm:inline">View</span>
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={() => handleDelete(record.id, record.repository.name)}
                     className="text-wharf-text-tertiary hover:text-wharf-orange hover:bg-transparent"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-4.5 h-4.5" />
                   </Button>
                 </div>
               </div>

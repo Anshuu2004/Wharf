@@ -406,17 +406,17 @@ export const TechStackSelector = ({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search technologies..."
-              className="pl-9 font-mono text-sm"
+              className="pl-9 font-mono text-sm rounded-xl"
             />
           </div>
         </div>
         <Button
           variant="outline"
           onClick={handleMagicAutofill}
-          className="flex items-center gap-2 whitespace-nowrap"
+          className="flex items-center gap-2 h-11.5 rounded-xl"
         >
           <Zap className="w-4 h-4 text-wharf-pink-dark" />
-          Magic Auto-Fill
+          Auto-Fill
         </Button>
       </div>
 
@@ -448,7 +448,7 @@ export const TechStackSelector = ({
                 <Badge
                   key={skill}
                   variant="cyan"
-                  className="cursor-pointer gap-1.5 group hover:bg-wharf-pink transition-colors"
+                  className="cursor-pointer gap-1.5 group hover:bg-wharf-pink transition-colors rounded-lg"
                   onClick={() => handleToggle(skill)}
                 >
                   {iconUrl && (

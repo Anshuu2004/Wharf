@@ -36,7 +36,7 @@ export const ProfileForm = ({ user, onFetch, isLoading }: ProfileFormProps) => {
   };
 
   return (
-    <Card variant="hard" className="overflow-visible">
+    <Card variant="hard" rounded="3xl" className="overflow-visible">
       <div className="flex items-center gap-2 border-b-2 border-wharf-border-primary pb-3 mb-4">
         <FaGithub className="w-5 h-5 text-wharf-pink-dark" />
         <span className="font-mono font-bold text-sm uppercase tracking-wider">GitHub Profile</span>
@@ -61,7 +61,13 @@ export const ProfileForm = ({ user, onFetch, isLoading }: ProfileFormProps) => {
               className="pl-9 font-mono text-sm"
             />
           </div>
-          <Button variant="primary" type="submit" loading={isLoading} className="min-w-[120px]">
+          <Button
+            variant="primary"
+            rounded="2xl"
+            type="submit"
+            loading={isLoading}
+            className="min-w-[120px]"
+          >
             {isLoading ? 'Fetching...' : 'Fetch Profile'}
             {!isLoading && <ArrowRight className="w-4 h-4" />}
           </Button>

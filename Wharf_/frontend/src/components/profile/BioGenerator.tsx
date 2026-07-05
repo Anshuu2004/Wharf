@@ -99,7 +99,7 @@ export const BioGenerator = ({ bio, onGenerate }: BioGeneratorProps) => {
           <button
             onClick={() => setIsToneOpen(!isToneOpen)}
             className={`
-              flex items-center justify-between w-full px-3 py-1.5 border-2 transition-all duration-200 text-[10px] font-mono font-bold cursor-pointer
+              flex items-center justify-between w-full px-3 py-1.5 border-2 transition-all duration-200 text-[10px] font-mono font-bold rounded-lg cursor-pointer 
               ${
                 isToneOpen
                   ? 'border-wharf-border-primary shadow-brutal-sm'
@@ -163,7 +163,7 @@ export const BioGenerator = ({ bio, onGenerate }: BioGeneratorProps) => {
           <button
             onClick={() => setIsLengthOpen(!isLengthOpen)}
             className={`
-              flex items-center justify-between w-full px-3 py-1.5 border-2 transition-all duration-200 text-[10px] font-mono font-bold cursor-pointer
+              flex items-center justify-between w-full px-3 py-1.5 border-2 transition-all duration-200 text-[10px] font-mono font-bold rounded-lg cursor-pointer
               ${
                 isLengthOpen
                   ? 'border-wharf-border-primary shadow-brutal-sm'
@@ -229,11 +229,11 @@ export const BioGenerator = ({ bio, onGenerate }: BioGeneratorProps) => {
           <button
             onClick={() => setIsEditing(!isEditing)}
             className={`
-              p-1.5 border transition-all duration-200 cursor-pointer
+              p-1.5 border-2 transition-all duration-200 cursor-pointer rounded-md
               ${
                 isEditing
                   ? 'border-wharf-pink bg-wharf-pink/10'
-                  : 'border-wharf-border-secondary hover:border-wharf-pink hover:bg-wharf-pink/50'
+                  : 'border-wharf-border-primary hover:border-wharf-pink hover:bg-wharf-pink/50'
               }
             `}
             title={isEditing ? 'Save changes' : 'Edit bio'}
@@ -268,7 +268,7 @@ export const BioGenerator = ({ bio, onGenerate }: BioGeneratorProps) => {
             <Input
               value={editBio}
               onChange={(e) => setEditBio(e.target.value)}
-              className="text-sm font-mono pr-16 min-h-[60px] resize-y text-wharf-text-primary"
+              className="text-sm font-mono pr-16 min-h-[60px] resize-y text-wharf-text-primary rounded-lg"
               placeholder="Write your bio..."
               autoFocus
             />
@@ -283,14 +283,14 @@ export const BioGenerator = ({ bio, onGenerate }: BioGeneratorProps) => {
           <div className="flex items-center justify-end gap-2">
             <button
               onClick={handleCancelEdit}
-              className="flex items-center gap-1 px-2 py-1 border border-wharf-border-secondary hover:border-wharf-error transition-colors font-mono text-[10px] text-wharf-text-secondary"
+              className="flex items-center gap-1 px-2 py-1 border border-wharf-border-secondary hover:border-wharf-error transition-colors font-mono text-[10px] rounded-md text-wharf-text-secondary"
             >
               <X className="w-3 h-3" />
               Cancel
             </button>
             <button
               onClick={handleSaveEdit}
-              className="flex items-center gap-1 px-2 py-1 border border-wharf-border-primary bg-wharf-pink hover:bg-wharf-pink/90 transition-colors font-mono text-[10px] font-bold text-wharf-black"
+              className="flex items-center gap-1 px-2 py-1 border border-wharf-border-primary bg-wharf-pink hover:bg-wharf-pink/90 transition-colors font-mono text-[10px] rounded-md font-bold text-wharf-black"
             >
               <Check className="w-3 h-3" />
               Save

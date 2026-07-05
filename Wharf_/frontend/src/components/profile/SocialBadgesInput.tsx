@@ -1,6 +1,21 @@
 import { useState } from 'react';
 import { Button, Input } from '../ui';
-import { Trash2, Plus, Link2, Globe, Mail, AtSign, Check, ChevronDown, AlertCircle, MessageCircle, Briefcase, Code2, XCircle, CheckCircle } from 'lucide-react';
+import {
+  Trash2,
+  Plus,
+  Link2,
+  Globe,
+  Mail,
+  AtSign,
+  Check,
+  ChevronDown,
+  AlertCircle,
+  MessageCircle,
+  Briefcase,
+  Code2,
+  XCircle,
+  CheckCircle,
+} from 'lucide-react';
 import { FaGithub, FaInstagram, FaLinkedin, FaTwitch, FaTwitter, FaYoutube } from 'react-icons/fa';
 
 export interface SocialLink {
@@ -162,7 +177,7 @@ export const SocialBadgesInput = ({ links, onChange }: SocialBadgesInputProps) =
   return (
     <div className="space-y-4">
       {/* Add Form */}
-      <div className="p-4 bg-wharf-surface-secondary border-2 border-wharf-border-primary shadow-brutal-sm">
+      <div className="p-4 bg-wharf-surface-secondary border-2 border-wharf-border-primary shadow-brutal-sm rounded-xl">
         <div className="flex flex-col gap-2">
           <div className="flex flex-col sm:flex-row gap-2">
             {/* Provider Select */}
@@ -213,6 +228,7 @@ export const SocialBadgesInput = ({ links, onChange }: SocialBadgesInputProps) =
             <Button
               onClick={handleAdd}
               variant="primary"
+              rounded="2xl"
               disabled={!url.trim() || (provider === 'Custom' && !customProvider.trim())}
               className="px-4 whitespace-nowrap cursor-pointer"
             >
@@ -267,7 +283,7 @@ export const SocialBadgesInput = ({ links, onChange }: SocialBadgesInputProps) =
           return (
             <div
               key={idx}
-              className="group flex items-center justify-between p-3 bg-wharf-surface-secondary border-2 border-wharf-border-primary shadow-brutal-sm hover:border-wharf-border-primary transition-colors"
+              className="group flex items-center justify-between p-3 bg-wharf-surface-secondary border-2 border-wharf-border-primary shadow-brutal-sm hover:border-wharf-border-primary transition-colors rounded-xl"
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div className="w-8 h-8 bg-wharf-surface-primary border border-wharf-border-secondary flex items-center justify-center flex-shrink-0">

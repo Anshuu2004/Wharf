@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { PageWrapper } from '../components/layout';
 import {
@@ -20,6 +20,7 @@ import {
   Star,
   Code,
   Eye,
+  RotateCcw,
 } from 'lucide-react';
 import { FaGithub } from 'react-icons/fa';
 import {
@@ -33,7 +34,15 @@ import {
   SocialBadgesInput,
   WidgetsCustomizer,
 } from '../components/profile';
-import { ReadmePreview } from '../components/generator/ReadmePreview';
+// Lazy-load The Heavy Markdown Preview
+const ReadmePreview = lazy(() =>
+  import('../components/generator/ReadmePreview').then((m) => ({ default: m.ReadmePreview }))
+);
+const MarkdownFallback = () => (
+  <div className="flex items-center justify-center min-h-[200px] font-mono text-sm text-wharf-text-tertiary">
+    Loading preview...
+  </div>
+);
 import { generatePreviewMarkdown } from '../utils/previewGenerator';
 import { Badge, Button, Card } from '../components/ui';
 import api from '../lib/api';
@@ -260,7 +269,7 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
   }
 
   return (
-    <section className="py-20 bg-wharf-surface-secondary border-y-4 border-wharf-border-primary w-full mt-12">
+    <section className="py-20 bg-wharf-background-primary border-y-4 border-wharf-border-primary w-full mt-12 rounded-3xl">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <Badge variant="cyan" className="mb-4 gap-2">
@@ -283,6 +292,7 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
             <Card
               key={stat.label}
               variant="hard-sm"
+              rounded="3xl"
               className="text-center group hover:translate-y-[-2px] transition-all duration-300"
             >
               <div className="flex flex-col items-center p-3">
@@ -341,6 +351,7 @@ export const ProfileGeneratorPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const [options, setOptions] = useState<ProfileOptionsType>(() =>
     initializeState('options', {
@@ -514,6 +525,28 @@ export const ProfileGeneratorPage = () => {
     }
   };
 
+  const handleConfirmReset = () => {
+    localStorage.removeItem('wharf_profile_gen_options');
+    localStorage.removeItem('wharf_profile_gen_generatedReadme');
+    localStorage.removeItem('wharf_profile_gen_activeTab');
+
+    setOptions({
+      template: 'minimal',
+      theme: 'tokyonight',
+      githubBadges: ['stars', 'followers', 'views'],
+      techStack: [],
+      social: [],
+      showStats: true,
+      showTopLanguages: true,
+      showContributions: true,
+      showTrophies: true,
+      showStreak: true,
+    });
+    setGeneratedReadme('');
+    setActiveTab('layout');
+    setShowResetConfirm(false);
+  };
+
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
   const steps = [
@@ -560,6 +593,7 @@ export const ProfileGeneratorPage = () => {
             <Button
               variant="primary"
               size="lg"
+              rounded="2xl"
               onClick={() => {
                 setProfileData(null);
                 setGeneratedReadme('');
@@ -573,6 +607,7 @@ export const ProfileGeneratorPage = () => {
             <Button
               variant="outline"
               size="lg"
+              rounded="2xl"
               onClick={() => setAppState('history')}
               disabled={!user}
               icon={<History className="w-4 h-4" />}
@@ -636,6 +671,7 @@ export const ProfileGeneratorPage = () => {
 
                 <Card
                   variant="hard"
+                  rounded="3xl"
                   className="text-center h-full w-full hover:translate-y-[-4px] transition-all duration-300"
                 >
                   <div className="flex flex-col items-center p-2 w-full">
@@ -677,6 +713,36 @@ export const ProfileGeneratorPage = () => {
 
   return (
     <PageWrapper title="" description="">
+      {/* Reset Confirmation Dialog */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-wharf-surface-primary border-2 border-wharf-border-primary p-6 max-w-sm w-full shadow-brutal">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertCircle className="w-6 h-6 text-wharf-error" />
+              <h3 className="font-display font-bold text-lg">Reset Profile Options?</h3>
+            </div>
+            <p className="font-mono text-sm text-wharf-text-secondary mb-6 capitalize">
+              Are you sure you want to reset your customization settings? This action cannot be
+              undone.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setShowResetConfirm(false)}
+                className="px-4 py-2 border-2 border-wharf-border-secondary font-mono text-xs font-bold hover:bg-wharf-surface-secondary transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmReset}
+                className="px-4 py-2 border-2 border-wharf-border-primary bg-wharf-error text-wharf-white font-mono text-xs font-bold hover:bg-wharf-error/80 transition-colors"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto space-y-8">
         {appState === 'history' && (
           <div className="space-y-6 animate-fadeInUp">
@@ -804,13 +870,25 @@ export const ProfileGeneratorPage = () => {
                 {/* Step 2: Customize */}
                 {currentStep === 2 && (
                   <div className="space-y-6 animate-fadeInUp">
-                    <div className="text-center mb-8">
-                      <h3 className="font-display font-black text-3xl tracking-tighter">
-                        Customize Your Profile
-                      </h3>
-                      <p className="font-mono text-sm text-wharf-text-tertiary mt-2 capitalize">
-                        Choose template, theme & sections for your README
-                      </p>
+                    <div className="flex items-center justify-between mb-8">
+                      <div>
+                        <h3 className="font-display font-black text-3xl tracking-tighter">
+                          Customize Your Profile
+                        </h3>
+                        <p className="font-mono text-sm text-wharf-text-tertiary mt-2 capitalize">
+                          Choose template, theme & sections for your README
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        rounded="lg"
+                        onClick={() => setShowResetConfirm(true)}
+                        icon={<RotateCcw className="w-4 h-4" />}
+                        className="text-wharf-error hover:bg-wharf-error/10 hover:border-wharf-error transition-colors"
+                      >
+                        Start Fresh
+                      </Button>
                     </div>
 
                     {profileData ? (
@@ -1135,10 +1213,12 @@ export const ProfileGeneratorPage = () => {
                                 <p className="font-mono text-sm text-wharf-text-secondary mb-4 capitalize">
                                   See how your profile will look with the current settings...
                                 </p>
-                                <div className="border-2 border-wharf-border-primary overflow-hidden">
-                                  <ReadmePreview
-                                    content={generatePreviewMarkdown(profileData, options)}
-                                  />
+                                <div className="overflow-hidden">
+                                  <Suspense fallback={<MarkdownFallback />}>
+                                    <ReadmePreview
+                                      content={generatePreviewMarkdown(profileData, options)}
+                                    />
+                                  </Suspense>
                                 </div>
                               </div>
                             )}
@@ -1329,7 +1409,7 @@ export const ProfileGeneratorPage = () => {
                         <p className="font-mono text-wharf-text-tertiary capitalize">
                           Please enter a username first...
                         </p>
-                        <Button variant="ghost" onClick={prevStep} className="mt-4">
+                        <Button variant="outline" onClick={prevStep} className="mt-4">
                           Go Back
                         </Button>
                       </div>
@@ -1339,7 +1419,8 @@ export const ProfileGeneratorPage = () => {
                     {profileData && (
                       <div className="flex justify-between items-center mt-8 pt-6 border-t-2 border-wharf-border-secondary">
                         <Button
-                          variant="ghost"
+                          variant="outline"
+                          rounded="2xl"
                           onClick={prevStep}
                           icon={<ArrowLeft className="w-4 h-4" />}
                         >
@@ -1355,6 +1436,7 @@ export const ProfileGeneratorPage = () => {
                           <Button
                             variant="primary"
                             size="lg"
+                            rounded="2xl"
                             onClick={handleGenerate}
                             icon={<Zap className="w-4 h-4" />}
                             className="font-bold"
@@ -1405,13 +1487,15 @@ export const ProfileGeneratorPage = () => {
 
                     {generatedReadme && !isGenerating && (
                       <>
-                        <ReadmePreview
-                          content={generatedReadme}
-                          onContentChange={setGeneratedReadme}
-                        />
+                        <Suspense fallback={<MarkdownFallback />}>
+                          <ReadmePreview
+                            content={generatedReadme}
+                            onContentChange={setGeneratedReadme}
+                          />
+                        </Suspense>
                         <div className="flex justify-between mt-6 pt-4 border-t-2 border-wharf-border-secondary">
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             onClick={prevStep}
                             icon={<ArrowLeft className="w-4 h-4" />}
                           >
@@ -1430,7 +1514,9 @@ export const ProfileGeneratorPage = () => {
                     )}
 
                     {generatedReadme && isGenerating && (
-                      <ReadmePreview content={generatedReadme} isGenerating={true} />
+                      <Suspense fallback={<MarkdownFallback />}>
+                        <ReadmePreview content={generatedReadme} isGenerating={true} />
+                      </Suspense>
                     )}
                   </div>
                 )}
@@ -1470,7 +1556,7 @@ export const ProfileGeneratorPage = () => {
                         />
                         <div className="flex justify-start mt-6 pt-4 border-t-2 border-wharf-border-secondary">
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             onClick={prevStep}
                             icon={<ArrowLeft className="w-4 h-4" />}
                           >
@@ -1483,7 +1569,7 @@ export const ProfileGeneratorPage = () => {
                         <p className="font-mono text-wharf-text-tertiary">
                           Generate a profile README first.
                         </p>
-                        <Button variant="ghost" onClick={() => setCurrentStep(1)} className="mt-4">
+                        <Button variant="outline" onClick={() => setCurrentStep(1)} className="mt-4">
                           Start Over
                         </Button>
                       </div>

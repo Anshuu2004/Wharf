@@ -1,4 +1,4 @@
-import { Hero, HowItWorks, Features, Comparison, HealthScoreDemo, CTASection } from '../components/home'
+import { Hero, HowItWorks, Features, Comparison, CTASection } from '../components/home';
 
 export const HomePage = () => {
   return (
@@ -8,9 +8,9 @@ export const HomePage = () => {
         <HowItWorks />
         <Features />
         <Comparison />
-        <HealthScoreDemo />
+        {/* <HealthScoreDemo /> */}
         <CTASection />
       </main>
     </div>
-  )
-}
+  );
+};

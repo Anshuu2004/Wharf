@@ -35,14 +35,15 @@ const features = [
   {
     icon: Settings,
     title: 'CHANGELOG Generator',
-    description: 'Auto-generate changelogs from commit history',
+    description:
+      'Turn your git commit history into structured, release-ready changelogs automatically',
     gradient: 'from-wharf-purple to-wharf-purple-dark',
     iconGradient: 'text-wharf-purple',
   },
   {
     icon: Shield,
     title: 'Contribution Score',
-    description: 'Rate how welcoming your repo is to open-source contributors',
+    description: 'Rate how welcoming your repository is to open-source contributors',
     gradient: 'from-wharf-orange to-wharf-orange-dark',
     iconGradient: 'text-wharf-orange',
   },
@@ -75,7 +76,7 @@ export const Features = () => {
             <Card
               key={feature.title}
               variant="hard-sm"
-              hoverable
+              rounded="3xl"
               className="group transition-all duration-300"
             >
               <div className="flex items-start gap-4">

@@ -9,6 +9,7 @@ import repoRoutes from './routes/repo.routes';
 import userRoutes from './routes/user.routes';
 import generateRoutes from './routes/generate.routes';
 import profileRoutes from './routes/profile.routes';
+import chatRoutes from './routes/chat.routes';
 import { initCronJobs } from './utils/cron';
 
 // Load Environment Variables
@@ -35,6 +36,7 @@ app.use('/api/repo', repoRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/generate', generateRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

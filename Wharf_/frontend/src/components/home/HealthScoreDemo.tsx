@@ -154,6 +154,7 @@ export const HealthScoreDemo = () => {
           <div className={`transition-all duration-500 ${showReport ? 'mb-8' : ''}`}>
             <Card
               variant="hard"
+              rounded="3xl"
               className={`text-center transition-all duration-500 ${showReport ? 'transform scale-95' : 'mx-auto max-w-md'}`}
             >
               <div className="flex flex-col items-center py-6">
