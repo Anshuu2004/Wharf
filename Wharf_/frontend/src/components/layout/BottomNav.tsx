@@ -28,7 +28,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentPage, onNavigate }) => {
 
   return (
     <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden md:block">
-      <div className="flex items-center gap-5 px-5 py-2.5 bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal">
+      <div className="flex items-center gap-5 px-5 py-2.5 bg-wharf-surface-secondary border-2 border-wharf-border-primary shadow-brutal rounded-xl">
         {navItems.map((item, index) => (
           <NavItem
             key={item.id}
@@ -67,7 +67,7 @@ function NavItem({
   // Animation Variants
   const iconVariants = {
     idle: { scale: 1, y: 0 },
-    hover: { scale: 1.35, y: -8 },
+    hover: { scale: 1.25, y: -8 },
     active: { scale: 1, y: 0 },
   };
 
@@ -83,8 +83,8 @@ function NavItem({
         w-11 h-11 transition-colors duration-200 cursor-pointer
         ${
           isActive
-            ? 'bg-wharf-pink border-2 border-wharf-border-primary'
-            : 'hover:bg-wharf-surface-secondary border-2 border-transparent'
+            ? 'bg-wharf-pink/70 border-2 border-wharf-border-primary rounded-xl'
+            : 'border-2 border-transparent'
         }
       `}
     >
@@ -118,8 +118,8 @@ function NavItem({
             w-6 h-6 transition-all duration-200
             ${
               isActive
-                ? 'text-wharf-black stroke-[2.5px]'
-                : 'text-wharf-text-secondary group-hover:text-wharf-text-primary'
+                ? 'text-wharf-text-primary stroke-[2.5px]'
+                : 'text-wharf-text-secondary hover:text-wharf-text-primary'
             }
           `}
         />
