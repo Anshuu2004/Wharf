@@ -32,6 +32,9 @@
   --color-wharf-surface-primary: #FFFFFF;
   --color-wharf-surface-secondary: #F5F5F5;
   --color-wharf-surface-tertiary: #E0E0E0;
+
+  --color-wharf-background-primary: #FFF8F0;
+  --color-wharf-background-secondary: #F5EDE3;
   
   --color-wharf-text-primary: #000000;
   --color-wharf-text-secondary: #333333;
@@ -45,7 +48,7 @@
   --color-wharf-warning: #F7CB46;
   --color-wharf-info: #B8A9FF;
 
-  /* Shadows - Using darker colors for depth */
+  /* Shadows */
   --shadow-hard-pink: 6px 6px 0px 0px var(--color-wharf-pink-dark);
   --shadow-hard-cyan: 6px 6px 0px 0px var(--color-wharf-cyan-dark);
   --shadow-hard-green: 6px 6px 0px 0px var(--color-wharf-green-dark);
@@ -80,7 +83,7 @@ body {
   padding-right: 1rem;
 }
 
-/* Small devices */
+/* Small Devices */
 @media (min-width: 640px) {
   .container {
     padding-left: 1.25rem;
@@ -88,7 +91,7 @@ body {
   }
 }
 
-/* Medium devices */
+/* Medium Devices */
 @media (min-width: 768px) {
   .container {
     padding-left: 1.5rem;
@@ -96,7 +99,7 @@ body {
   }
 }
 
-/* Large devices */
+/* Large Devices */
 @media (min-width: 1024px) {
   .container {
     padding-left: 3rem;
