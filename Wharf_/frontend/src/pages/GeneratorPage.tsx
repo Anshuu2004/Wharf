@@ -247,7 +247,7 @@ const UserStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) => {
   }
 
   return (
-    <section className="py-20 bg-wharf-surface-secondary border-y-4 border-wharf-border-primary w-full mt-12 border-t-4">
+    <section className="py-20 bg-wharf-background-primary border-y-4 border-wharf-border-primary w-full mt-12 rounded-3xl">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
@@ -271,6 +271,7 @@ const UserStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) => {
             <Card
               key={stat.label}
               variant="hard-sm"
+              rounded="3xl"
               className="text-center group hover:translate-y-[-2px] transition-all duration-300"
             >
               <div className="flex flex-col items-center p-3">
@@ -497,6 +498,7 @@ export const GeneratorPage = () => {
             <Button
               variant="primary"
               size="lg"
+              rounded="2xl"
               onClick={() => {
                 setSelectedRepo(null);
                 setGeneratedReadme('');
@@ -510,6 +512,7 @@ export const GeneratorPage = () => {
             <Button
               variant="outline"
               size="lg"
+              rounded="2xl"
               onClick={() => setAppState('history')}
               disabled={!user}
               icon={<History className="w-4 h-4" />}
@@ -573,6 +576,7 @@ export const GeneratorPage = () => {
 
                 <Card
                   variant="hard"
+                  rounded="3xl"
                   className="text-center h-full w-full hover:translate-y-[-4px] transition-all duration-300"
                 >
                   <div className="flex flex-col items-center p-2 w-full">
@@ -751,7 +755,8 @@ export const GeneratorPage = () => {
                         />
                         <div className="flex justify-between mt-6 pt-4 border-t-2 border-wharf-border-secondary">
                           <Button
-                            variant="ghost"
+                            variant="outline"
+                            rounded="2xl"
                             onClick={prevStep}
                             icon={<ArrowLeft className="w-4 h-4" />}
                           >
@@ -759,6 +764,7 @@ export const GeneratorPage = () => {
                           </Button>
                           <Button
                             variant="primary"
+                            rounded="2xl"
                             onClick={handleGenerate}
                             icon={<Zap className="w-4 h-4" />}
                           >
@@ -771,7 +777,7 @@ export const GeneratorPage = () => {
                         <p className="font-mono text-wharf-text-tertiary">
                           Please select a repository first.
                         </p>
-                        <Button variant="ghost" onClick={prevStep} className="mt-4">
+                        <Button variant="outline" rounded="2xl" onClick={prevStep} className="mt-4">
                           Go Back
                         </Button>
                       </div>
@@ -806,7 +812,8 @@ export const GeneratorPage = () => {
                         </Suspense>
                         <div className="flex justify-between mt-6 pt-4 border-t-2 border-wharf-border-secondary">
                           <Button
-                            variant="ghost"
+                            variant="outline"
+                            rounded="2xl"
                             onClick={prevStep}
                             icon={<ArrowLeft className="w-4 h-4" />}
                           >
@@ -814,6 +821,7 @@ export const GeneratorPage = () => {
                           </Button>
                           <Button
                             variant="primary"
+                            rounded="2xl"
                             onClick={() => setCurrentStep(4)}
                             iconPosition="right"
                             icon={<ArrowRight className="w-4 h-4" />}
@@ -860,7 +868,8 @@ export const GeneratorPage = () => {
                         <ExportActions content={generatedReadme} repoName={selectedRepo?.repo} />
                         <div className="flex justify-start mt-6 pt-4 border-t-2 border-wharf-border-secondary">
                           <Button
-                            variant="ghost"
+                            variant="outline"
+                            rounded="2xl"
                             onClick={prevStep}
                             icon={<ArrowLeft className="w-4 h-4" />}
                           >
@@ -873,7 +882,11 @@ export const GeneratorPage = () => {
                         <p className="font-mono text-wharf-text-tertiary">
                           Generate a README first.
                         </p>
-                        <Button variant="ghost" onClick={() => setCurrentStep(1)} className="mt-4">
+                        <Button
+                          variant="outline"
+                          onClick={() => setCurrentStep(1)}
+                          className="mt-4"
+                        >
                           Start Over
                         </Button>
                       </div>
