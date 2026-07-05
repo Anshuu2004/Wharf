@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bot, User, Copy, Check, Edit2, CheckCircle, X } from 'lucide-react';
+import { User, Copy, Check, Edit2, CheckCircle, X } from 'lucide-react';
 import { CodeBlock } from './CodeBlock';
+import { useAuthStore } from '../../stores/authStore';
 
 interface ChatMessageProps {
   id: string;
@@ -186,6 +187,7 @@ export const ChatMessage = ({
   timestamp,
   onEdit,
 }: ChatMessageProps) => {
+  const { user } = useAuthStore();
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(content);
@@ -217,11 +219,27 @@ export const ChatMessage = ({
       {/* Avatar */}
       <div className={`flex-shrink-0 ${role === 'user' ? 'order-2' : 'order-1'}`}>
         <div
-          className={`w-8 h-8 border-2 border-wharf-border-primary flex items-center justify-center ${
+          className={`w-9 h-9 border-2 border-wharf-border-primary flex items-center justify-center overflow-hidden ${
             role === 'user' ? 'bg-wharf-pink' : 'bg-wharf-surface-secondary'
           }`}
         >
-          {role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+          {role === 'user' ? (
+            user?.username ? (
+              <img
+                src={`https://github.com/${user.username}.png`}
+                alt={user.username}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <User className="w-4 h-4" />
+            )
+          ) : (
+            <img
+              src="https://res.cloudinary.com/dhn92qb61/image/upload/v1751381563/Gojo__o3vpim.webp"
+              alt="Wharf AI"
+              className="w-full h-full object-cover"
+            />
+          )}
         </div>
       </div>
 
@@ -244,19 +262,19 @@ export const ChatMessage = ({
                     textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
                   }
                 }}
-                className="w-full bg-black/10 border-2 border-black/20 p-2 font-mono text-sm resize-none focus:outline-none focus:border-black/50 rounded-none text-black"
+                className="w-full min-h-10 p-2 font-mono text-sm resize-none focus:outline-none scrollbar-hidden rounded-none text-black"
                 rows={1}
               />
               <div className="flex justify-end gap-2 mt-2">
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="flex items-center gap-1 px-2 py-1 bg-black/10 hover:bg-black/20 font-mono text-xs transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 bg-black/10 hover:bg-black/20 font-mono text-xs transition-colors cursor-pointer"
                 >
                   <X className="w-3 h-3" /> Cancel
                 </button>
                 <button
                   onClick={handleEditSubmit}
-                  className="flex items-center gap-1 px-2 py-1 bg-black hover:bg-black/80 text-white font-mono text-xs transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 bg-black hover:bg-black/80 text-white font-mono text-xs transition-colors cursor-pointer"
                 >
                   <CheckCircle className="w-3 h-3" /> Save & Resend
                 </button>
@@ -292,7 +310,7 @@ export const ChatMessage = ({
                 setEditContent(content);
                 setIsEditing(true);
               }}
-              className="flex items-center gap-1 px-2 py-0.5 border border-wharf-border-secondary font-mono text-[10px] hover:border-wharf-border-primary hover:bg-wharf-surface-secondary transition-colors"
+              className="flex items-center gap-1 px-2 py-0.5 border border-wharf-border-secondary font-mono text-[10px] hover:border-wharf-border-primary hover:bg-wharf-surface-secondary transition-colors cursor-pointer"
             >
               <Edit2 className="w-3 h-3" />
               Edit
@@ -300,7 +318,7 @@ export const ChatMessage = ({
           )}
           <button
             onClick={() => copyToClipboard(content)}
-            className="flex items-center gap-1 px-2 py-0.5 border border-wharf-border-secondary font-mono text-[10px] hover:border-wharf-border-primary hover:bg-wharf-surface-secondary transition-colors"
+            className="flex items-center gap-1 px-2 py-0.5 border border-wharf-border-secondary font-mono text-[10px] hover:border-wharf-border-primary hover:bg-wharf-surface-secondary transition-colors cursor-pointer"
           >
             {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
             {copied ? 'Copied' : 'Copy'}

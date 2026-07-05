@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot } from 'lucide-react';
+
 import { ChatMessage, QuickPrompts } from '../chat';
 
 interface Message {
@@ -31,8 +31,12 @@ export const ChatMessages = ({
         {/* Welcome Section */}
         <div className="flex-1 flex items-center justify-center">
           <div className="max-w-2xl mx-auto w-full text-center">
-            <div className="w-16 h-16 border-2 border-wharf-border-primary flex items-center justify-center mx-auto mb-4 bg-wharf-pink/10">
-              <Bot className="w-8 h-8 text-wharf-pink" />
+            <div className="w-16 h-16 border-2 border-wharf-border-primary flex items-center justify-center mx-auto mb-4 bg-wharf-pink/10 overflow-hidden">
+              <img
+                src="https://res.cloudinary.com/dhn92qb61/image/upload/v1751381563/Gojo__o3vpim.webp"
+                alt="Wharf AI"
+                className="w-full h-full object-cover"
+              />
             </div>
             <h2 className="font-display font-black text-2xl tracking-tighter mb-2">
               Welcome to WHARF Chat
@@ -80,8 +84,12 @@ export const ChatMessages = ({
             className="flex justify-start"
           >
             <div className="flex gap-4">
-              <div className="w-8 h-8 border-2 border-wharf-border-primary bg-wharf-surface-secondary flex items-center justify-center">
-                <Bot className="w-4 h-4 text-wharf-text-tertiary" />
+              <div className="w-8 h-8 border-2 border-wharf-border-primary bg-wharf-surface-secondary flex items-center justify-center overflow-hidden">
+                <img
+                  src="https://res.cloudinary.com/dhn92qb61/image/upload/v1751381563/Gojo__o3vpim.webp"
+                  alt="Wharf AI"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="border-2 border-wharf-border-primary bg-wharf-surface-secondary p-4">
                 <div className="flex gap-1">
