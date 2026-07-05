@@ -159,7 +159,7 @@ export const ReadmePreview = ({
           if (!code.trim()) continue;
 
           // Auto-Fix Unquoted Node Labels With Parentheses e.g. A[Label (Extra)] -> A["Label (Extra)"]
-          code = code.replace(/\[([^"\]\[]*?\([^)]*?\)[^"\]\[]*?)\]/g, '["$1"]');
+          code = code.replace(/\[([^"\][]*?\([^)]*?\)[^"\][]*?)\]/g, '["$1"]');
 
           try {
             element.removeAttribute('data-processed');
