@@ -390,7 +390,7 @@ export const ProfileHistoryView = ({
                     </Button>
                     <button
                       onClick={() => handleDelete(item.id, item.username)}
-                      className="p-1.75 text-wharf-text-primary hover:text-wharf-error bg-wharf-surface-tertiary hover:bg-wharf-error/10 transition-all border-2 border-wharf-border-primary hover:border-wharf-error rounded-lg"
+                      className="p-1.75 text-wharf-text-primary hover:text-wharf-error bg-wharf-surface-tertiary hover:bg-wharf-error/10 transition-all border-2 border-wharf-border-primary hover:border-wharf-error rounded-lg cursor-pointer"
                       title="Delete"
                     >
                       <Trash className="w-3.5 h-3.5" />
