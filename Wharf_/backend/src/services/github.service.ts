@@ -22,7 +22,16 @@ export class GithubService {
   private octokit: Octokit;
 
   constructor(options?: { token?: string; installationId?: string }) {
-    if (options?.installationId && process.env.GITHUB_APP_ID && process.env.GITHUB_PRIVATE_KEY) {
+    if (options?.token) {
+      // Prioritize User OAuth Token For Full Private Repo Access
+      this.octokit = new Octokit({
+        auth: options.token,
+      });
+    } else if (
+      options?.installationId &&
+      process.env.GITHUB_APP_ID &&
+      process.env.GITHUB_PRIVATE_KEY
+    ) {
       // Authenticate As A GitHub App Installation (High Rate Limits)
       this.octokit = new Octokit({
         authStrategy: createAppAuth,
@@ -33,9 +42,9 @@ export class GithubService {
         },
       });
     } else {
-      // Fallback To OAuth Token Or System Token
+      // Fallback To System Token
       this.octokit = new Octokit({
-        auth: options?.token || process.env.GITHUB_TOKEN,
+        auth: process.env.GITHUB_TOKEN,
       });
     }
   }
@@ -103,7 +112,7 @@ export class GithubService {
       per_page,
     });
 
-    return data.map(commit => ({
+    return data.map((commit) => ({
       sha: commit.sha,
       message: commit.commit.message,
       author: commit.commit.author?.name,
@@ -119,7 +128,7 @@ export class GithubService {
       page,
     });
 
-    return data.map(repo => ({
+    return data.map((repo) => ({
       id: repo.id,
       name: repo.name,
       full_name: repo.full_name,
@@ -166,9 +175,11 @@ export class GithubService {
         });
         data = res.data;
       }
-      
+
       // Sort By Stars Descending
-      return data.sort((a, b) => (b.stargazers_count || 0) - (a.stargazers_count || 0)).slice(0, limit);
+      return data
+        .sort((a, b) => (b.stargazers_count || 0) - (a.stargazers_count || 0))
+        .slice(0, limit);
     } catch (error: any) {
       if (error.status === 404) return [];
       throw error;

@@ -44,7 +44,30 @@ export class RepoService {
 
     // 3. Fetch Key Files For Deeper Analysis
     const keyFiles: Record<string, string> = {};
-    const filesToFetch = ['package.json', 'requirements.txt', 'README.md', 'docker-compose.yml'];
+    const filesToFetch = [
+      'package.json',
+      'requirements.txt',
+      'README.md',
+      'docker-compose.yml',
+      'src/index.ts',
+      'src/App.tsx',
+      'src/main.tsx',
+      'src/server.ts',
+      'main.py',
+      'app.py',
+      'index.html',
+      'Cargo.toml',
+      'src/main.rs',
+      'src/lib.rs',
+      'go.mod',
+      'main.go',
+      'pom.xml',
+      'build.gradle',
+      'CMakeLists.txt',
+      'Makefile',
+      'main.c',
+      'main.cpp',
+    ];
 
     for (const file of filesToFetch) {
       if (filePaths.includes(file)) {
@@ -67,9 +90,34 @@ export class RepoService {
     const commands = getCommands(frameworks);
 
     // 5. Build Tree Preview
+    const ignoreFolders = [
+      'node_modules',
+      '.git',
+      'dist',
+      'build',
+      'out',
+      'bin',
+      'obj',
+      '.cache',
+      '.next',
+      'coverage',
+      '.vscode',
+      '.idea',
+      'vendor',
+      'venv',
+      '.venv',
+      '__pycache__',
+    ];
+    const ignoreFiles = ['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', '.DS_Store'];
+
     const treePreview = tree
-      .filter((item) => !item.path.includes('node_modules') && !item.path.includes('.git'))
-      .slice(0, 50)
+      .filter((item) => {
+        const pathSegments = item.path.split('/');
+        if (pathSegments.some((seg) => ignoreFolders.includes(seg))) return false;
+        if (ignoreFiles.includes(pathSegments[pathSegments.length - 1])) return false;
+        return true;
+      })
+      .slice(0, 300)
       .map((item) => item.path)
       .join('\n');
 
