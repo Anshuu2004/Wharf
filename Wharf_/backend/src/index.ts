@@ -10,6 +10,7 @@ import userRoutes from './routes/user.routes';
 import generateRoutes from './routes/generate.routes';
 import profileRoutes from './routes/profile.routes';
 import chatRoutes from './routes/chat.routes';
+import healthRoutes from './routes/health.routes';
 import { initCronJobs } from './utils/cron';
 
 // Load Environment Variables
@@ -24,10 +25,14 @@ initCronJobs();
 // Middleware
 app.use(helmet());
 app.use(morgan('dev'));
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  })
+);
 app.use(express.json());
 
 // Routes
@@ -37,6 +42,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/generate', generateRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/health', healthRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

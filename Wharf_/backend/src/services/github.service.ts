@@ -22,7 +22,16 @@ export class GithubService {
   private octokit: Octokit;
 
   constructor(options?: { token?: string; installationId?: string }) {
-    if (options?.installationId && process.env.GITHUB_APP_ID && process.env.GITHUB_PRIVATE_KEY) {
+    if (options?.token) {
+      // Prioritize User OAuth Token For Full Private Repo Access
+      this.octokit = new Octokit({
+        auth: options.token,
+      });
+    } else if (
+      options?.installationId &&
+      process.env.GITHUB_APP_ID &&
+      process.env.GITHUB_PRIVATE_KEY
+    ) {
       // Authenticate As A GitHub App Installation (High Rate Limits)
       this.octokit = new Octokit({
         authStrategy: createAppAuth,
@@ -33,9 +42,9 @@ export class GithubService {
         },
       });
     } else {
-      // Fallback To OAuth Token Or System Token
+      // Fallback To System Token
       this.octokit = new Octokit({
-        auth: options?.token || process.env.GITHUB_TOKEN,
+        auth: process.env.GITHUB_TOKEN,
       });
     }
   }
@@ -103,7 +112,7 @@ export class GithubService {
       per_page,
     });
 
-    return data.map(commit => ({
+    return data.map((commit) => ({
       sha: commit.sha,
       message: commit.commit.message,
       author: commit.commit.author?.name,
@@ -119,7 +128,7 @@ export class GithubService {
       page,
     });
 
-    return data.map(repo => ({
+    return data.map((repo) => ({
       id: repo.id,
       name: repo.name,
       full_name: repo.full_name,
@@ -166,9 +175,11 @@ export class GithubService {
         });
         data = res.data;
       }
-      
+
       // Sort By Stars Descending
-      return data.sort((a, b) => (b.stargazers_count || 0) - (a.stargazers_count || 0)).slice(0, limit);
+      return data
+        .sort((a, b) => (b.stargazers_count || 0) - (a.stargazers_count || 0))
+        .slice(0, limit);
     } catch (error: any) {
       if (error.status === 404) return [];
       throw error;
@@ -185,6 +196,84 @@ export class GithubService {
       return data as Record<string, number>;
     } catch (error: any) {
       return {};
+    }
+  }
+
+  // Health Score Helper Methods
+  async getReadmeContent(owner: string, repo: string): Promise<string> {
+    try {
+      const response = await this.octokit.repos.getReadme({ owner, repo });
+      const content = Buffer.from(response.data.content, 'base64').toString('utf-8');
+      return content;
+    } catch (error) {
+      return '';
+    }
+  }
+
+  async checkFileExists(owner: string, repo: string, path: string): Promise<boolean> {
+    try {
+      await this.octokit.repos.getContent({ owner, repo, path });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async getContributingFile(owner: string, repo: string): Promise<string | null> {
+    try {
+      const paths = [
+        'CONTRIBUTING.md',
+        'CONTRIBUTING.mdx',
+        'contributing.md',
+        'docs/CONTRIBUTING.md',
+      ];
+      for (const path of paths) {
+        const exists = await this.checkFileExists(owner, repo, path);
+        if (exists) return path;
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async getIssueTemplates(owner: string, repo: string): Promise<string[]> {
+    try {
+      const { data } = await this.octokit.repos.getContent({
+        owner,
+        repo,
+        path: '.github/ISSUE_TEMPLATE',
+      });
+      if (Array.isArray(data)) {
+        return data.map((item: any) => item.path);
+      }
+      return [];
+    } catch (error) {
+      // Check Legacy Single-File Location
+      if (await this.checkFileExists(owner, repo, '.github/ISSUE_TEMPLATE.md')) {
+        return ['.github/ISSUE_TEMPLATE.md'];
+      }
+      return [];
+    }
+  }
+
+  async getPRTemplates(owner: string, repo: string): Promise<string[]> {
+    try {
+      const { data } = await this.octokit.repos.getContent({
+        owner,
+        repo,
+        path: '.github/PULL_REQUEST_TEMPLATE',
+      });
+      if (Array.isArray(data)) {
+        return data.map((item: any) => item.path);
+      }
+      return [];
+    } catch (error) {
+      // Check Legacy Single-File Location
+      if (await this.checkFileExists(owner, repo, '.github/PULL_REQUEST_TEMPLATE.md')) {
+        return ['.github/PULL_REQUEST_TEMPLATE.md'];
+      }
+      return [];
     }
   }
 }

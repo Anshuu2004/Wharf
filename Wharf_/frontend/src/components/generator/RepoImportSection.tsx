@@ -66,6 +66,8 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
     }
   };
 
+  const isValidUrl = repoUrl.trim().includes('github.com') && repoUrl.trim().length > 0;
+
   const handleRepoSelect = async (repo: {
     id: number;
     name: string;
@@ -165,6 +167,7 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
                   rounded="2xl"
                   onClick={handleUrlSubmit}
                   loading={isLoading}
+                  disabled={!isValidUrl}
                   className="min-w-[120px]"
                 >
                   {isLoading ? 'Analyzing...' : 'Analyze'}

@@ -6,7 +6,7 @@ export const auth = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return next(); // Proceed Without User (Optional Auth)
+    return next();
   }
 
   const token = authHeader.split(' ')[1];
@@ -16,15 +16,14 @@ export const auth = (req: Request, res: Response, next: NextFunction) => {
     (req as any).user = decoded;
     next();
   } catch (error: any) {
-    console.error('[Auth Middleware] Invalid token error:', error.message);
-    // If Token Is Invalid, We Still Proceed But Without A User
     next();
   }
 };
 
 // Middleware To Require Authentication For Specific Routes.
 export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-  if (!(req as any).user) {
+  const user = (req as any).user;
+  if (!user) {
     return res.status(401).json({ success: false, error: 'Authentication required' });
   }
   next();
