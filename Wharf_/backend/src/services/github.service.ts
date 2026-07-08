@@ -198,4 +198,82 @@ export class GithubService {
       return {};
     }
   }
+
+  // Health Score Helper Methods
+  async getReadmeContent(owner: string, repo: string): Promise<string> {
+    try {
+      const response = await this.octokit.repos.getReadme({ owner, repo });
+      const content = Buffer.from(response.data.content, 'base64').toString('utf-8');
+      return content;
+    } catch (error) {
+      return '';
+    }
+  }
+
+  async checkFileExists(owner: string, repo: string, path: string): Promise<boolean> {
+    try {
+      await this.octokit.repos.getContent({ owner, repo, path });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async getContributingFile(owner: string, repo: string): Promise<string | null> {
+    try {
+      const paths = [
+        'CONTRIBUTING.md',
+        'CONTRIBUTING.mdx',
+        'contributing.md',
+        'docs/CONTRIBUTING.md',
+      ];
+      for (const path of paths) {
+        const exists = await this.checkFileExists(owner, repo, path);
+        if (exists) return path;
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async getIssueTemplates(owner: string, repo: string): Promise<string[]> {
+    try {
+      const { data } = await this.octokit.repos.getContent({
+        owner,
+        repo,
+        path: '.github/ISSUE_TEMPLATE',
+      });
+      if (Array.isArray(data)) {
+        return data.map((item: any) => item.path);
+      }
+      return [];
+    } catch (error) {
+      // Check Legacy Single-File Location
+      if (await this.checkFileExists(owner, repo, '.github/ISSUE_TEMPLATE.md')) {
+        return ['.github/ISSUE_TEMPLATE.md'];
+      }
+      return [];
+    }
+  }
+
+  async getPRTemplates(owner: string, repo: string): Promise<string[]> {
+    try {
+      const { data } = await this.octokit.repos.getContent({
+        owner,
+        repo,
+        path: '.github/PULL_REQUEST_TEMPLATE',
+      });
+      if (Array.isArray(data)) {
+        return data.map((item: any) => item.path);
+      }
+      return [];
+    } catch (error) {
+      // Check Legacy Single-File Location
+      if (await this.checkFileExists(owner, repo, '.github/PULL_REQUEST_TEMPLATE.md')) {
+        return ['.github/PULL_REQUEST_TEMPLATE.md'];
+      }
+      return [];
+    }
+  }
 }
