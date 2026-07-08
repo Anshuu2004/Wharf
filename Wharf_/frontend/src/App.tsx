@@ -3,11 +3,24 @@ import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { Header, Footer, BottomNav } from './components/layout';
 import { ToastProvider } from './components/ui';
 
-const HomePage = React.lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
-const AuthCallback = React.lazy(() => import('./pages/AuthCallback').then(m => ({ default: m.AuthCallback })));
-const GeneratorPage = React.lazy(() => import('./pages/GeneratorPage').then(m => ({ default: m.GeneratorPage })));
-const ProfileGeneratorPage = React.lazy(() => import('./pages/ProfileGeneratorPage').then(m => ({ default: m.ProfileGeneratorPage })));
-const ChatPage = React.lazy(() => import('./pages/ChatPage').then(m => ({ default: m.ChatPage })));
+const HomePage = React.lazy(() =>
+  import('./pages/HomePage').then((m) => ({ default: m.HomePage }))
+);
+const AuthCallback = React.lazy(() =>
+  import('./pages/AuthCallback').then((m) => ({ default: m.AuthCallback }))
+);
+const GeneratorPage = React.lazy(() =>
+  import('./pages/GeneratorPage').then((m) => ({ default: m.GeneratorPage }))
+);
+const ProfileGeneratorPage = React.lazy(() =>
+  import('./pages/ProfileGeneratorPage').then((m) => ({ default: m.ProfileGeneratorPage }))
+);
+const ChatPage = React.lazy(() =>
+  import('./pages/ChatPage').then((m) => ({ default: m.ChatPage }))
+);
+const HealthPage = React.lazy(() =>
+  import('./pages/HealthPage').then((m) => ({ default: m.HealthPage }))
+);
 
 function App() {
   const location = useLocation();
@@ -22,13 +35,20 @@ function App() {
         {!isChatPage && <Header />}
 
         <main className="flex-1">
-          <Suspense fallback={<div className="flex min-h-[50vh] items-center justify-center font-mono font-bold text-wharf-text-secondary">Loading...</div>}>
+          <Suspense
+            fallback={
+              <div className="flex min-h-[50vh] items-center justify-center font-mono font-bold text-wharf-text-secondary">
+                Loading...
+              </div>
+            }
+          >
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/generator" element={<GeneratorPage />} />
               <Route path="/profile" element={<ProfileGeneratorPage />} />
               <Route path="/chat" element={<ChatPage />} />
+              <Route path="/health" element={<HealthPage />} />
               <Route path="*" element={<HomePage />} />
             </Routes>
           </Suspense>
