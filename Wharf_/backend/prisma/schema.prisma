@@ -26,6 +26,7 @@ model User {
   apiKeys     UserApiKey[]
   profileReadmes ProfileReadme[]
   chatSessions ChatSession[]
+  healthScores  HealthScore[]
 }
 
 
@@ -173,4 +174,26 @@ model ChatAnalytics {
   createdAt       DateTime  @default(now())
 
   session         ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+// ─── Repo Health ──────────────────────────────────────────────────────────────
+model HealthScore {
+  id              String   @id @default(cuid())
+  repoId          String?
+  repoUrl         String   @unique
+  repoName        String
+  score           Int      // 0-100
+  breakdown       Json     // { description: 18, installation: 20, usage: 10, techStack: 15, contributing: 10, license: 8, visuals: 2 }
+  suggestions     String[] // ["Add screenshots (+3 points)", "Create CONTRIBUTING.md (+5 points)"]
+  checkedAt       DateTime @default(now())
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  contributionScore     Int?
+  contributionBreakdown Json? // { hasContributing: true, hasIssueTemplates: false, hasPRTemplates: false, hasCodeOfConduct: false, hasGoodFirstIssues: false, hasCommunityLink: false }
+  contributionSuggestions String[]
+
+  @@index([userId])
+  @@index([checkedAt])
+  @@index([repoUrl])
 }
