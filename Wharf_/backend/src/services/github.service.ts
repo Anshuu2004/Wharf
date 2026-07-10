@@ -276,4 +276,103 @@ export class GithubService {
       return [];
     }
   }
+
+  // Fetches All Commits With Pagination
+  async getCommits(owner: string, repo: string, maxCommits: number = 500): Promise<any[]> {
+    const allCommits: any[] = [];
+    const perPage = 100;
+    const maxPages = Math.ceil(Math.min(maxCommits, 500) / perPage);
+
+    for (let page = 1; page <= maxPages; page++) {
+      try {
+        const response = await this.octokit.repos.listCommits({
+          owner,
+          repo,
+          per_page: perPage,
+          page,
+        });
+
+        const commits = response.data;
+        if (commits.length === 0) break;
+
+        allCommits.push(
+          ...commits.map((commit: any) => ({
+            sha: commit.sha,
+            shortSha: commit.sha.slice(0, 7),
+            message: commit.commit.message,
+            author: {
+              name: commit.commit.author?.name || 'Unknown',
+              email: commit.commit.author?.email || '',
+              date: commit.commit.author?.date || new Date().toISOString(),
+              login: commit.author?.login || null,
+            },
+            url: commit.html_url,
+            type: this.detectCommitType(commit.commit.message),
+            subject: commit.commit.message.split('\n')[0],
+            body: commit.commit.message.split('\n').slice(1).join('\n').trim() || null,
+          }))
+        );
+
+        // If We Got Fewer Than PerPage, We've Reached The End
+        if (commits.length < perPage) break;
+        // If We've Already Collected Enough
+        if (allCommits.length >= maxCommits) break;
+      } catch (error: any) {
+        if (error.status === 404) {
+          throw new Error(
+            `Repository not found or access denied. For private repos, ensure you are signed in with GitHub.`
+          );
+        }
+        if (error.status === 403) {
+          throw new Error(`Access forbidden. Private repositories require GitHub authentication.`);
+        }
+        console.error(`Failed to fetch commits page ${page}: ${error}`);
+        break;
+      }
+    }
+
+    return allCommits.slice(0, maxCommits);
+  }
+
+  async getContributors(owner: string, repo: string): Promise<string[]> {
+    try {
+      const response = await this.octokit.repos.listContributors({
+        owner,
+        repo,
+      });
+      return response.data.map((c: any) => c.login || 'Unknown');
+    } catch (error) {
+      return [];
+    }
+  }
+
+  async getTags(owner: string, repo: string): Promise<string[]> {
+    try {
+      const response = await this.octokit.repos.listTags({
+        owner,
+        repo,
+        per_page: 20,
+      });
+      return response.data.map((t: any) => t.name);
+    } catch (error) {
+      return [];
+    }
+  }
+
+  private detectCommitType(
+    message: string
+  ): 'feat' | 'fix' | 'refactor' | 'breaking' | 'chore' | 'docs' | 'style' | 'test' {
+    const match = message.match(
+      /^(feat|fix|refactor|chore|docs|style|test|perf|ci|build|revert)(\([^)]+\))?:/
+    );
+    if (match) {
+      return match[1] as any;
+    }
+
+    if (message.includes('BREAKING CHANGE') || message.includes('breaking change')) {
+      return 'breaking';
+    }
+
+    return 'chore';
+  }
 }
