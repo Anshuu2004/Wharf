@@ -27,6 +27,7 @@ model User {
   profileReadmes ProfileReadme[]
   chatSessions ChatSession[]
   healthScores  HealthScore[]
+  changelogs    Changelog[]
 }
 
 
@@ -195,5 +196,37 @@ model HealthScore {
 
   @@index([userId])
   @@index([checkedAt])
+  @@index([repoUrl])
+}
+
+// ─── Changelog Generator ──────────────────────────────────────────────────────
+model Changelog {
+  id              String   @id @default(cuid())
+  repoUrl         String
+  repoName        String
+  content         String   @db.Text
+  format          String   // 'keep-a-changelog' | 'simple' | 'json'
+  commitCount     Int
+  includeTags     Boolean  @default(true)
+  includeContributors Boolean @default(true)
+  groupByType     Boolean  @default(true)
+  generatedAt     DateTime @default(now())
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([generatedAt])
+  @@index([repoUrl])
+}
+
+model ChangelogStats {
+  id              String   @id @default(cuid())
+  repoUrl         String   @unique
+  totalCommits    Int
+  contributors    Int
+  tags            Int
+  commitsByType   Json     // { feat: 10, fix: 5, refactor: 3, breaking: 1, chore: 4 }
+  lastFetched     DateTime @default(now())
+  
   @@index([repoUrl])
 }
