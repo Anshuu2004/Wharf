@@ -339,6 +339,7 @@ export class GithubService {
       const response = await this.octokit.repos.listContributors({
         owner,
         repo,
+        per_page: 100,
       });
       return response.data.map((c: any) => c.login || 'Unknown');
     } catch (error) {
