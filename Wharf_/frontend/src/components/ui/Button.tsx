@@ -6,6 +6,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?:
     | 'primary'
     | 'secondary'
+    | 'green'
+    | 'purple'
+    | 'cyan'
+    | 'yellow'
     | 'success'
     | 'danger'
     | 'warning'
@@ -53,6 +57,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       'btn',
       variant === 'primary' && 'btn-primary',
       variant === 'secondary' && 'btn-secondary',
+      variant === 'green' && 'btn-green',
+      variant === 'purple' && 'btn-purple',
+      variant === 'cyan' && 'btn-cyan',
+      variant === 'yellow' && 'btn-yellow',
       variant === 'success' && 'btn-success',
       variant === 'danger' && 'btn-danger',
       variant === 'warning' && 'btn-warning',
