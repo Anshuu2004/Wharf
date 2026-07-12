@@ -183,7 +183,7 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
       <div className="flex items-center justify-between">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink transition-colors group"
+          className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink-dark transition-colors group cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Back To Dashboard
@@ -266,23 +266,48 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
         </div>
       )}
 
-      {/* Loading State */}
+      {/* History List - Skeleton Loading or Content */}
       {isLoading ? (
-        <div className="p-16 text-center border-2 border-wharf-border-primary rounded-3xl">
-          <div className="w-10 h-10 border-4 border-wharf-pink border-t-transparent animate-spin mx-auto" />
-          <p className="font-mono text-sm text-wharf-text-tertiary mt-4">Loading Your History...</p>
+        // Loading skeleton cards
+        <div className="grid gap-6">
+          {[1, 2, 3, 4].map((index) => (
+            <Card key={index} variant="hard" rounded="3xl" className="p-4 animate-pulse">
+              <div className="flex flex-col md:flex-row md:items-center gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="w-10 h-10 bg-wharf-border-secondary rounded-lg flex-shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-wharf-border-secondary rounded w-3/4" />
+                      <div className="flex gap-3">
+                        <div className="h-3 bg-wharf-border-secondary rounded w-16" />
+                        <div className="h-3 bg-wharf-border-secondary rounded w-20" />
+                        <div className="h-3 bg-wharf-border-secondary rounded w-12" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
+                  <div className="h-8 bg-wharf-border-secondary rounded w-16" />
+                  <div className="h-8 bg-wharf-border-secondary rounded w-16" />
+                  <div className="h-8 bg-wharf-border-secondary rounded w-16" />
+                  <div className="h-8 w-8 bg-wharf-border-secondary rounded" />
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
       ) : filteredHistory.length === 0 ? (
-        <Card variant="hard" className="p-16 text-center">
-          <div className="w-20 h-20 bg-wharf-surface-secondary border-2 border-wharf-border-primary flex items-center justify-center mx-auto mb-4">
+        <Card variant="hard" className="p-16 text-center rounded-3xl">
+          <div className="w-20 h-20 bg-wharf-surface-secondary border-2 border-wharf-border-primary flex items-center justify-center mx-auto mb-4 rounded-2xl">
             <FileText className="w-10 h-10 text-wharf-text-tertiary opacity-50" />
           </div>
           <h3 className="font-display font-black text-2xl tracking-tighter mb-2">
             No History Found
           </h3>
           <p className="font-mono text-sm text-wharf-text-tertiary max-w-md mx-auto">
-            You Haven't Generated Any Documentation Yet...
-            {searchQuery && ' Try Adjusting Your Search Filters.'}
+            {searchQuery
+              ? 'Try Adjusting Your Search Filters.'
+              : "You Haven't Generated Any Documentation Yet..."}
           </p>
           {!searchQuery && (
             <Button variant="primary" size="sm" className="mt-4" onClick={onBack}>
@@ -291,98 +316,101 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
           )}
         </Card>
       ) : (
-        /* History List */
-        <div className="grid gap-6">
-          {filteredHistory.map((record) => (
-            <Card
-              key={record.id}
-              variant="hard"
-              rounded="3xl"
-              className="p-4 hover:translate-y-[-2px] transition-all duration-200 group"
-            >
-              <div className="flex flex-col md:flex-row md:items-center gap-4">
-                {/* Left - Repo Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-1">
-                    <div className="w-10 h-10 border-2 border-wharf-border-primary flex items-center justify-center flex-shrink-0 bg-wharf-surface-secondary">
-                      <FaGithub className="w-5 h-5 text-wharf-text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-mono font-bold text-lg truncate">
-                        {record.repository.owner}/{record.repository.name}
-                      </h3>
-                      <div className="flex flex-wrap items-center gap-3 mt-1">
-                        {record.repository.language && (
-                          <span className="flex items-center gap-1 font-mono text-xs">
-                            <span
-                              className={`w-2 h-2 ${getLanguageColor(record.repository.language)} border border-wharf-border-primary`}
-                            />
-                            {record.repository.language}
+        <>
+          {/* History List */}
+          <div className="grid gap-6">
+            {filteredHistory.map((record) => (
+              <Card
+                key={record.id}
+                variant="hard"
+                rounded="3xl"
+                className="p-4 hover:translate-y-[-2px] transition-all duration-200 group"
+              >
+                <div className="flex flex-col md:flex-row md:items-center gap-4">
+                  {/* Left - Repo Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-1">
+                      <div className="w-10 h-10 border-2 border-wharf-border-primary flex items-center justify-center flex-shrink-0 bg-wharf-surface-secondary rounded-lg">
+                        <FaGithub className="w-5 h-5 text-wharf-text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-mono font-bold text-lg truncate">
+                          {record.repository.owner}/{record.repository.name}
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-3 mt-1">
+                          {record.repository.language && (
+                            <span className="flex items-center gap-1 font-mono text-xs">
+                              <span
+                                className={`w-2 h-2 ${getLanguageColor(record.repository.language)} border border-wharf-border-primary rounded-full`}
+                              />
+                              {record.repository.language}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1 font-mono text-xs text-wharf-text-tertiary">
+                            <Clock className="w-3 h-3" />
+                            {formatDate(record.createdAt)}
                           </span>
-                        )}
-                        <span className="flex items-center gap-1 font-mono text-xs text-wharf-text-tertiary">
-                          <Clock className="w-3 h-3" />
-                          {formatDate(record.createdAt)}
-                        </span>
-                        {record.wordCount && (
-                          <span className="font-mono text-xs text-wharf-text-tertiary">
-                            {record.wordCount} words
-                          </span>
-                        )}
+                          {record.wordCount && (
+                            <span className="font-mono text-xs text-wharf-text-tertiary">
+                              {record.wordCount} words
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Right - Actions */}
-                <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleCopy(record.id, record.repository.name)}
-                    className="group/btn"
-                  >
-                    <Copy className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
-                    <span className="hidden sm:inline">Copy</span>
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleDownload(record.id, record.repository.name)}
-                    className="group/btn"
-                  >
-                    <Download className="w-4 h-4 group-hover/btn:-translate-y-0.5 transition-transform" />
-                    <span className="hidden sm:inline">Download</span>
-                  </Button>
-                  <Button variant="primary" size="sm" onClick={() => handleView(record.id)}>
-                    <Eye className="w-4 h-4" />
-                    <span className="hidden sm:inline">View</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDelete(record.id, record.repository.name)}
-                    className="text-wharf-text-tertiary hover:text-wharf-orange hover:bg-transparent"
-                  >
-                    <Trash2 className="w-4.5 h-4.5" />
-                  </Button>
+                  {/* Right - Actions */}
+                  <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleCopy(record.id, record.repository.name)}
+                      className="group/btn"
+                    >
+                      <Copy className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                      <span className="hidden sm:inline">Copy</span>
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleDownload(record.id, record.repository.name)}
+                      className="group/btn"
+                    >
+                      <Download className="w-4 h-4 group-hover/btn:-translate-y-0.5 transition-transform" />
+                      <span className="hidden sm:inline">Download</span>
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={() => handleView(record.id)}>
+                      <Eye className="w-4 h-4" />
+                      <span className="hidden sm:inline">View</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(record.id, record.repository.name)}
+                      className="text-wharf-text-tertiary hover:text-wharf-orange hover:bg-transparent"
+                    >
+                      <Trash2 className="w-4.5 h-4.5" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
+              </Card>
+            ))}
+          </div>
 
-      {/* Footer Stats */}
-      {!isLoading && filteredHistory.length > 0 && (
-        <div className="flex justify-between items-center my-8 pt-4 border-t-2 border-wharf-border-secondary font-mono text-xs text-wharf-text-tertiary capitalize">
-          <span>
-            Showing {filteredHistory.length} of {history.length} records
-          </span>
-          <span>
-            {history.reduce((acc, r) => acc + (r.wordCount || 0), 0).toLocaleString()} total words
-          </span>
-        </div>
+          {/* Footer Stats */}
+          {filteredHistory.length > 0 && (
+            <div className="flex justify-between items-center my-8 pt-4 border-t-2 border-wharf-border-secondary font-mono text-xs text-wharf-text-tertiary capitalize">
+              <span>
+                Showing {filteredHistory.length} of {history.length} records
+              </span>
+              <span>
+                {history.reduce((acc, r) => acc + (r.wordCount || 0), 0).toLocaleString()} total
+                words
+              </span>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

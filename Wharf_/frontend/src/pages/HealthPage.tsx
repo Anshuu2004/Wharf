@@ -157,7 +157,7 @@ export const HealthPage = () => {
             <h2 className="font-display font-black text-5xl md:text-7xl tracking-tighter leading-[1.1]">
               Analyze & Improve Your
               <br />
-              <span className="bg-gradient-to-r from-wharf-pink-dark to-wharf-pink bg-clip-text text-transparent">
+              <span className="bg-wharf-green-darker bg-clip-text text-transparent">
                 Project Health
               </span>
             </h2>
@@ -170,7 +170,7 @@ export const HealthPage = () => {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-8 pt-8">
             <Button
-              variant="primary"
+              variant="green"
               size="lg"
               rounded="2xl"
               onClick={() => {
@@ -290,7 +290,7 @@ export const HealthPage = () => {
           <div className="space-y-6 animate-fadeInUp">
             <button
               onClick={() => setAppState('landing')}
-              className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink transition-colors group cursor-pointer"
+              className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink-dark transition-colors group cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               Back To Dashboard
@@ -306,10 +306,10 @@ export const HealthPage = () => {
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setAppState('landing')}
-                className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink transition-colors group cursor-pointer"
+                className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink-dark transition-colors group cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                Back to Dashboard
+                Back To Dashboard
               </button>
             </div>
 

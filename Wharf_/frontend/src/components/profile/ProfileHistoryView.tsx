@@ -207,7 +207,7 @@ export const ProfileHistoryView = ({
       {/* Title Section */}
       <div className="space-y-4">
         <h2 className="font-display font-black text-4xl md:text-5xl tracking-tighter">
-          Profile <span className="text-wharf-pink">History</span>
+          Profile <span className="text-yellow-500">History</span>
         </h2>
         <p className="font-mono text-md text-wharf-text-tertiary mb-10 capitalize">
           Review & reuse your previously generated profile READMEs...
@@ -274,15 +274,42 @@ export const ProfileHistoryView = ({
         </div>
       )}
 
-      {/* Loading & Empty State */}
+      {/* History Grid */}
       {loading ? (
-        <div className="p-16 text-center border-2 border-wharf-border-primary rounded-3xl">
-          <div className="w-10 h-10 border-4 border-wharf-pink border-t-transparent animate-spin mx-auto" />
-          <p className="font-mono text-sm text-wharf-text-tertiary mt-4">Loading Your History...</p>
+        // Loading Skeleton Cards
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[1, 2, 3, 4].map((index) => (
+            <Card
+              key={index}
+              variant="hard"
+              className="p-0 overflow-hidden rounded-3xl animate-pulse"
+            >
+              <div className="h-1 bg-wharf-border-secondary" />
+              <div className="p-4">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-10 h-10 bg-wharf-border-secondary rounded-lg flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-wharf-border-secondary rounded w-3/4" />
+                    <div className="flex gap-2">
+                      <div className="h-3 bg-wharf-border-secondary rounded w-16" />
+                      <div className="h-3 bg-wharf-border-secondary rounded w-20" />
+                    </div>
+                  </div>
+                  <div className="h-5 bg-wharf-border-secondary rounded w-16 flex-shrink-0" />
+                </div>
+                <div className="flex gap-3 pt-3 border-t-2 border-wharf-border-secondary">
+                  <div className="h-8 bg-wharf-border-secondary rounded flex-1" />
+                  <div className="h-8 bg-wharf-border-secondary rounded flex-1" />
+                  <div className="h-8 bg-wharf-border-secondary rounded flex-1" />
+                  <div className="h-8 w-8 bg-wharf-border-secondary rounded" />
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
       ) : filteredHistory.length === 0 ? (
-        <Card variant="hard" className="p-16 text-center">
-          <div className="w-20 h-20 bg-wharf-surface-secondary border-2 border-wharf-border-primary flex items-center justify-center mx-auto mb-4">
+        <Card variant="hard" className="p-16 text-center rounded-3xl">
+          <div className="w-20 h-20 bg-wharf-surface-secondary border-2 border-wharf-border-primary flex items-center justify-center mx-auto mb-4 rounded-2xl">
             <FileText className="w-10 h-10 text-wharf-text-tertiary opacity-50" />
           </div>
           <h3 className="font-display font-black text-2xl tracking-tighter mb-2">
@@ -301,7 +328,6 @@ export const ProfileHistoryView = ({
         </Card>
       ) : (
         <>
-          {/* History Grid - 2 Columns */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredHistory.map((item) => (
               <Card
@@ -317,7 +343,7 @@ export const ProfileHistoryView = ({
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       {/* Avatar */}
-                      <div className="w-10 h-10 border-2 border-wharf-border-primary flex items-center justify-center flex-shrink-0 bg-wharf-surface-secondary overflow-hidden">
+                      <div className="w-10 h-10 border-2 border-wharf-border-primary flex items-center justify-center flex-shrink-0 bg-wharf-surface-secondary overflow-hidden rounded-lg">
                         {item.avatarUrl || item.username ? (
                           <img
                             src={item.avatarUrl || `https://github.com/${item.username}.png`}

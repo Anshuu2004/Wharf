@@ -187,10 +187,43 @@ export const HealthHistory = ({ onSelect, onBack, onCountChange }: HealthHistory
 
   return (
     <div className="space-y-6 animate-fadeInUp">
+      {/* Header */}
+      {onBack && (
+        <div className="flex items-center justify-between">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink transition-colors group capitalize"
+          >
+            <span className="group-hover:-translate-x-1 transition-transform">←</span>
+            Back To Dashboard
+          </button>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-wharf-green" />
+              <span className="font-mono text-xs text-wharf-text-tertiary">
+                {filteredHistory.filter((r) => r.score >= 80).length}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-wharf-yellow" />
+              <span className="font-mono text-xs text-wharf-text-tertiary">
+                {filteredHistory.filter((r) => r.score >= 60 && r.score < 80).length}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-wharf-error" />
+              <span className="font-mono text-xs text-wharf-text-tertiary">
+                {filteredHistory.filter((r) => r.score < 60).length}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Title Section */}
       <div className="space-y-4">
         <h2 className="font-display font-black text-4xl md:text-5xl tracking-tighter">
-          Health <span className="text-wharf-pink">History</span>
+          Health <span className="text-wharf-green-darker">History</span>
         </h2>
         <p className="font-mono text-md text-wharf-text-tertiary mb-10 capitalize">
           Review & re-analyze your previously checked repositories...
@@ -256,15 +289,46 @@ export const HealthHistory = ({ onSelect, onBack, onCountChange }: HealthHistory
         </div>
       )}
 
-      {/* Loading & Empty State */}
+      {/* History Grid */}
       {isLoading ? (
-        <div className="p-16 text-center border-2 border-wharf-border-primary rounded-3xl">
-          <div className="w-10 h-10 border-4 border-wharf-pink border-t-transparent animate-spin mx-auto" />
-          <p className="font-mono text-sm text-wharf-text-tertiary mt-4">Loading Your History...</p>
+        // Loading Skeleton Cards
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((index) => (
+            <Card
+              key={index}
+              variant="hard"
+              className="p-0 overflow-hidden rounded-3xl animate-pulse"
+            >
+              <div className="h-1 bg-wharf-border-secondary" />
+              <div className="p-4">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-14 h-14 bg-wharf-border-secondary rounded-full flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-wharf-border-secondary rounded w-3/4" />
+                    <div className="flex gap-2">
+                      <div className="h-3 bg-wharf-border-secondary rounded w-16" />
+                      <div className="h-3 bg-wharf-border-secondary rounded w-20" />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-3 border-t-2 border-wharf-border-secondary">
+                  <div className="flex gap-3">
+                    <div className="h-3 bg-wharf-border-secondary rounded w-12" />
+                    <div className="h-3 bg-wharf-border-secondary rounded w-12" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 bg-wharf-border-secondary rounded w-16" />
+                    <div className="h-8 w-8 bg-wharf-border-secondary rounded" />
+                  </div>
+                </div>
+                <div className="mt-2 h-3 bg-wharf-border-secondary rounded w-full" />
+              </div>
+            </Card>
+          ))}
         </div>
       ) : filteredHistory.length === 0 ? (
-        <Card variant="hard" className="p-16 text-center">
-          <div className="w-20 h-20 bg-wharf-surface-secondary border-2 border-wharf-border-primary flex items-center justify-center mx-auto mb-4">
+        <Card variant="hard" className="p-16 text-center rounded-3xl">
+          <div className="w-20 h-20 bg-wharf-surface-secondary border-2 border-wharf-border-primary flex items-center justify-center mx-auto mb-4 rounded-2xl">
             <Activity className="w-10 h-10 text-wharf-text-tertiary opacity-50" />
           </div>
           <h3 className="font-display font-black text-2xl tracking-tighter mb-2">
@@ -283,7 +347,6 @@ export const HealthHistory = ({ onSelect, onBack, onCountChange }: HealthHistory
         </Card>
       ) : (
         <>
-          {/* History Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {filteredHistory.map((record, index) => (
               <motion.div

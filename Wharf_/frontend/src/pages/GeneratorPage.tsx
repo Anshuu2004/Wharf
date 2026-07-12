@@ -482,9 +482,7 @@ export const GeneratorPage = () => {
             <h2 className="font-display font-black text-5xl md:text-7xl tracking-tighter leading-[1.1]">
               Generate Professional
               <br />
-              <span className="bg-gradient-to-r from-wharf-pink to-wharf-pink-dark bg-clip-text text-transparent">
-                README Files
-              </span>
+              <span className="bg-wharf-pink bg-clip-text text-transparent">README Files</span>
             </h2>
 
             <p className="font-mono text-base md:text-lg text-wharf-text-secondary max-w-2xl mx-auto capitalize">
@@ -636,10 +634,10 @@ export const GeneratorPage = () => {
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setAppState('landing')}
-                className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink transition-colors group"
+                className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink-dark transition-colors group cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                Back to Dashboard
+                Back To Dashboard
               </button>
               {selectedRepo && (
                 <Badge variant="cyan" className="gap-1">
