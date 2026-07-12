@@ -223,7 +223,7 @@ export const ChangelogInput = ({
             >
               <span className="relative z-10 flex items-center gap-2">
                 <GitBranch className="w-4 h-4" />
-                Generate Changelog
+                Fetch Commits
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </span>
               {!isLoading && (
