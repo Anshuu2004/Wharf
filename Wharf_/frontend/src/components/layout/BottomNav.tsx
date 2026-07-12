@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Home, FileText, Activity, MessageSquare, Settings, Users, BarChart3 } from 'lucide-react';
+import { Home, FileText, Activity, MessageSquare, Settings, Users, Logs } from 'lucide-react';
 
 interface BottomNavProps {
   currentPage: string;
@@ -22,7 +22,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentPage, onNavigate }) => {
     { id: 'profile', icon: Users, label: 'Profile README' },
     { id: 'chat', icon: MessageSquare, label: 'Chat Assistant' },
     { id: 'health', icon: Activity, label: 'Health' },
-    { id: 'analytics', icon: BarChart3, label: 'Analytics' },
+    { id: 'changelog', icon: Logs, label: 'Changelog' },
     { id: 'settings', icon: Settings, label: 'Settings' },
   ];
 
