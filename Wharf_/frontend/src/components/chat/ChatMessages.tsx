@@ -31,7 +31,7 @@ export const ChatMessages = ({
         {/* Welcome Section */}
         <div className="flex-1 flex items-center justify-center">
           <div className="max-w-2xl mx-auto w-full text-center">
-            <div className="w-16 h-16 border-2 border-wharf-border-primary flex items-center justify-center mx-auto mb-4 bg-wharf-pink/10 overflow-hidden">
+            <div className="w-16 h-16 border-2 border-wharf-border-primary flex items-center justify-center mx-auto mb-4 bg-wharf-pink/10 rounded-xl overflow-hidden">
               <img
                 src="https://res.cloudinary.com/dhn92qb61/image/upload/v1751381563/Gojo__o3vpim.webp"
                 alt="Wharf AI"
