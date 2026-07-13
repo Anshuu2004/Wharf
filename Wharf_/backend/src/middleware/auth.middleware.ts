@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import prisma from '../db';
 
-export const auth = (req: Request, res: Response, next: NextFunction) => {
+export const auth = async (req: Request, res: Response, next: NextFunction) => {
   const JWT_SECRET = process.env.JWT_SECRET || 'secret';
   const authHeader = req.headers.authorization;
 
@@ -12,8 +13,20 @@ export const auth = (req: Request, res: Response, next: NextFunction) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    (req as any).user = decoded;
+    const decoded: any = jwt.verify(token, JWT_SECRET);
+
+    // Fetch Secure Tokens From Database
+    const dbUser = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { githubAccessToken: true, installationId: true },
+    });
+
+    (req as any).user = {
+      ...decoded,
+      githubAccessToken: dbUser?.githubAccessToken,
+      installationId: dbUser?.installationId,
+    };
+
     next();
   } catch (error: any) {
     next();
