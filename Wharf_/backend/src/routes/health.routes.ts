@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { HealthController } from '../controllers/health.controller';
 import { auth, requireAuth } from '../middleware/auth.middleware';
 import { rateLimit } from 'express-rate-limit';
+import { anonymousAnalysisLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 const healthController = new HealthController();
@@ -18,12 +19,14 @@ router.post(
   '/score',
   auth,
   rateLimitMiddleware,
+  anonymousAnalysisLimiter,
   healthController.analyzeReadmeHealth.bind(healthController)
 );
 router.post(
   '/contribution',
   auth,
   rateLimitMiddleware,
+  anonymousAnalysisLimiter,
   healthController.analyzeContributionReadiness.bind(healthController)
 );
 
