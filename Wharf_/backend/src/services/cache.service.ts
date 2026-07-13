@@ -70,9 +70,10 @@ export class CacheService {
   async getProfileReadme(
     username: string,
     template: string,
-    theme: string
+    theme: string,
+    hash: string = ''
   ): Promise<string | null> {
-    const key = `profile:readme:${username.toLowerCase()}:${template}:${theme}`;
+    const key = `profile:readme:${username.toLowerCase()}:${template}:${theme}:${hash}`;
     return await cacheGet(key);
   }
 
@@ -81,9 +82,10 @@ export class CacheService {
     username: string,
     template: string,
     theme: string,
+    hash: string,
     markdown: string
   ): Promise<void> {
-    const key = `profile:readme:${username.toLowerCase()}:${template}:${theme}`;
+    const key = `profile:readme:${username.toLowerCase()}:${template}:${theme}:${hash}`;
     await cacheSet(key, markdown, README_TTL);
   }
 
