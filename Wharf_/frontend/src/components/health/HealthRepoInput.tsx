@@ -18,6 +18,7 @@ interface HealthRepoInputProps {
   setRepoUrl: (url: string) => void;
   onAnalyze: () => void;
   isLoading: boolean;
+  apiError?: string | null;
   recentRepos?: string[];
   onRecentSelect?: (url: string) => void;
   onClearRecent?: () => void;
@@ -28,13 +29,12 @@ export const HealthRepoInput = ({
   setRepoUrl,
   onAnalyze,
   isLoading,
+  apiError,
   recentRepos = [],
 }: HealthRepoInputProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [, setShowRecent] = useState(false);
   const [touched, setTouched] = useState(false);
-  const [isValidating, setIsValidating] = useState(false);
-  const [networkValid, setNetworkValid] = useState<boolean | null>(null);
 
   // Define Examples
   const examples = [
@@ -63,43 +63,6 @@ export const HealthRepoInput = ({
     }
 
     return { isValid: true, message: 'Valid GitHub Repository URL' };
-  };
-
-  // Network Validation - Check If Repo Exists
-  const validateRepoExists = async (url: string) => {
-    if (!validateUrl(url).isValid) return;
-
-    setIsValidating(true);
-    setNetworkValid(null);
-
-    try {
-      // Extract Repo From URL
-      const match = url.match(/github\.com\/([^/]+\/[^/]+)/);
-      if (!match) return;
-
-      const repoPath = match[1];
-      const apiUrl = `https://api.github.com/repos/${repoPath}`;
-
-      const response = await fetch(apiUrl, {
-        headers: {
-          Accept: 'application/vnd.github.v3+json',
-        },
-      });
-
-      if (response.status === 200) {
-        setNetworkValid(true);
-      } else if (response.status === 404) {
-        setNetworkValid(false);
-      } else {
-        // Rate Limited Error
-        setNetworkValid(null);
-      }
-    } catch {
-      // Network Error
-      setNetworkValid(null);
-    } finally {
-      setIsValidating(false);
-    }
   };
 
   const isValidUrl = () => {
@@ -138,8 +101,6 @@ export const HealthRepoInput = ({
         setRepoUrl(cleanUrl);
         setTouched(true);
         e.preventDefault();
-        // Trigger Network Validation After Paste
-        setTimeout(() => validateRepoExists(cleanUrl), 500);
       }
     }
   };
@@ -148,21 +109,18 @@ export const HealthRepoInput = ({
     const url = `https://github.com/${example}`;
     setRepoUrl(url);
     setTouched(true);
-    setTimeout(() => validateRepoExists(url), 500);
   };
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setRepoUrl(value);
     setTouched(true);
-    setNetworkValid(null); // Reset Network Validation On Change
   };
 
   const validation = getValidationStatus();
   const isValid = isValidUrl();
 
-  // Determine If The Button Should Be Disabled
-  const isButtonDisabled = isLoading || (touched && !isValid) || isValidating;
+  const isButtonDisabled = isLoading || (touched && !isValid);
 
   return (
     <Card variant="hard" rounded="3xl" className="overflow-visible">
@@ -207,9 +165,6 @@ export const HealthRepoInput = ({
               onBlur={() => {
                 setIsFocused(false);
                 setTimeout(() => setShowRecent(false), 200);
-                if (isValid) {
-                  validateRepoExists(repoUrl);
-                }
               }}
               className={`pl-12 font-mono text-sm transition-all duration-300 rounded-2xl ${
                 isFocused ? 'border-wharf-pink ring-2 ring-wharf-pink/20' : ''
@@ -219,14 +174,8 @@ export const HealthRepoInput = ({
             {/* Validation Indicator */}
             {touched && repoUrl && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                {isValidating ? (
-                  <div className="w-4 h-4 border-2 border-wharf-cyan border-t-transparent rounded-full animate-spin" />
-                ) : isValid ? (
-                  networkValid === false ? (
-                    <AlertCircle className="w-4 h-4 text-wharf-error" />
-                  ) : (
-                    <CheckCircle className="w-4 h-4 text-wharf-green-darker" />
-                  )
+                {isValid ? (
+                  <CheckCircle className="w-4 h-4 text-wharf-green-darker" />
                 ) : (
                   <AlertCircle className="w-4 h-4 text-wharf-error" />
                 )}
@@ -239,7 +188,7 @@ export const HealthRepoInput = ({
             rounded="2xl"
             onClick={handleAnalyze}
             loading={isLoading}
-            disabled={isButtonDisabled || networkValid === false}
+            disabled={isButtonDisabled}
             className="min-w-[160px] group relative overflow-hidden"
           >
             <span className="relative z-10 flex items-center gap-2">
@@ -257,29 +206,18 @@ export const HealthRepoInput = ({
         </div>
 
         {/* Validation Message */}
-        {touched && repoUrl && !isValid && validation && (
+        {apiError && (
+          <div className="flex items-center gap-2 p-2 bg-wharf-error/5 border border-wharf-error/50 rounded-lg">
+            <AlertCircle className="w-4 h-4 text-wharf-error flex-shrink-0" />
+            <span className="font-mono text-xs text-wharf-error capitalize">{apiError}</span>
+          </div>
+        )}
+
+        {touched && repoUrl && !isValid && validation && !apiError && (
           <div className="flex items-center gap-2 p-2 bg-wharf-error/5 border border-wharf-error/50 rounded-lg">
             <AlertCircle className="w-4 h-4 text-wharf-error flex-shrink-0" />
             <span className="font-mono text-xs text-wharf-error capitalize">
               {validation.message}
-            </span>
-          </div>
-        )}
-
-        {touched && repoUrl && isValid && networkValid === false && (
-          <div className="flex items-center gap-2 p-2 bg-wharf-error/5 border border-wharf-error/50 rounded-lg">
-            <AlertCircle className="w-4 h-4 text-wharf-error flex-shrink-0" />
-            <span className="font-mono text-xs text-wharf-error capitalize">
-              Repository not found. Please check the URL & try again.
-            </span>
-          </div>
-        )}
-
-        {touched && repoUrl && isValid && networkValid === true && (
-          <div className="flex items-center gap-2 p-2 bg-wharf-green/15 border border-wharf-green-dark rounded-lg">
-            <CheckCircle className="w-4 h-4 text-wharf-green-darker flex-shrink-0" />
-            <span className="font-mono text-xs text-wharf-green-darker capitalize">
-              Valid GitHub Repository - Ready to analyze
             </span>
           </div>
         )}
