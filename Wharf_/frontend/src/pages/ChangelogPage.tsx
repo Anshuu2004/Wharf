@@ -8,7 +8,7 @@ import {
   ChangelogHistory,
 } from '../components/changelog';
 
-// Lazy-load Preview
+// Lazy-Load Preview
 const ReadmePreview = lazy(() =>
   import('../components/generator/ReadmePreview').then((m) => ({ default: m.ReadmePreview }))
 );
@@ -92,6 +92,7 @@ export const ChangelogPage = () => {
   );
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [currentStep, setCurrentStep] = useState(() =>
@@ -139,6 +140,7 @@ export const ChangelogPage = () => {
   const handleAnalyzeRepo = async () => {
     if (!repoUrl) return;
 
+    setApiError(null);
     setIsAnalyzing(true);
     try {
       const statsRes = await api.post('/changelog/stats', { repoUrl });
@@ -152,9 +154,22 @@ export const ChangelogPage = () => {
       if (options.commitCount > max) {
         setOptions((prev) => ({ ...prev, commitCount: max }));
       }
-    } catch (error) {
-      console.error('Failed to get stats:', error);
-      alert('Failed to analyze repository');
+    } catch (err) {
+      console.error('Failed to get stats:', err);
+      let errorMsg = 'Failed to analyze repository. Please check if it exists.';
+
+      // Type Guard To Safely Access Error Properties
+      if (err && typeof err === 'object' && 'response' in err) {
+        const errorResponse = err as { response?: { data?: { error?: string } } };
+        if (errorResponse.response?.data?.error) {
+          errorMsg = errorResponse.response.data.error;
+        }
+      }
+
+      if (errorMsg.includes('Not Found') || errorMsg.includes('docs.github.com')) {
+        errorMsg = 'Repository not found or requires authentication.';
+      }
+      setApiError(errorMsg);
     } finally {
       setIsAnalyzing(false);
     }
@@ -723,6 +738,7 @@ export const ChangelogPage = () => {
                       setRepoUrl={setRepoUrl}
                       onAnalyze={handleAnalyzeRepo}
                       isLoading={isAnalyzing}
+                      apiError={apiError}
                     />
                   </div>
                 )}
