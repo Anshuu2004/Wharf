@@ -59,7 +59,7 @@ export function detectFrameworks(files: string[], packageJson?: any): string[] {
   // Check package.json Dependencies
   if (packageJson) {
     const deps = { ...(packageJson.dependencies || {}), ...(packageJson.devDependencies || {}) };
-    
+
     if (deps['react']) detected.add('react');
     if (deps['vite']) detected.add('vite');
     if (deps['next']) detected.add('nextjs');
@@ -69,7 +69,7 @@ export function detectFrameworks(files: string[], packageJson?: any): string[] {
   }
 
   // Check File Patterns If Not Detected Via package.json
-  files.forEach(file => {
+  files.forEach((file) => {
     if (file.includes('manage.py')) detected.add('django');
     if (file.includes('requirements.txt')) {
       // Basic Check, Could Be Improved By Reading Content

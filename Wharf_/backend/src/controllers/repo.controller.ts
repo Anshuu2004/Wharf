@@ -11,7 +11,7 @@ export const analyzeRepo = async (req: Request, res: Response) => {
     return res.status(400).json({ success: false, error: 'Repository URL is required' });
   }
 
-    try {
+  try {
     let token: string | undefined;
     let installationId: string | undefined;
 

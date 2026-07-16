@@ -22,9 +22,7 @@ export const getRedisClient = () => {
     socket: {
       reconnectStrategy: (retries) => {
         if (retries > 3) {
-          console.warn(
-            '[Redis] Max reconnect attempts reached. Falling back to in-memory store.'
-          );
+          console.warn('[Redis] Max reconnect attempts reached. Falling back to in-memory store.');
 
           isRedisConnected = false;
 
@@ -60,17 +58,12 @@ if (process.env.REDIS_URL || process.env.NODE_ENV === 'production') {
 }
 
 /* Cache GET Utility With Local In-Memory Fallback */
-export async function cacheGet(
-  key: string
-): Promise<string | null> {
+export async function cacheGet(key: string): Promise<string | null> {
   if (isRedisConnected && redisClient) {
     try {
       return await redisClient.get(key);
     } catch (err: any) {
-      console.error(
-        '[Redis Cache] Get failed, using fallback:',
-        err.message
-      );
+      console.error('[Redis Cache] Get failed, using fallback:', err.message);
     }
   }
 
@@ -90,11 +83,7 @@ export async function cacheGet(
 }
 
 /* Cache SET Utility With Local In-Memory Fallback */
-export async function cacheSet(
-  key: string,
-  value: string,
-  ttlSeconds: number
-): Promise<void> {
+export async function cacheSet(key: string, value: string, ttlSeconds: number): Promise<void> {
   if (isRedisConnected && redisClient) {
     try {
       await redisClient.set(key, value, {
@@ -103,10 +92,7 @@ export async function cacheSet(
 
       return;
     } catch (err: any) {
-      console.error(
-        '[Redis Cache] Set failed, using fallback:',
-        err.message
-      );
+      console.error('[Redis Cache] Set failed, using fallback:', err.message);
     }
   }
 

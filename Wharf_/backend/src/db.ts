@@ -22,12 +22,14 @@ const prisma = prismaInternal.$extends({
             return await query(args);
           } catch (error) {
             if (error instanceof Prisma.PrismaClientKnownRequestError) {
-               // P1001 = Can't Reach DB, P2024 = Connection Pool Timeout, P1017 = Connection Closed
+              // P1001 = Can't Reach DB, P2024 = Connection Pool Timeout, P1017 = Connection Closed
               if (['P1001', 'P2024', 'P1017'].includes(error.code)) {
                 retries--;
                 if (retries === 0) throw error;
-                console.warn(`[PRISMA RETRY] DB connection issue (${error.code}). Retrying in 1 second...`);
-                await new Promise(res => setTimeout(res, 1000));
+                console.warn(
+                  `[PRISMA RETRY] DB connection issue (${error.code}). Retrying in 1 second...`
+                );
+                await new Promise((res) => setTimeout(res, 1000));
                 continue;
               }
             }

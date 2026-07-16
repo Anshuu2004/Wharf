@@ -11,7 +11,9 @@ export const generateReadme = async (req: Request, res: Response) => {
   const userId = (req as any).user?.userId;
 
   if (!repoUrl || !tone || !sections || !Array.isArray(sections)) {
-    return res.status(400).json({ success: false, error: 'repoUrl, tone, and sections are required fields' });
+    return res
+      .status(400)
+      .json({ success: false, error: 'repoUrl, tone, and sections are required fields' });
   }
 
   const parsed = parseGithubUrl(repoUrl);
@@ -32,7 +34,7 @@ export const generateReadme = async (req: Request, res: Response) => {
     const cachedReadme = await cacheService.getReadme(owner, repo, tone, sections);
     if (cachedReadme) {
       console.log(`[Cache] Cache hit for README: ${owner}/${repo}`);
-      
+
       // Stream Cached Content In Chunks To Simulate Smooth Loading
       const chunkSize = 100;
       for (let i = 0; i < cachedReadme.length; i += chunkSize) {
@@ -62,11 +64,11 @@ export const generateReadme = async (req: Request, res: Response) => {
               installationId: true,
             },
           });
-        
+
           if (typeof user?.githubAccessToken === 'string') {
             token = decrypt(user.githubAccessToken);
           }
-        
+
           if (user?.installationId) {
             installationId = user.installationId;
           }
@@ -143,7 +145,9 @@ export const generateReadme = async (req: Request, res: Response) => {
     res.end();
   } catch (error: any) {
     console.error('README generation error:', error);
-    res.write(`data: ${JSON.stringify({ error: error.message || 'Failed to generate README' })}\n\n`);
+    res.write(
+      `data: ${JSON.stringify({ error: error.message || 'Failed to generate README' })}\n\n`
+    );
     res.end();
   }
 };
@@ -159,8 +163,8 @@ export const getHistory = async (req: Request, res: Response) => {
     const history = await prisma.generation.findMany({
       where: {
         repository: {
-          userId
-        }
+          userId,
+        },
       },
       select: {
         id: true,
@@ -173,13 +177,13 @@ export const getHistory = async (req: Request, res: Response) => {
             name: true,
             url: true,
             language: true,
-            stars: true
-          }
-        }
+            stars: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: 'desc',
+      },
     });
 
     res.json({ success: true, data: history });
@@ -199,8 +203,8 @@ export const getHistoryById = async (req: Request, res: Response) => {
     const record = await prisma.generation.findUnique({
       where: { id },
       include: {
-        repository: true
-      }
+        repository: true,
+      },
     });
 
     if (!record || record.repository.userId !== userId) {
@@ -223,7 +227,7 @@ export const deleteHistoryItem = async (req: Request, res: Response) => {
   try {
     const record = await prisma.generation.findUnique({
       where: { id },
-      include: { repository: true }
+      include: { repository: true },
     });
 
     if (!record || record.repository.userId !== userId) {
