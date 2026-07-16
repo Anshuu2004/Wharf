@@ -1,4 +1,5 @@
 export * from './ai.service'
+export * from './apiKey.service'
 export * from './cache.service'
 export * from './changelog.service'
 export * from './chat.service'

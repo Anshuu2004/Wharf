@@ -8,7 +8,7 @@ export function buildReadmePrompt(
   const toneInstructions = {
     technical: `Write for developers and contributors. Be precise about implementation, architecture decisions, and technical requirements. Assume the reader is a developer.`,
     recruiter: `Write for hiring managers reviewing a portfolio. Highlight impact, problems solved, and key technical decisions. Use impact-focused language: "Built X that achieves Y using Z." Make it stand out to non-technical recruiters.`,
-    beginner: `Write for open-source newcomers. Be welcoming, explain every setup step, use accessible language, and make contributing feel easy and inviting.`
+    beginner: `Write for open-source newcomers. Be welcoming, explain every setup step, use accessible language, and make contributing feel easy and inviting.`,
   };
 
   return `You are Wharf, an AI documentation engine. Generate a highly polished, professional README.md for this repository based on the parsed context.
@@ -30,7 +30,9 @@ FILE TREE PREVIEW:
 ${context.treePreview}
 
 KEY FILES:
-${Object.entries(context.keyFiles).map(([file, content]) => `--- File: ${file} ---\n${content.slice(0, 1500)}`).join('\n\n')}
+${Object.entries(context.keyFiles)
+  .map(([file, content]) => `--- File: ${file} ---\n${content.slice(0, 1500)}`)
+  .join('\n\n')}
 
 SECTIONS TO INCLUDE: ${sections.join(', ')}
 
@@ -48,8 +50,9 @@ RULES:
 - For "Project Structure", order the file tree exactly as an IDE would (directories first, then files within). Represent every directory name using a \`📁\` emoji Prefix (e.g. \`├── 📁src/\`). Add an extra empty line \`│\` after every directory block inside the tree so it looks clean. Use \`\`\`bash\` for the tree block and add inline comments.
 - For "Getting Started" or "Installation", strictly mention environmental (.env) setup FIRST (if any) before guiding the user to backend and frontend setup. Use a strict step-by-step numbered format. CRITICAL: You MUST use markdown code blocks (\`\`\`bash\`) for installation commands to pass the Repo Health check. After EACH COMPLETE numbered step section (including its explanation and any code block), add a lone \`#\` on its own line as a visual separator BEFORE the next numbered step heading.
 - For "Usage" or "Examples", explicitly show users how to utilize the system. You MUST provide usage examples using markdown code blocks.
-- If "API Reference" is requested, include an API Summary Table first (columns: Method, API, Description) and add a single \`#\` line immediately after it. Then format each detailed API with a numbered title (e.g. \`### 1) POST /api/analyze\`), and strictly add a single \`#\` line AFTER completing the ENTIRE description block for each API. Also, ensure you include "Customization" and "Future Enhancements" sections if applicable.
-- For "Contributing", follow a highly detailed step-by-step layout under "How To Contribute". When a step contains a code block, add one blank line. Also include a structured "Areas For Contribution" list. MUST INCLUDE THIS for contribution health points.
+- If "API Reference" is requested, include an API Summary Table first (columns: Method, API, Description) and add a single \`#\` line immediately after it. Then format each detailed API with a numbered title (e.g. \`### 1) POST /api/analyze\`), and strictly add a single \`#\` line AFTER completing the ENTIRE description block for each API. 
+- Also, ensure you include "Customization" and "Future Enhancements" sections.
+- For "Contributing", follow a highly detailed step-by-step layout under "How To Contribute". When a step contains a code block, add one blank line. Also include a structured "Areas For Contribution" list. Strictly add a lone \`#\` on its own line as a visual separator BEFORE the next numbered step & before the "Areas For Contribution" heading as well. MUST INCLUDE THIS for contribution health points.
 - For "License", just add this text: "This project is licensed under the MIT License. See the [LICENSE](https://github.com/${context.meta.owner}/${context.meta.name}/blob/main/LICENSE) file for details." Do not include the full license description text. MUST INCLUDE THIS for license health points.
 - For "Author", add the author's name in an **bold** tag followed by a \`<br><br>\` tags. Below the name, output a single line of badges for Website, GitHub, LinkedIn, Email, etc. using \`&nbsp;\` between each badge as spacing. Ensure the PR badge strictly follows this format if used: \`[![GitHub](https://img.shields.io/badge/GitHub-1e1e2f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/FrostByte-49) &nbsp;\`. 
 - Include a "🌟 Support The Project" section near the end asking users to star and share the repository.

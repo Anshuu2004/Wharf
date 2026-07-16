@@ -19,10 +19,12 @@ model User {
   githubAccessToken String?     // Encrypted OAuth token
   githubCreatedAt   DateTime? 
   installationId    String?      // GitHub App installation ID
+  preferences       Json?        // User preferences (e.g. darkMode, autoSave)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   repos       Repository[]
+  profile     UserProfile?
   apiKeys     UserApiKey[]
   profileReadmes ProfileReadme[]
   chatSessions ChatSession[]
@@ -68,23 +70,35 @@ model Generation {
 }
 
 
-// ─── BYOK — User's Own API Keys ───────────────────────────────────────────────
 model UserApiKey {
-  id          String   @id @default(cuid())
-  provider    String   // OPENAI, ANTHROPIC, GEMINI, GROQ, DEEPSEEK, etc.
-  key         String   // Encrypted key
-  label       String   @default("Primary") // To distinguish multiple keys
-  isExhausted   Boolean  @default(false)
-  usageCount    Int      @default(0)
-  lastUsed      DateTime @default(now())
+  id              String   @id @default(cuid())
+  provider        String   // OPENAI, ANTHROPIC, GEMINI, GROQ, DEEPSEEK, etc.
+  key             String   // Encrypted key
+  label           String?  @default("Primary") // To distinguish multiple keys
+  lastFour        String?  // Last 4 characters
   
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Status tracking
+  isVerified      Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  isExhausted     Boolean  @default(false)
+  verificationError String?
+  
+  // Usage tracking
+  usageCount      Int      @default(0)
+  lastUsed        DateTime?
+  lastVerifiedAt  DateTime?
+  expiresAt       DateTime?
+  
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@unique([userId, provider, label])
+  @@index([userId])
+  @@index([provider])
+  @@index([isVerified])
 }
 
 // ─── System Key Pool — Shared Keys For Rotation ──────────────────────────────
@@ -229,4 +243,28 @@ model ChangelogStats {
   lastFetched     DateTime @default(now())
   
   @@index([repoUrl])
+}
+
+// ─── Settings / Profile ───────────────────────────────────────────────────────
+model UserProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name            String?
+  bio             String?  @db.Text
+  location        String?
+  company         String?
+  website         String?
+  
+  // GitHub Stats
+  reposCount      Int      @default(0)
+  starsCount      Int      @default(0)
+  followersCount  Int      @default(0)
+  followingCount  Int      @default(0)
+  gistsCount      Int      @default(0)
+  githubJoinedAt  DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

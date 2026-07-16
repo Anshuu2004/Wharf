@@ -24,6 +24,9 @@ const HealthPage = React.lazy(() =>
 const ChangelogPage = React.lazy(() =>
   import('./pages/ChangelogPage').then((m) => ({ default: m.ChangelogPage }))
 );
+const SettingsPage = React.lazy(() =>
+  import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage }))
+);
 
 function App() {
   const location = useLocation();
@@ -53,6 +56,7 @@ function App() {
               <Route path="/chat" element={<ChatPage />} />
               <Route path="/health" element={<HealthPage />} />
               <Route path="/changelog" element={<ChangelogPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<HomePage />} />
             </Routes>
           </Suspense>

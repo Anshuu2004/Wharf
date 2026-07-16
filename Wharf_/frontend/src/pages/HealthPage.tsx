@@ -83,7 +83,7 @@ export const HealthPage = () => {
   );
 
   const [isLoading, setIsLoading] = useState(false);
-  const [, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Persist State To Sync Across Page Refreshes
   useEffect(() => {
@@ -123,10 +123,17 @@ export const HealthPage = () => {
       setAnalyzedRepoUrl(target);
       setCurrentStep(2); // Move To Results Step
     } catch (err: unknown) {
-      const errorMessage =
+      let errorMessage =
         err && typeof err === 'object' && 'response' in err
           ? (err as { response?: { data?: { error?: string } } }).response?.data?.error
           : undefined;
+
+      if (
+        errorMessage &&
+        (errorMessage.includes('Not Found') || errorMessage.includes('docs.github.com'))
+      ) {
+        errorMessage = 'Repository not found or requires authentication.';
+      }
       setError(errorMessage || 'Failed to analyze repository. Please check the URL and try again.');
     } finally {
       setIsLoading(false);
@@ -393,6 +400,7 @@ export const HealthPage = () => {
                       setRepoUrl={setRepoUrl}
                       onAnalyze={() => handleAnalyze()}
                       isLoading={isLoading}
+                      apiError={error}
                     />
                   </div>
                 )}

@@ -24,9 +24,20 @@ export class AiService {
     const preferredProviders = ['GEMINI', 'GROQ', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK'];
     let keyInfo = null;
 
-    for (const provider of preferredProviders) {
-      keyInfo = await this.keyRouter.getAvailableKey(provider, userId);
-      if (keyInfo) break;
+    // Step 1: Check For User BYOK Key Across ALL Providers First
+    if (userId) {
+      for (const provider of preferredProviders) {
+        keyInfo = await this.keyRouter.getUserKey(provider, userId);
+        if (keyInfo) break;
+      }
+    }
+
+    // Step 2: Only If No User Key Found, Fall Back To System Pool
+    if (!keyInfo) {
+      for (const provider of preferredProviders) {
+        keyInfo = await this.keyRouter.getSystemKey(provider);
+        if (keyInfo) break;
+      }
     }
 
     if (!keyInfo) {
@@ -171,9 +182,20 @@ export class AiService {
     const preferredProviders = ['GEMINI', 'GROQ', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK'];
     let keyInfo = null;
 
-    for (const provider of preferredProviders) {
-      keyInfo = await this.keyRouter.getAvailableKey(provider, userId);
-      if (keyInfo) break;
+    // Step 1: Check For User BYOK Key Across ALL Providers First
+    if (userId) {
+      for (const provider of preferredProviders) {
+        keyInfo = await this.keyRouter.getUserKey(provider, userId);
+        if (keyInfo) break;
+      }
+    }
+
+    // Step 2: Only If No User Key Found, Fall Back To System Pool
+    if (!keyInfo) {
+      for (const provider of preferredProviders) {
+        keyInfo = await this.keyRouter.getSystemKey(provider);
+        if (keyInfo) break;
+      }
     }
 
     if (!keyInfo) {

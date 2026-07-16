@@ -74,13 +74,12 @@ export const githubCallback = async (req: Request, res: Response) => {
     // 4. Create JWT
     const JWT_SECRET = process.env.JWT_SECRET || 'secret';
     const token = jwt.sign(
-      { 
-        userId: user.id, 
+      {
+        userId: user.id,
         username: user.username,
         githubCreatedAt: (user as any).githubCreatedAt,
         email: user.email,
         avatar: user.avatar,
-        githubAccessToken: user.githubAccessToken
       },
       JWT_SECRET,
       { expiresIn: '7d' }

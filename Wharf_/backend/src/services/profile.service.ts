@@ -19,10 +19,10 @@ export class ProfileService {
     try {
       // 1. Fetch User Profile
       const user = await this.githubService.getUserProfile(username);
-      
+
       // 2. Fetch Top Starred Repositories (Pinned Proxy)
       const topRepos = await this.githubService.getTopStarredRepos(username, 10);
-      
+
       // Calculate Stats
       let totalStars = 0;
       let totalForks = 0;
@@ -34,7 +34,7 @@ export class ProfileService {
         description: repo.description || '',
         url: repo.html_url || '',
         language: repo.language || 'Unknown',
-        stars: repo.stargazers_count || 0
+        stars: repo.stargazers_count || 0,
       }));
 
       // Summarize Stats & Infer Languages Without Fetching ListLanguages Per Repo To Save API Calls
@@ -43,11 +43,11 @@ export class ProfileService {
         topRepos.forEach((repo: any) => {
           totalStars += repo.stargazers_count || 0;
           totalForks += repo.forks_count || 0;
-          
+
           if (repo.language) {
             languageCounts[repo.language] = (languageCounts[repo.language] || 0) + 1;
             techStackSet.add(repo.language.toLowerCase()); // Simple Mapping For Tech Stack
-            
+
             // Basic Tech Stack Expansion Based On Topics
             if (repo.topics && Array.isArray(repo.topics)) {
               repo.topics.forEach((topic: string) => techStackSet.add(topic.toLowerCase()));
@@ -61,7 +61,7 @@ export class ProfileService {
       const topLanguages = Object.entries(languageCounts)
         .map(([name, count]) => ({
           name,
-          percentage: Math.round((count / totalReposWithLang) * 100)
+          percentage: Math.round((count / totalReposWithLang) * 100),
         }))
         .sort((a, b) => b.percentage - a.percentage)
         .slice(0, 5);
@@ -71,8 +71,8 @@ export class ProfileService {
         name: user.name || user.login,
         bio: user.bio || '',
         avatarUrl: user.avatar_url,
-        company: user.company || undefined, 
-        location: user.location || undefined, 
+        company: user.company || undefined,
+        location: user.location || undefined,
         followers: user.followers,
         following: user.following,
         repos: user.public_repos,
@@ -80,9 +80,9 @@ export class ProfileService {
         totalForks,
         topLanguages,
         techStack: Array.from(techStackSet).slice(0, 15),
-        contributions: 0, 
+        contributions: 0,
         joinDate: user.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown',
-        pinnedRepos
+        pinnedRepos,
       };
 
       // Set Cache

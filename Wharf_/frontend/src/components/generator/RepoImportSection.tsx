@@ -25,9 +25,9 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
   const [importMethod, setImportMethod] = useState<'url' | 'github'>('url');
   const [repoUrl, setRepoUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
-  const [isValidating, setIsValidating] = useState(false);
-  const [networkValid, setNetworkValid] = useState<boolean | null>(null);
+
   const [recentRepos] = useState<
     {
       id: number;
@@ -64,43 +64,6 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
     return { isValid: true, message: 'Valid GitHub Repository URL' };
   };
 
-  // Network Validation - Check If Repo Exists
-  const validateRepoExists = async (url: string) => {
-    if (!validateUrl(url).isValid) return;
-
-    setIsValidating(true);
-    setNetworkValid(null);
-
-    try {
-      // Extract Repo From URL
-      const match = url.match(/github\.com\/([^/]+\/[^/]+)/);
-      if (!match) return;
-
-      const repoPath = match[1];
-      const apiUrl = `https://api.github.com/repos/${repoPath}`;
-
-      const response = await fetch(apiUrl, {
-        headers: {
-          Accept: 'application/vnd.github.v3+json',
-        },
-      });
-
-      if (response.status === 200) {
-        setNetworkValid(true);
-      } else if (response.status === 404) {
-        setNetworkValid(false);
-      } else {
-        // Rate Limited
-        setNetworkValid(null);
-      }
-    } catch {
-      // Network Error
-      setNetworkValid(null);
-    } finally {
-      setIsValidating(false);
-    }
-  };
-
   const isValidUrl = () => {
     const result = validateUrl(repoUrl);
     return result.isValid;
@@ -119,6 +82,7 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
       return;
     }
 
+    setApiError(null);
     setIsLoading(true);
     try {
       const response = await api.post('/repo/analyze', { repoUrl });
@@ -134,9 +98,25 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
           language: analysis.meta.language || '',
           framework: analysis.frameworks || [],
         });
+      } else {
+        setApiError(response.data?.error || 'Failed To Analyze Repository');
       }
-    } catch (error) {
-      console.error('Failed to analyze repository:', error);
+    } catch (err) {
+      console.error('Failed To Analyze Repository:', err);
+      let errorMsg = 'Failed To Analyze Repository. Please Check If It Exists.';
+
+      // Type guard to check if err has response property
+      if (err && typeof err === 'object' && 'response' in err) {
+        const errorResponse = err as { response?: { data?: { error?: string } } };
+        if (errorResponse.response?.data?.error) {
+          errorMsg = errorResponse.response.data.error;
+        }
+      }
+
+      if (errorMsg.includes('Not Found') || errorMsg.includes('docs.github.com')) {
+        errorMsg = 'Repository Not Found. Please Check If It Exists.';
+      }
+      setApiError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -149,9 +129,9 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
       if (match) {
         const cleanUrl = `https://github.com/${match[1]}`;
         setRepoUrl(cleanUrl);
+        setApiError(null);
         setTouched(true);
         e.preventDefault();
-        setTimeout(() => validateRepoExists(cleanUrl), 500);
       }
     }
   };
@@ -159,15 +139,15 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
   const handleExampleClick = (example: string) => {
     const url = `https://github.com/${example}`;
     setRepoUrl(url);
+    setApiError(null);
     setTouched(true);
-    setTimeout(() => validateRepoExists(url), 500);
   };
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setRepoUrl(value);
+    setApiError(null);
     setTouched(true);
-    setNetworkValid(null); // Reset Network Validation On Change
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -178,8 +158,7 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
 
   const validation = getValidationStatus();
   const isValid = isValidUrl();
-  const isButtonDisabled =
-    isLoading || (touched && !isValid) || isValidating || networkValid === false;
+  const isButtonDisabled = isLoading || (touched && !isValid);
 
   const examples = [
     { name: 'facebook/react', stars: '222k', description: 'React UI library' },
@@ -285,11 +264,6 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
                     onFocus={() => {
                       setTouched(true);
                     }}
-                    onBlur={() => {
-                      if (isValid) {
-                        validateRepoExists(repoUrl);
-                      }
-                    }}
                     className={`pl-9 font-mono text-sm transition-all duration-300 rounded-2xl ${
                       touched && repoUrl
                         ? isValid
@@ -302,14 +276,8 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
                   {/* Validation Indicator */}
                   {touched && repoUrl && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      {isValidating ? (
-                        <div className="w-4 h-4 border-2 border-wharf-cyan border-t-transparent rounded-full animate-spin" />
-                      ) : isValid ? (
-                        networkValid === false ? (
-                          <AlertCircle className="w-4 h-4 text-wharf-error" />
-                        ) : (
-                          <CheckCircle className="w-4 h-4 text-wharf-green-darker" />
-                        )
+                      {isValid ? (
+                        <CheckCircle className="w-4 h-4 text-wharf-green-darker" />
                       ) : (
                         <AlertCircle className="w-4 h-4 text-wharf-error" />
                       )}
@@ -329,30 +297,19 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
                 </Button>
               </div>
 
+              {apiError && (
+                <div className="flex items-center gap-2 p-2 bg-wharf-error/5 border border-wharf-error/50 rounded-lg">
+                  <AlertCircle className="w-4 h-4 text-wharf-error flex-shrink-0" />
+                  <span className="font-mono text-xs text-wharf-error capitalize">{apiError}</span>
+                </div>
+              )}
+
               {/* Validation Message */}
-              {touched && repoUrl && !isValid && validation && (
+              {touched && repoUrl && !isValid && validation && !apiError && (
                 <div className="flex items-center gap-2 p-2 bg-wharf-error/5 border border-wharf-error/50 rounded-lg">
                   <AlertCircle className="w-4 h-4 text-wharf-error flex-shrink-0" />
                   <span className="font-mono text-xs text-wharf-error capitalize">
                     {validation.message}
-                  </span>
-                </div>
-              )}
-
-              {touched && repoUrl && isValid && networkValid === false && (
-                <div className="flex items-center gap-2 p-2 bg-wharf-error/5 border border-wharf-error/50 rounded-lg">
-                  <AlertCircle className="w-4 h-4 text-wharf-error flex-shrink-0" />
-                  <span className="font-mono text-xs text-wharf-error capitalize">
-                    Repository not found. Please check the URL & try again.
-                  </span>
-                </div>
-              )}
-
-              {touched && repoUrl && isValid && networkValid === true && (
-                <div className="flex items-center gap-2 p-2 bg-wharf-green/15 border border-wharf-green-dark rounded-lg">
-                  <CheckCircle className="w-4 h-4 text-wharf-green-darker flex-shrink-0" />
-                  <span className="font-mono text-xs text-wharf-green-darker capitalize">
-                    Valid GitHub Repository - Ready to analyze
                   </span>
                 </div>
               )}

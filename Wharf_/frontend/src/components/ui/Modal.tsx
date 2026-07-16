@@ -1,16 +1,16 @@
-import { useEffect, type ReactNode } from 'react'
-import { createPortal } from 'react-dom'
-import { cn } from '../../lib/cn'
-import { Button } from './Button'
+import { useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import { cn } from '../../lib/cn';
+import { X } from 'lucide-react';
 
 export interface ModalProps {
-  isOpen: boolean
-  onClose: () => void
-  title?: string
-  children: ReactNode
-  footer?: ReactNode
-  size?: 'sm' | 'md' | 'lg' | 'xl'
-  closeOnOverlayClick?: boolean
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  children: ReactNode;
+  footer?: ReactNode;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  closeOnOverlayClick?: boolean;
 }
 
 const Modal = ({
@@ -24,37 +24,41 @@ const Modal = ({
 }: ModalProps) => {
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden'
+      document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = 'unset'
+      document.body.style.overflow = 'unset';
     }
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
-        onClose()
+        onClose();
       }
-    }
+    };
 
-    document.addEventListener('keydown', handleEscape)
+    document.addEventListener('keydown', handleEscape);
     return () => {
-      document.body.style.overflow = 'unset'
-      document.removeEventListener('keydown', handleEscape)
-    }
-  }, [isOpen, onClose])
+      document.body.style.overflow = 'unset';
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, onClose]);
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   const sizeStyles = {
     sm: 'max-w-md',
     md: 'max-w-lg',
     lg: 'max-w-2xl',
     xl: 'max-w-4xl',
-  }
+  };
 
   const modalContent = (
     <div className="modal-overlay" onClick={() => closeOnOverlayClick && onClose()}>
       <div
-        className={cn('modal-content', sizeStyles[size])}
+        className={cn(
+          'modal-content',
+          sizeStyles[size],
+          'shadow-brutal rounded-2xl overflow-hidden'
+        )}
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
@@ -62,29 +66,21 @@ const Modal = ({
             <h2 className="text-2xl font-black">{title}</h2>
             <button
               onClick={onClose}
-              className="w-8 h-8 border-2 border-wharf-border-primary hover:bg-wharf-coral transition-colors"
+              className="w-8 h-8 transition-colors flex items-center justify-center font-bold cursor-pointer"
             >
-              ✕
+              <X className="w-6 h-6 hover:text-wharf-error" />
             </button>
           </div>
         )}
-        
+
         <div className="modal-body">{children}</div>
-        
+
         {footer && <div className="modal-footer">{footer}</div>}
-        
-        {!footer && (
-          <div className="modal-footer">
-            <Button variant="secondary" onClick={onClose}>
-              Close
-            </Button>
-          </div>
-        )}
       </div>
     </div>
-  )
+  );
 
-  return createPortal(modalContent, document.body)
-}
+  return createPortal(modalContent, document.body);
+};
 
-export { Modal }
+export { Modal };
