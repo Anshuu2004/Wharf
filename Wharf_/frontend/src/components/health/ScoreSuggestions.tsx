@@ -123,7 +123,7 @@ export const ScoreSuggestions = ({
       </div>
 
       {/* Suggestions */}
-      <div className="flex-grow overflow-y-auto space-y-3 min-h-[200px] max-h-[400px] pr-1 custom-scrollbar">
+      <div className="flex-grow overflow-y-auto space-y-3 min-h-[200px] max-h-[400px] pr-1 scrollbar-hidden">
         {suggestions.map((suggestion, idx) => {
           const priority = getPriority(idx);
           return (
