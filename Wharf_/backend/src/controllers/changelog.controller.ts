@@ -90,6 +90,7 @@ export class ChangelogController {
               repoUrl,
               repoName: extractRepoName(repoUrl),
               content: fullContent,
+              wordCount: fullContent.split(/\s+/).filter(Boolean).length,
               format: options.format || 'keep-a-changelog',
               commitCount: Number(options.commitCount) || 100,
               includeTags: options.includeTags ?? true,

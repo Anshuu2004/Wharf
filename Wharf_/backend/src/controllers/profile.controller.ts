@@ -94,6 +94,7 @@ export const generate = async (req: Request, res: Response) => {
             userId,
             username,
             content: generatedMarkdown,
+            wordCount: generatedMarkdown.split(/\s+/).filter(Boolean).length,
             template,
             theme,
             badges: options.githubBadges || [],
