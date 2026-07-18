@@ -27,6 +27,9 @@ const ChangelogPage = React.lazy(() =>
 const SettingsPage = React.lazy(() =>
   import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage }))
 );
+const AdminDashboard = React.lazy(() =>
+  import('./pages/AdminDashboard').then((m) => ({ default: m.AdminDashboard }))
+);
 
 function App() {
   const location = useLocation();
@@ -57,6 +60,7 @@ function App() {
               <Route path="/health" element={<HealthPage />} />
               <Route path="/changelog" element={<ChangelogPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/admin" element={<AdminDashboard />} />
               <Route path="*" element={<HomePage />} />
             </Routes>
           </Suspense>

@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Home, FileText, Activity, MessageSquare, Settings, Users, Logs } from 'lucide-react';
+import {
+  Home,
+  FileText,
+  Activity,
+  MessageSquare,
+  Settings,
+  Users,
+  Logs,
+  LayoutDashboard,
+} from 'lucide-react';
+import { useAuthStore } from '../../stores/authStore';
 
 interface BottomNavProps {
   currentPage: string;
@@ -16,7 +26,7 @@ interface NavItemData {
 const BottomNav: React.FC<BottomNavProps> = ({ currentPage, onNavigate }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  const navItems: NavItemData[] = [
+  const defaultNavItems: NavItemData[] = [
     { id: 'home', icon: Home, label: 'Home' },
     { id: 'generator', icon: FileText, label: 'Repo README' },
     { id: 'profile', icon: Users, label: 'Profile README' },
@@ -25,6 +35,11 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentPage, onNavigate }) => {
     { id: 'changelog', icon: Logs, label: 'Changelog' },
     { id: 'settings', icon: Settings, label: 'Settings' },
   ];
+
+  const { user } = useAuthStore();
+  const navItems = user?.isAdmin
+    ? [...defaultNavItems, { id: 'admin', icon: LayoutDashboard, label: 'Admin' }]
+    : defaultNavItems;
 
   return (
     <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden md:block">
