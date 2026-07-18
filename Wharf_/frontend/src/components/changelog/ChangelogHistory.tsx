@@ -11,6 +11,7 @@ import {
   Filter,
   ChevronDown,
   GitBranch,
+  AlertTriangle,
 } from 'lucide-react';
 import api from '../../lib/api';
 import { useAuthStore } from '../../stores/authStore';
@@ -41,6 +42,7 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'alphabetical'>('newest');
   const [showFilters, setShowFilters] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const { showToast } = useToast();
 
   const fetchHistory = useCallback(async () => {
@@ -105,14 +107,8 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
     }
   }, [history, searchQuery, sortBy, onCountChange]);
 
-  const handleDelete = async (id: string, repoName: string) => {
-    try {
-      await api.delete(`/changelog/${id}`);
-      setHistory((h) => h.filter((item) => item.id !== id));
-      showToast(`Deleted ${repoName} From History`, 'info');
-    } catch {
-      showToast('Failed To Delete Record', 'error');
-    }
+  const handleDelete = (id: string) => {
+    setConfirmDeleteId(id);
   };
 
   const handleCopy = async (content: string, repoName: string) => {
@@ -399,7 +395,7 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
                       <span className="hidden sm:inline text-xs">Download</span>
                     </Button>
                     <button
-                      onClick={() => handleDelete(item.id, item.repoName)}
+                      onClick={() => handleDelete(item.id)}
                       className="p-1.75 text-wharf-text-primary hover:text-wharf-error bg-wharf-surface-tertiary hover:bg-wharf-error/10 transition-all border-2 border-wharf-border-primary hover:border-wharf-error rounded-lg cursor-pointer"
                       title="Delete"
                     >
@@ -421,6 +417,45 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
             </span>
           </div>
         </>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center">
+          <div className="bg-wharf-surface-primary border-2 border-wharf-border-primary p-6 max-w-sm w-full shadow-brutal animate-scaleIn">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertTriangle className="w-6 h-6 text-wharf-error" />
+              <h3 className="font-display font-bold text-lg">Delete Record?</h3>
+            </div>
+            <p className="text-sm font-mono text-wharf-text-secondary mb-6">
+              Are you sure you want to delete this changelog record? This action cannot be undone.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="px-4 py-2 border-2 border-wharf-border-secondary font-mono text-xs font-bold hover:bg-wharf-surface-secondary transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await api.delete(`/changelog/${confirmDeleteId}`);
+                    setHistory((h) => h.filter((item) => item.id !== confirmDeleteId));
+                    showToast('Deleted changelog from history', 'info');
+                  } catch {
+                    showToast('Failed to delete record', 'error');
+                  } finally {
+                    setConfirmDeleteId(null);
+                  }
+                }}
+                className="px-4 py-2 border-2 border-wharf-border-primary bg-wharf-error text-wharf-white font-mono text-xs font-bold hover:bg-wharf-error/80 transition-colors cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

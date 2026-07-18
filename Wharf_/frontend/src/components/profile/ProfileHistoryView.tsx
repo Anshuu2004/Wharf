@@ -12,6 +12,7 @@ import {
   Filter,
   ChevronDown,
   LayoutTemplate,
+  AlertTriangle,
 } from 'lucide-react';
 import api from '../../lib/api';
 
@@ -46,6 +47,7 @@ export const ProfileHistoryView = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'alphabetical'>('newest');
   const [showFilters, setShowFilters] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -104,14 +106,8 @@ export const ProfileHistoryView = ({
     }
   }, [history, searchQuery, sortBy, onCountChange]);
 
-  const handleDelete = async (id: string, username: string) => {
-    try {
-      await api.delete(`/profile/${id}`);
-      setHistory((h) => h.filter((item) => item.id !== id));
-      showToast(`Deleted ${username} from history`, 'info');
-    } catch {
-      showToast('Failed to delete record', 'error');
-    }
+  const handleDelete = (id: string) => {
+    setDeleteConfirm(id);
   };
 
   const handleCopy = async (content: string, username: string) => {
@@ -415,7 +411,7 @@ export const ProfileHistoryView = ({
                       <span className="hidden sm:inline text-xs">View</span>
                     </Button>
                     <button
-                      onClick={() => handleDelete(item.id, item.username)}
+                      onClick={() => handleDelete(item.id)}
                       className="p-1.75 text-wharf-text-primary hover:text-wharf-error bg-wharf-surface-tertiary hover:bg-wharf-error/10 transition-all border-2 border-wharf-border-primary hover:border-wharf-error rounded-lg cursor-pointer"
                       title="Delete"
                     >
@@ -437,6 +433,45 @@ export const ProfileHistoryView = ({
             </span>
           </div>
         </>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center">
+          <div className="bg-wharf-surface-primary border-2 border-wharf-border-primary p-6 max-w-sm w-full shadow-brutal animate-scaleIn">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertTriangle className="w-6 h-6 text-wharf-error" />
+              <h3 className="font-display font-bold text-lg">Delete Record?</h3>
+            </div>
+            <p className="text-sm font-mono text-wharf-text-secondary mb-6">
+              Are you sure you want to delete this profile record? This action cannot be undone.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-4 py-2 border-2 border-wharf-border-secondary font-mono text-xs font-bold hover:bg-wharf-surface-secondary transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await api.delete(`/profile/${deleteConfirm}`);
+                    setHistory((h) => h.filter((item) => item.id !== deleteConfirm));
+                    showToast(`Deleted profile record`, 'info');
+                  } catch {
+                    showToast('Failed to delete record', 'error');
+                  } finally {
+                    setDeleteConfirm(null);
+                  }
+                }}
+                className="px-4 py-2 border-2 border-wharf-border-primary bg-wharf-error text-wharf-white font-mono text-xs font-bold hover:bg-wharf-error/80 transition-colors cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
