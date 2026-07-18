@@ -6,6 +6,7 @@ import { streamText } from 'ai';
 import { buildChatPrompt } from '../utils/chatPromptBuilder';
 import { decrypt } from '../utils/encryption';
 import prisma from '../db';
+import { recordDailyGeneration } from '../utils/dailyStats';
 
 export class ChatService {
   private repoService: RepoService;
@@ -122,6 +123,13 @@ export class ChatService {
               avgResponseTime: 0,
             },
           });
+
+          if (userId && completion.usage?.totalTokens) {
+            // Permanently Bank These Tokens
+            const chatTokens = completion.usage.totalTokens;
+            await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${chatTokens}, "lifetimeChats" = "lifetimeChats" + 1 WHERE id = ${userId}`;
+            await recordDailyGeneration(userId);
+          }
         } catch (dbError) {
           console.error('[ChatService] Error saving message or analytics to DB:', dbError);
         }

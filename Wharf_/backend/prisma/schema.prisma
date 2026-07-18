@@ -20,6 +20,12 @@ model User {
   githubCreatedAt   DateTime? 
   installationId    String?      // GitHub App installation ID
   preferences       Json?        // User preferences (e.g. darkMode, autoSave)
+  lifetimeTokens    Int      @default(0)  // Immutable accumulator — never decremented
+  lifetimeReadmes      Int      @default(0)
+  lifetimeProfiles     Int      @default(0)
+  lifetimeHealthChecks Int      @default(0)
+  lifetimeChangelogs   Int      @default(0)
+  lifetimeChats        Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -120,6 +126,7 @@ model ProfileReadme {
   userId        String?
   username      String   // GitHub username
   content       String   @db.Text  // Generated README content
+  wordCount     Int?     // Token estimation via word count
   template      String   // minimal, developer, creative, professional, terminal
   theme         String   // default, dark, ocean, sunset, forest, monochrome
   badges        String[] // Selected badges
@@ -219,6 +226,7 @@ model Changelog {
   repoUrl         String
   repoName        String
   content         String   @db.Text
+  wordCount       Int?     // Token estimation
   format          String   // 'keep-a-changelog' | 'simple' | 'json'
   commitCount     Int
   includeTags     Boolean  @default(true)
@@ -267,4 +275,50 @@ model UserProfile {
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+// ─── Admin Dashboard ────────────────────────────────────────────────────────
+model Analytics {
+  id            String   @id @default(cuid())
+  type          String   // 'generation' | 'chat' | 'profile' | 'health' | 'changelog'
+  provider      String?  // 'gemini' | 'groq' | 'openai' | 'anthropic'
+  success       Boolean
+  responseTime  Int      // milliseconds
+  tokensUsed    Int?
+  repoUrl       String?
+  userId        String?
+  feature       String?  // 'readme' | 'profile' | 'health' | 'changelog' | 'chat'
+  template      String?  // For profile generator
+  error         String?  @db.Text
+  createdAt     DateTime @default(now())
+  
+  @@index([type])
+  @@index([createdAt])
+  @@index([provider])
+  @@index([success])
+  @@index([userId])
+}
+
+model AdminAlert {
+  id            String   @id @default(cuid())
+  level         String   // 'info' | 'warning' | 'critical'
+  type          String   // 'error_spike' | 'rate_limit' | 'server_health'
+  message       String   @db.Text
+  resolved      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  resolvedAt    DateTime?
+}
+
+model DailyStats {
+  id            String   @id @default(cuid())
+  date          DateTime @unique
+  totalGenerations Int   @default(0)
+  totalUsers    Int     @default(0)
+  activeUsers   Int     @default(0)
+  successRate   Float   @default(0)
+  avgResponseTime Float  @default(0)
+  cacheHitRate  Float   @default(0)
+  totalTokens   Int     @default(0)
+  errors        Int     @default(0)
+  newUsers      Int     @default(0)
 }

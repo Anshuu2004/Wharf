@@ -32,6 +32,7 @@ export const AuthCallback = () => {
             avatar: decoded.avatar,
             email: decoded.email,
             githubCreatedAt: decoded.githubCreatedAt,
+            isAdmin: decoded.isAdmin,
           },
           token
         );

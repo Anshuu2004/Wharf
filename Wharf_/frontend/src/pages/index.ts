@@ -5,4 +5,5 @@ export * from './ChatPage';
 export * from './HealthPage';
 export * from './ChangelogPage';
 export * from './SettingsPage';
+export * from './AdminDashboard';
 export * from './AuthCallback';

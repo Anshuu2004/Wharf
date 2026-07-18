@@ -114,6 +114,10 @@ export class ChangelogService {
   }
 
   async deleteChangelog(id: string, userId: string): Promise<void> {
+    // High-Water Mark Prerequisite Sync: Lock In Current Count
+    const dynamicChangelogs = await prisma.changelog.count({ where: { userId } });
+    await prisma.$executeRaw`UPDATE "User" SET "lifetimeChangelogs" = GREATEST("lifetimeChangelogs", ${dynamicChangelogs}) WHERE id = ${userId}`;
+
     await prisma.changelog.delete({
       where: { id, userId },
     });

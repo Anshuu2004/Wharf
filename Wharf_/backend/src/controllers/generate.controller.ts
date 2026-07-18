@@ -5,6 +5,7 @@ import { cacheService } from '../services/cache.service';
 import { parseGithubUrl } from '../utils/parseGithubUrl';
 import { decrypt } from '../utils/encryption';
 import prisma from '../db';
+import { recordDailyGeneration } from '../utils/dailyStats';
 
 export const generateReadme = async (req: Request, res: Response) => {
   const { repoUrl, tone, sections } = req.body;
@@ -24,7 +25,7 @@ export const generateReadme = async (req: Request, res: Response) => {
   const { owner, repo } = parsed;
 
   try {
-    // Set SSE headers
+    // Set SSE Headers
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
@@ -95,7 +96,7 @@ export const generateReadme = async (req: Request, res: Response) => {
       }
     );
 
-    // Store In Cache - pass sections as array
+    // Store In Cache - Pass Sections As Array
     await cacheService.setReadme(owner, repo, tone, sections, generatedMarkdown);
 
     // Save To Database Repository List If User Is Logged In
@@ -126,6 +127,7 @@ export const generateReadme = async (req: Request, res: Response) => {
         });
 
         const wordCount = generatedMarkdown.split(/\s+/).filter(Boolean).length;
+        const tokensGenerated = Math.round(wordCount * 1.37);
 
         await prisma.generation.create({
           data: {
@@ -136,6 +138,11 @@ export const generateReadme = async (req: Request, res: Response) => {
             repoId: repository.id,
           },
         });
+
+        // Permanently Bank These Tokens — Raw SQL Bypasses Stale Prisma Client Types
+        await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeReadmes" = "lifetimeReadmes" + 1 WHERE id = ${userId}`;
+        // Record today's count in DailyStats so heatmap/trend survive deletions
+        await recordDailyGeneration(userId);
       } catch (dbError) {
         console.error('Failed to save generation to DB:', dbError);
       }
@@ -233,6 +240,12 @@ export const deleteHistoryItem = async (req: Request, res: Response) => {
     if (!record || record.repository.userId !== userId) {
       return res.status(404).json({ success: false, error: 'Record not found' });
     }
+
+    // High-Water Mark Prerequisite Sync: Before Deleting, Ensure Lifetime Counter
+    const userDynamicReadmes = await prisma.generation.count({
+      where: { repository: { userId }, type: 'README' },
+    });
+    await prisma.$executeRaw`UPDATE "User" SET "lifetimeReadmes" = GREATEST("lifetimeReadmes", ${userDynamicReadmes}) WHERE id = ${userId}`;
 
     await prisma.generation.delete({ where: { id } });
     res.json({ success: true, message: 'Deleted successfully' });

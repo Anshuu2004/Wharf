@@ -10,6 +10,7 @@ import {
   Star,
   GitBranch,
   AlertCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import { Button, Card, Input, useToast } from '../ui';
 import api from '../../lib/api';
@@ -44,6 +45,7 @@ export const HealthHistory = ({ onSelect, onBack, onCountChange }: HealthHistory
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'highest' | 'lowest'>('newest');
   const [showFilters, setShowFilters] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [selectedScoreRange, setSelectedScoreRange] = useState<'all' | 'high' | 'medium' | 'low'>(
     'all'
   );
@@ -121,21 +123,10 @@ export const HealthHistory = ({ onSelect, onBack, onCountChange }: HealthHistory
     }
   }, [history, searchQuery, sortBy, selectedScoreRange, onCountChange]);
 
-  const handleDelete = async (id: string, repoName: string, e: React.MouseEvent) => {
+  const handleDelete = (id: string, _repoName: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (deletingId === id) return;
-    setDeletingId(id);
-    try {
-      await api.delete(`/health/history/${id}`);
-      setHistory((prev) => prev.filter((item) => item.id !== id));
-      showToast(`Deleted ${repoName} from history`, 'info');
-    } catch (error) {
-      console.error('Failed to delete:', error);
-      showToast('Failed to delete record', 'error');
-    } finally {
-      setDeletingId(null);
-    }
+    setConfirmDeleteId(id);
   };
 
   const handleView = (repoUrl: string) => {
@@ -485,6 +476,49 @@ export const HealthHistory = ({ onSelect, onBack, onCountChange }: HealthHistory
             </div>
           </div>
         </>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center">
+          <div className="bg-wharf-surface-primary border-2 border-wharf-border-primary p-6 max-w-sm w-full shadow-brutal animate-scaleIn">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertTriangle className="w-6 h-6 text-wharf-error" />
+              <h3 className="font-display font-bold text-lg">Delete Record?</h3>
+            </div>
+            <p className="text-sm font-mono text-wharf-text-secondary mb-6">
+              Are you sure you want to delete this repository record? This action cannot be undone.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="px-4 py-2 border-2 border-wharf-border-secondary font-mono text-xs font-bold hover:bg-wharf-surface-secondary transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={deletingId === confirmDeleteId}
+                onClick={async () => {
+                  setDeletingId(confirmDeleteId);
+                  try {
+                    await api.delete(`/health/history/${confirmDeleteId}`);
+                    setHistory((prev) => prev.filter((item) => item.id !== confirmDeleteId));
+                    showToast('Deleted record from history', 'info');
+                  } catch (error) {
+                    console.error('Failed to delete:', error);
+                    showToast('Failed to delete record', 'error');
+                  } finally {
+                    setDeletingId(null);
+                    setConfirmDeleteId(null);
+                  }
+                }}
+                className="px-4 py-2 border-2 border-wharf-border-primary bg-wharf-error text-wharf-white font-mono text-xs font-bold hover:bg-wharf-error/80 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deletingId === confirmDeleteId ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

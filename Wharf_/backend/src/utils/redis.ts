@@ -57,11 +57,17 @@ if (process.env.REDIS_URL || process.env.NODE_ENV === 'production') {
   getRedisClient();
 }
 
+export let globalCacheHits = 0;
+export let globalCacheMisses = 0;
+
 /* Cache GET Utility With Local In-Memory Fallback */
 export async function cacheGet(key: string): Promise<string | null> {
   if (isRedisConnected && redisClient) {
     try {
-      return await redisClient.get(key);
+      const val = await redisClient.get(key);
+      if (val) globalCacheHits++;
+      else globalCacheMisses++;
+      return val;
     } catch (err: any) {
       console.error('[Redis Cache] Get failed, using fallback:', err.message);
     }
@@ -71,15 +77,28 @@ export async function cacheGet(key: string): Promise<string | null> {
   const cached = localCache.get(key);
 
   if (!cached) {
+    globalCacheMisses++;
     return null;
   }
 
   if (Date.now() > cached.expiresAt) {
     localCache.delete(key);
+    globalCacheMisses++;
     return null;
   }
 
+  globalCacheHits++;
   return cached.value;
+}
+
+export function getCacheStats() {
+  const total = globalCacheHits + globalCacheMisses;
+  const hitRate = total === 0 ? 0 : Math.round((globalCacheHits / total) * 100);
+  return {
+    hitRate,
+    missRate: total === 0 ? 0 : 100 - hitRate,
+    size: localCache.size,
+  };
 }
 
 /* Cache SET Utility With Local In-Memory Fallback */

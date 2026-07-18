@@ -10,6 +10,7 @@ import {
   Filter,
   ChevronDown,
   Download,
+  AlertTriangle,
 } from 'lucide-react';
 import { FaGithub } from 'react-icons/fa';
 import { Button, Badge, Card, Input, useToast } from '../ui';
@@ -43,7 +44,7 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'alphabetical'>('newest');
   const [showFilters, setShowFilters] = useState(false);
-  const [,] = useState<GenerationRecord | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -115,14 +116,8 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
     showToast(`Copied ${repoName} README to clipboard!`, 'success');
   };
 
-  const handleDelete = async (id: string, repoName: string) => {
-    try {
-      await api.delete(`/generate/history/${id}`);
-      setHistory((prev) => prev.filter((record) => record.id !== id));
-      showToast(`Deleted ${repoName} from history`, 'info');
-    } catch {
-      showToast('Failed to delete record', 'error');
-    }
+  const handleDelete = (id: string) => {
+    setConfirmDeleteId(id);
   };
 
   const handleDownload = async (id: string, repoName: string) => {
@@ -387,7 +382,7 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleDelete(record.id, record.repository.name)}
+                      onClick={() => handleDelete(record.id)}
                       className="text-wharf-text-tertiary hover:text-wharf-orange hover:bg-transparent"
                     >
                       <Trash2 className="w-4.5 h-4.5" />
@@ -411,6 +406,46 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
             </div>
           )}
         </>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center">
+          <div className="bg-wharf-surface-primary border-2 border-wharf-border-primary p-6 max-w-sm w-full shadow-brutal animate-scaleIn">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertTriangle className="w-6 h-6 text-wharf-error" />
+              <h3 className="font-display font-bold text-lg">Delete Record?</h3>
+            </div>
+            <p className="text-sm font-mono text-wharf-text-secondary mb-6">
+              Are you sure you want to delete this generated README record? This action cannot be
+              undone.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="px-4 py-2 border-2 border-wharf-border-secondary font-mono text-xs font-bold hover:bg-wharf-surface-secondary transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await api.delete(`/generate/history/${confirmDeleteId}`);
+                    setHistory((prev) => prev.filter((record) => record.id !== confirmDeleteId));
+                    showToast('Deleted record from history', 'info');
+                  } catch {
+                    showToast('Failed to delete record', 'error');
+                  } finally {
+                    setConfirmDeleteId(null);
+                  }
+                }}
+                className="px-4 py-2 border-2 border-wharf-border-primary bg-wharf-error text-wharf-white font-mono text-xs font-bold hover:bg-wharf-error/80 transition-colors cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

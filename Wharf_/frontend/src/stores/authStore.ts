@@ -7,6 +7,7 @@ interface User {
   avatar?: string;
   email?: string;
   githubCreatedAt?: string;
+  isAdmin?: boolean;
 }
 
 interface AuthState {

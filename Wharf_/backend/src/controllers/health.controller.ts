@@ -4,6 +4,7 @@ import { GithubService } from '../services/github.service';
 import prisma from '../db';
 import { parseGithubUrl } from '../utils/parseGithubUrl';
 import { decrypt } from '../utils/encryption';
+import { recordDailyGeneration } from '../utils/dailyStats';
 
 export class HealthController {
   async analyzeReadmeHealth(req: Request, res: Response) {
@@ -46,6 +47,13 @@ export class HealthController {
           userId: user?.userId ?? null,
         },
       });
+
+      if (user?.userId) {
+        const uid = user.userId;
+        await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + 213, "lifetimeHealthChecks" = "lifetimeHealthChecks" + 1 WHERE id = ${uid}`;
+        // Record Today's Count In DailyStats So Heatmap/Trend Survive Deletions
+        await recordDailyGeneration(uid);
+      }
 
       res.json({ success: true, data: result });
     } catch (error: any) {
@@ -129,6 +137,10 @@ export class HealthController {
     if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
     try {
+      // High-Water Mark Prerequisite Sync
+      const dynamicHealth = await prisma.healthScore.count({ where: { userId } });
+      await prisma.$executeRaw`UPDATE "User" SET "lifetimeHealthChecks" = GREATEST("lifetimeHealthChecks", ${dynamicHealth}) WHERE id = ${userId}`;
+
       await (prisma as any).healthScore.delete({
         where: { id, userId },
       });
