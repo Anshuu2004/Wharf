@@ -4,6 +4,7 @@ import { GithubService } from '../services/github.service';
 import prisma from '../db';
 import { parseGithubUrl } from '../utils/parseGithubUrl';
 import { decrypt } from '../utils/encryption';
+import { recordDailyGeneration } from '../utils/dailyStats';
 
 export class HealthController {
   async analyzeReadmeHealth(req: Request, res: Response) {
@@ -50,6 +51,8 @@ export class HealthController {
       if (user?.userId) {
         const uid = user.userId;
         await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + 213, "lifetimeHealthChecks" = "lifetimeHealthChecks" + 1 WHERE id = ${uid}`;
+        // Record Today's Count In DailyStats So Heatmap/Trend Survive Deletions
+        await recordDailyGeneration(uid);
       }
 
       res.json({ success: true, data: result });

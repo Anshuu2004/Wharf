@@ -5,6 +5,7 @@ import { cacheService } from '../services/cache.service';
 import { parseGithubUrl } from '../utils/parseGithubUrl';
 import { decrypt } from '../utils/encryption';
 import prisma from '../db';
+import { recordDailyGeneration } from '../utils/dailyStats';
 
 export const generateReadme = async (req: Request, res: Response) => {
   const { repoUrl, tone, sections } = req.body;
@@ -140,6 +141,8 @@ export const generateReadme = async (req: Request, res: Response) => {
 
         // Permanently Bank These Tokens — Raw SQL Bypasses Stale Prisma Client Types
         await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeReadmes" = "lifetimeReadmes" + 1 WHERE id = ${userId}`;
+        // Record today's count in DailyStats so heatmap/trend survive deletions
+        await recordDailyGeneration(userId);
       } catch (dbError) {
         console.error('Failed to save generation to DB:', dbError);
       }

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { aiService, ChangelogService, GithubService, cacheService } from '../services';
 import prisma from '../db';
 import { decrypt } from '../utils/encryption';
+import { recordDailyGeneration } from '../utils/dailyStats';
 
 function extractRepoName(repoUrl: string): string {
   try {
@@ -103,6 +104,8 @@ export class ChangelogController {
           // Permanently Bank These Tokens
           const tokensGenerated = Math.round(wordCount * 1.37);
           await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeChangelogs" = "lifetimeChangelogs" + 1 WHERE id = ${userId}`;
+          // Record Today's Count In DailyStats So Heatmap/Trend Survive Deletions
+          await recordDailyGeneration(userId);
         } catch (dbError) {
           console.error('DB Save Error:', dbError);
         }

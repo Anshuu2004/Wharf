@@ -19,7 +19,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
         prisma.chatSession.count(),
       ]);
 
-    // Raw SQL sum of lifetime counters — bypasses stale Prisma client types
+    // Raw SQL Sum Of Lifetime Counters — Bypasses Stale Prisma Client Types
     const lifetimeRows = await prisma.$queryRaw<
       Array<{
         totalTokens: bigint;
@@ -141,139 +141,180 @@ export const getDashboardData = async (req: Request, res: Response) => {
       console.error('recentActivity query failed:', e);
     }
 
-    // 5. Top Users
+    // 5. Top Users - Using Lifetime* Accumulator Fields (Never Decrease On Deletion)
     let topUsers: any[] = [];
     try {
-      const usersWithActivity = await prisma.user.findMany({
-        select: {
-          username: true,
-          _count: {
-            select: {
-              profileReadmes: true,
-              changelogs: true,
-              healthScores: true,
-              chatSessions: true,
-            },
-          },
-          repos: { select: { _count: { select: { generations: true } } } },
-        },
-      });
-      topUsers = usersWithActivity
-        .map((u) => ({
-          username: u.username,
-          generations:
-            u._count.profileReadmes +
-            u._count.changelogs +
-            u._count.healthScores +
-            u._count.chatSessions +
-            u.repos.reduce((acc, r) => acc + r._count.generations, 0),
-          change: 0,
-        }))
-        .sort((a, b) => b.generations - a.generations)
-        .slice(0, 5);
+      const topUserRows = await prisma.$queryRaw<Array<{ username: string; total: bigint }>>`
+        SELECT
+          username,
+          ("lifetimeReadmes" + "lifetimeProfiles" + "lifetimeHealthChecks" + "lifetimeChangelogs" + "lifetimeChats") AS total
+        FROM "User"
+        ORDER BY total DESC
+        LIMIT 5
+      `;
+      topUsers = topUserRows.map((u) => ({
+        username: u.username,
+        generations: Number(u.total),
+        change: 0,
+      }));
     } catch (e) {
       console.error('topUsers query failed:', e);
     }
 
-    // 6. GitHub-Style Yearly Heatmap (Date → Count)
+    // 6. GitHub-Style Yearly Heatmap — Read From DailyStats (Deletion-Resilient)
     let heatmapData: { date: string; count: number }[] = [];
     try {
       const sinceDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
-      const [gens, profiles, healths, changelogs, chats] = await Promise.all([
-        prisma.generation.findMany({
-          where: { createdAt: { gte: sinceDate } },
-          select: { createdAt: true },
-        }),
-        prisma.profileReadme.findMany({
-          where: { generatedAt: { gte: sinceDate } },
-          select: { generatedAt: true },
-        }),
-        prisma.healthScore.findMany({
-          where: { checkedAt: { gte: sinceDate } },
-          select: { checkedAt: true },
-        }),
-        prisma.changelog.findMany({
-          where: { generatedAt: { gte: sinceDate } },
-          select: { generatedAt: true },
-        }),
-        prisma.chatSession.findMany({
-          where: { createdAt: { gte: sinceDate } },
-          select: { createdAt: true },
-        }),
-      ]);
-      const dateMap: Record<string, number> = {};
-      const addDate = (d: Date) => {
-        const key = d.toISOString().split('T')[0];
-        dateMap[key] = (dateMap[key] || 0) + 1;
-      };
-      gens.forEach((g) => addDate(g.createdAt));
-      profiles.forEach((p) => addDate(p.generatedAt));
-      healths.forEach((h) => addDate(h.checkedAt));
-      changelogs.forEach((c) => addDate(c.generatedAt));
-      chats.forEach((c) => addDate(c.createdAt));
-      heatmapData = Object.entries(dateMap).map(([date, count]) => ({ date, count }));
+
+      const dailyRows = await prisma.$queryRaw<Array<{ date: Date; totalGenerations: number }>>`
+        SELECT date, "totalGenerations"
+        FROM "DailyStats"
+        WHERE date >= ${sinceDate}
+        ORDER BY date ASC
+      `;
+
+      if (dailyRows.length > 0) {
+        // Use DailyStats — These Are Immutable Accumulators
+        heatmapData = dailyRows.map((r) => ({
+          date: r.date.toISOString().split('T')[0],
+          count: Number(r.totalGenerations),
+        }));
+
+        // Reconcile: If Lifetime Total > DailyStats Sum, Credit Orphaned
+        const heatmapSum = heatmapData.reduce((s, d) => s + d.count, 0);
+        const orphaned = totalGenerations - heatmapSum;
+        if (orphaned > 0) {
+          const todayKey = new Date().toISOString().split('T')[0];
+          const todayEntry = heatmapData.find((d) => d.date === todayKey);
+          if (todayEntry) {
+            todayEntry.count += orphaned;
+          } else {
+            heatmapData.push({ date: todayKey, count: orphaned });
+          }
+        }
+      } else {
+        // Fallback: Fresh Deployment, DailyStats Not Yet Populated — Read Live Tables
+        const [gens, profiles, healths, changelogs, chats] = await Promise.all([
+          prisma.generation.findMany({
+            where: { createdAt: { gte: sinceDate } },
+            select: { createdAt: true },
+          }),
+          prisma.profileReadme.findMany({
+            where: { generatedAt: { gte: sinceDate } },
+            select: { generatedAt: true },
+          }),
+          prisma.healthScore.findMany({
+            where: { checkedAt: { gte: sinceDate } },
+            select: { checkedAt: true },
+          }),
+          prisma.changelog.findMany({
+            where: { generatedAt: { gte: sinceDate } },
+            select: { generatedAt: true },
+          }),
+          prisma.chatSession.findMany({
+            where: { createdAt: { gte: sinceDate } },
+            select: { createdAt: true },
+          }),
+        ]);
+        const dateMap: Record<string, number> = {};
+        const addDate = (d: Date) => {
+          const k = d.toISOString().split('T')[0];
+          dateMap[k] = (dateMap[k] || 0) + 1;
+        };
+        gens.forEach((g) => addDate(g.createdAt));
+        profiles.forEach((p) => addDate(p.generatedAt));
+        healths.forEach((h) => addDate(h.checkedAt));
+        changelogs.forEach((c) => addDate(c.generatedAt));
+        chats.forEach((c) => addDate(c.createdAt));
+        heatmapData = Object.entries(dateMap).map(([date, count]) => ({ date, count }));
+      }
     } catch (e) {
       console.error('heatmap query failed:', e);
     }
 
-    // 7. Usage Trend
+    // 7. Usage Trend — Read From DailyStats (Deletion-Resilient)
     let usageData: any[] = [];
     try {
       const period = req.query.period === 'month' ? 30 : 7;
       const sinceDateTrend = new Date(Date.now() - period * 24 * 60 * 60 * 1000);
-      const [gens, profiles, healths, changelogs, chats] = await Promise.all([
-        prisma.generation.findMany({
-          where: { createdAt: { gte: sinceDateTrend } },
-          select: { createdAt: true, repository: { select: { userId: true } } },
-        }),
-        prisma.profileReadme.findMany({
-          where: { generatedAt: { gte: sinceDateTrend } },
-          select: { generatedAt: true, userId: true },
-        }),
-        prisma.healthScore.findMany({
-          where: { checkedAt: { gte: sinceDateTrend } },
-          select: { checkedAt: true, userId: true },
-        }),
-        prisma.changelog.findMany({
-          where: { generatedAt: { gte: sinceDateTrend } },
-          select: { generatedAt: true, userId: true },
-        }),
-        prisma.chatSession.findMany({
-          where: { createdAt: { gte: sinceDateTrend } },
-          select: { createdAt: true, userId: true },
-        }),
-      ]);
-      const dayMap: Record<string, { gens: number; users: Set<string> }> = {};
-      const daysList: string[] = [];
-      const todayNum = Date.now();
 
-      for (let i = period - 1; i >= 0; i--) {
-        const d = new Date(todayNum - i * 24 * 60 * 60 * 1000);
-        const l = `${d.getMonth() + 1}/${d.getDate()}`;
-        daysList.push(l);
-        dayMap[l] = { gens: 0, users: new Set<string>() };
+      const dailyTrendRows = await prisma.$queryRaw<
+        Array<{ date: Date; totalGenerations: number; activeUsers: number }>
+      >`
+        SELECT date, "totalGenerations", "activeUsers"
+        FROM "DailyStats"
+        WHERE date >= ${sinceDateTrend}
+        ORDER BY date ASC
+      `;
+
+      // Build A Lookup From DailyStats Results
+      const dailyMap = new Map<string, { gens: number; users: number }>();
+      dailyTrendRows.forEach((r) => {
+        const label = `${r.date.getMonth() + 1}/${r.date.getDate()}`;
+        dailyMap.set(label, {
+          gens: Number(r.totalGenerations),
+          users: Number(r.activeUsers),
+        });
+      });
+
+      // If DailyStats Has No Rows, Fall Back To Live Table Scan For Today's Period
+      const useLive = dailyTrendRows.length === 0;
+      let liveMap = new Map<string, { gens: number; users: Set<string> }>();
+
+      if (useLive) {
+        const [gens, profiles, healths, changelogs, chats] = await Promise.all([
+          prisma.generation.findMany({
+            where: { createdAt: { gte: sinceDateTrend } },
+            select: { createdAt: true, repository: { select: { userId: true } } },
+          }),
+          prisma.profileReadme.findMany({
+            where: { generatedAt: { gte: sinceDateTrend } },
+            select: { generatedAt: true, userId: true },
+          }),
+          prisma.healthScore.findMany({
+            where: { checkedAt: { gte: sinceDateTrend } },
+            select: { checkedAt: true, userId: true },
+          }),
+          prisma.changelog.findMany({
+            where: { generatedAt: { gte: sinceDateTrend } },
+            select: { generatedAt: true, userId: true },
+          }),
+          prisma.chatSession.findMany({
+            where: { createdAt: { gte: sinceDateTrend } },
+            select: { createdAt: true, userId: true },
+          }),
+        ]);
+        const addLive = (d: Date, uid?: string | null) => {
+          const l = `${d.getMonth() + 1}/${d.getDate()}`;
+          if (!liveMap.has(l)) liveMap.set(l, { gens: 0, users: new Set<string>() });
+          liveMap.get(l)!.gens += 1;
+          if (uid) liveMap.get(l)!.users.add(uid);
+        };
+        gens.forEach((g) => addLive(g.createdAt, g.repository?.userId));
+        profiles.forEach((p) => addLive(p.generatedAt, p.userId));
+        healths.forEach((h) => addLive(h.checkedAt, h.userId));
+        changelogs.forEach((c) => addLive(c.generatedAt, c.userId));
+        chats.forEach((c) => addLive(c.createdAt, c.userId));
       }
 
-      const addUsage = (d: Date, uid?: string | null) => {
-        const l = `${d.getMonth() + 1}/${d.getDate()}`;
-        if (dayMap[l]) {
-          dayMap[l].gens += 1;
-          if (uid) dayMap[l].users.add(uid);
+      // Build Fully-Populated Day Array
+      const todayNum = Date.now();
+      const daysList: string[] = [];
+      for (let i = period - 1; i >= 0; i--) {
+        const d = new Date(todayNum - i * 24 * 60 * 60 * 1000);
+        daysList.push(`${d.getMonth() + 1}/${d.getDate()}`);
+      }
+
+      usageData = daysList.map((label) => {
+        if (useLive) {
+          const entry = liveMap.get(label);
+          return { date: label, generations: entry?.gens ?? 0, users: entry?.users.size ?? 0 };
         }
-      };
-
-      gens.forEach((g) => addUsage(g.createdAt, g.repository?.userId));
-      profiles.forEach((p) => addUsage(p.generatedAt, p.userId));
-      healths.forEach((h) => addUsage(h.checkedAt, h.userId));
-      changelogs.forEach((c) => addUsage(c.generatedAt, c.userId));
-      chats.forEach((c) => addUsage(c.createdAt, c.userId));
-
-      usageData = daysList.map((d) => ({
-        date: d,
-        generations: dayMap[d].gens,
-        users: dayMap[d].users.size,
-      }));
+        const entry = dailyMap.get(label);
+        return { date: label, generations: entry?.gens ?? 0, users: entry?.users ?? 0 };
+      });
     } catch (e) {
+      console.error('usageData query failed:', e);
       usageData = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => ({
         date: d,
         generations: 0,
@@ -294,7 +335,6 @@ export const getDashboardData = async (req: Request, res: Response) => {
     };
 
     try {
-      // 1. Calculate Realistic Provider Usage Hits Based On User + System Key Counts
       const userKeyUsage = await prisma.userApiKey.groupBy({
         by: ['provider'],
         _sum: { usageCount: true },
@@ -318,13 +358,11 @@ export const getDashboardData = async (req: Request, res: Response) => {
 
       let totalHits = Object.values(providerHits).reduce((sum, h) => sum + h, 0);
 
-      // Fallback If No Usage At All
       if (totalHits === 0) {
         providerHits['GEMINI'] = 1;
         totalHits = 1;
       }
 
-      // Populate Provider Distribution (%)
       providerData = Object.entries(providerHits)
         .map(([provider, hits]) => ({
           name: provider.charAt(0) + provider.slice(1).toLowerCase(),
@@ -333,7 +371,6 @@ export const getDashboardData = async (req: Request, res: Response) => {
         .filter((p) => p.value > 0)
         .sort((a, b) => b.value - a.value);
 
-      // 2. Aggregate Exact WordCounts & Compute Realistic Tokens Per Generation Type
       const chatAnalytics = await prisma.chatAnalytics.findMany({ select: { totalTokens: true } });
       const generationStats = await prisma.generation.aggregate({
         _count: true,
@@ -351,7 +388,6 @@ export const getDashboardData = async (req: Request, res: Response) => {
 
       let chatTokens = chatAnalytics.reduce((sum, a) => sum + a.totalTokens, 0);
 
-      // 1.37 Tokens/Word
       const readmeTokens = Math.round(
         (generationStats._sum.wordCount || generationStats._count * 1150) * 1.37
       );
@@ -366,13 +402,11 @@ export const getDashboardData = async (req: Request, res: Response) => {
       const dynamicTotal =
         chatTokens + readmeTokens + profileTokens + changelogTokens + healthTokens;
 
-      // Use Raw SQL For Lifetime Tokens To Avoid TypeScript Errors
       const lifetimeTokenResult = await prisma.$queryRaw<Array<{ totalTokens: bigint }>>`
         SELECT SUM("lifetimeTokens") as "totalTokens" FROM "User"
       `;
       const totalLifetime = Number(lifetimeTokenResult[0]?.totalTokens) || 0;
 
-      // High-Water Mark Logic To Elegantly Survive Deletions
       chatTokens = Math.max(dynamicTotal, totalLifetime);
 
       tokenData = Object.entries(providerHits)
@@ -403,9 +437,9 @@ export const getDashboardData = async (req: Request, res: Response) => {
 
     res.json({
       stats: {
-        totalUsers, // All-Time
+        totalUsers,
         totalGenerations,
-        activeUsers, // 7-Day
+        activeUsers,
         successRate: 98.7,
         avgResponseTime: 2.3,
         cacheHitRate: cacheStats.hitRate,

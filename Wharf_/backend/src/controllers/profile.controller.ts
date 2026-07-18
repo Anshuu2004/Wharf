@@ -5,6 +5,7 @@ import { cacheService } from '../services/cache.service';
 import prisma from '../db';
 import { decrypt } from '../utils/encryption';
 import crypto from 'crypto';
+import { recordDailyGeneration } from '../utils/dailyStats';
 
 export const getProfile = async (req: Request, res: Response) => {
   const { username } = req.params;
@@ -109,8 +110,10 @@ export const generate = async (req: Request, res: Response) => {
         // Permanently Bank These Tokens — Raw SQL Bypasses Stale Prisma Client Types
         const tokensGenerated = Math.round(wordCount * 1.37);
         await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeProfiles" = "lifetimeProfiles" + 1 WHERE id = ${userId}`;
+        // Record Today's Count In DailyStats So Heatmap/Trend Survive Deletions
+        await recordDailyGeneration(userId);
 
-        // Update stats
+        // Update Stats
         const stats = await prisma.profileStats.findFirst();
         if (stats) {
           await prisma.profileStats.update({
