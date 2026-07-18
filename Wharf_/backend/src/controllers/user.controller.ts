@@ -52,7 +52,7 @@ export const getUserRepos = async (req: Request, res: Response) => {
   }
 };
 
-// Add new API key
+// Add New API Key
 export const addApiKey = async (req: Request, res: Response) => {
   try {
     const { key, provider, label } = req.body;
@@ -241,19 +241,46 @@ export const getUsageStats = async (req: Request, res: Response) => {
     const userId = (req as any).user?.userId;
     if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
-    const readmesGenerated = await prisma.generation.count({
-      where: { repository: { userId }, type: 'README' },
-    });
     const chats = await prisma.chatSession.count({ where: { userId } });
-    const profilesGenerated = await prisma.profileReadme.count({ where: { userId } });
     const healthChecks = await prisma.healthScore.count({ where: { userId } });
-    const changelogsGenerated = await prisma.changelog.count({ where: { userId } });
 
     const analytics = await prisma.chatAnalytics.aggregate({
       where: { session: { userId } },
       _sum: { totalTokens: true },
     });
-    const totalTokens = analytics._sum.totalTokens || 0;
+
+    // Aggregate Exact WordCounts Stored Per Record For All Generation Types
+    const readmesData = await prisma.generation.aggregate({
+      where: { repository: { userId }, type: 'README' },
+      _count: true,
+      _sum: { wordCount: true },
+    });
+    const profilesData = await prisma.profileReadme.aggregate({
+      where: { userId },
+      _count: true,
+      _sum: { wordCount: true },
+    });
+    const changelogsData = await prisma.changelog.aggregate({
+      where: { userId },
+      _count: true,
+      _sum: { wordCount: true },
+    });
+    const readmesGenerated = readmesData._count;
+    const profilesGenerated = profilesData._count;
+    const changelogsGenerated = changelogsData._count;
+
+    // 1.37 Tokens/Word
+    const readmeTokens = Math.round((readmesData._sum.wordCount || readmesGenerated * 1150) * 1.37);
+    const profileTokens = Math.round(
+      (profilesData._sum.wordCount || profilesGenerated * 420) * 1.37
+    );
+    const changelogTokens = Math.round(
+      (changelogsData._sum.wordCount || changelogsGenerated * 620) * 1.37
+    );
+    const healthTokens = healthChecks * 213;
+
+    const chatTokens = analytics._sum.totalTokens || 0;
+    const totalTokens = chatTokens + readmeTokens + profileTokens + changelogTokens + healthTokens;
 
     const data = {
       totalRequests:
