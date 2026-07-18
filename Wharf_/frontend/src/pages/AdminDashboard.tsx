@@ -110,11 +110,140 @@ export const AdminDashboard = () => {
   if (isLoading && !data) {
     return (
       <PageWrapper title="Admin Dashboard" description="">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="w-10 h-10 border-4 border-wharf-pink border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="font-mono text-sm text-wharf-text-tertiary mt-4">Loading Dashboard...</p>
-          </div>
+        <div className="space-y-12">
+          <AdminHeader onRefresh={() => {}} isRefetching={false} />
+          <AdminNav activeTab={activeTab} onTabChange={setActiveTab} />
+
+          {/* Skeleton Loader */}
+          {activeTab === 'overview' && (
+            <div className="space-y-12 mb-12 animate-pulse">
+              {/* Admin Stats Skeleton */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-[104px] bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal-sm rounded-2xl p-4 flex flex-col justify-between"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="h-3 bg-wharf-border-secondary rounded w-20"></div>
+                      <div className="w-8 h-8 bg-wharf-border-secondary rounded"></div>
+                    </div>
+                    <div className="h-6 bg-wharf-border-secondary rounded w-16 mt-2"></div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Two Medium Height Charts */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="h-[400px] bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6">
+                  <div className="h-6 bg-wharf-border-secondary rounded w-1/4 mb-4"></div>
+                  <div className="h-4 bg-wharf-border-secondary rounded w-1/3 mb-10"></div>
+                  <div className="h-[240px] bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-lg"></div>
+                </div>
+                <div className="h-[400px] bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6">
+                  <div className="h-6 bg-wharf-border-secondary rounded w-1/4 mb-4"></div>
+                  <div className="h-4 bg-wharf-border-secondary rounded w-1/3 mb-10"></div>
+                  <div className="h-[240px] bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-lg mx-auto w-3/4 rounded-full"></div>
+                </div>
+              </div>
+
+              {/* Feature Usage + Token Usage */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="h-[400px] bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6">
+                  <div className="h-6 bg-wharf-border-secondary rounded w-1/4 mb-4"></div>
+                  <div className="h-4 bg-wharf-border-secondary rounded w-1/3 mb-10"></div>
+                  <div className="h-[240px] bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-lg"></div>
+                </div>
+                <div className="h-[400px] bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6">
+                  <div className="h-6 bg-wharf-border-secondary rounded w-1/4 mb-4"></div>
+                  <div className="h-4 bg-wharf-border-secondary rounded w-1/3 mb-10"></div>
+                  <div className="h-[240px] bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-lg"></div>
+                </div>
+              </div>
+
+              {/* Heatmap */}
+              <div className="h-[280px] bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6">
+                <div className="h-6 bg-wharf-border-secondary rounded w-1/4 mb-4"></div>
+                <div className="h-4 bg-wharf-border-secondary rounded w-1/3 mb-10"></div>
+                <div className="h-[120px] bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-lg"></div>
+              </div>
+
+              {/* Top Users + Top Repos */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="h-[450px] bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6">
+                  <div className="h-6 bg-wharf-border-secondary rounded w-1/4 mb-6"></div>
+                  <div className="space-y-4">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div
+                        key={i}
+                        className="h-12 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-xl"
+                      ></div>
+                    ))}
+                  </div>
+                </div>
+                <div className="h-[450px] bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6">
+                  <div className="h-6 bg-wharf-border-secondary rounded w-1/4 mb-6"></div>
+                  <div className="space-y-4">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div
+                        key={i}
+                        className="h-12 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-xl"
+                      ></div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'analytics' && (
+            <div className="space-y-12 mb-12 animate-pulse">
+              <div className="h-[200px] bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6">
+                <div className="h-6 bg-wharf-border-secondary rounded w-1/4 mb-8"></div>
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="h-24 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-xl"></div>
+                  <div className="h-24 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-xl"></div>
+                  <div className="h-24 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-xl"></div>
+                </div>
+              </div>
+              <div className="h-[150px] bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6 flex flex-col justify-center">
+                <div className="h-6 bg-wharf-border-secondary rounded w-1/4 mb-4"></div>
+                <div className="h-10 bg-wharf-border-secondary rounded w-32"></div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'metrics' && (
+            <div className="mb-12 animate-pulse">
+              <div className="bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6 min-h-[600px]">
+                <div className="h-6 bg-wharf-border-secondary rounded w-1/4 mb-6"></div>
+                <div className="space-y-4">
+                  {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                    <div
+                      key={i}
+                      className="h-16 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-xl"
+                    ></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'logs' && (
+            <div className="mb-12 animate-pulse">
+              <div className="bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6 min-h-[500px]">
+                <div className="h-6 bg-wharf-border-secondary rounded w-1/4 mb-6"></div>
+                <div className="space-y-4">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div
+                      key={i}
+                      className="h-20 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-xl"
+                    ></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </PageWrapper>
     );
