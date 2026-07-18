@@ -20,6 +20,12 @@ model User {
   githubCreatedAt   DateTime? 
   installationId    String?      // GitHub App installation ID
   preferences       Json?        // User preferences (e.g. darkMode, autoSave)
+  lifetimeTokens    Int      @default(0)  // Immutable accumulator — never decremented
+  lifetimeReadmes      Int      @default(0)
+  lifetimeProfiles     Int      @default(0)
+  lifetimeHealthChecks Int      @default(0)
+  lifetimeChangelogs   Int      @default(0)
+  lifetimeChats        Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
