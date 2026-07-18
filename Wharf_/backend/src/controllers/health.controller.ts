@@ -47,6 +47,11 @@ export class HealthController {
         },
       });
 
+      if (user?.userId) {
+        const uid = user.userId;
+        await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + 213, "lifetimeHealthChecks" = "lifetimeHealthChecks" + 1 WHERE id = ${uid}`;
+      }
+
       res.json({ success: true, data: result });
     } catch (error: any) {
       res.status(500).json({ success: false, error: error.message });
@@ -129,6 +134,10 @@ export class HealthController {
     if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
     try {
+      // High-Water Mark Prerequisite Sync
+      const dynamicHealth = await prisma.healthScore.count({ where: { userId } });
+      await prisma.$executeRaw`UPDATE "User" SET "lifetimeHealthChecks" = GREATEST("lifetimeHealthChecks", ${dynamicHealth}) WHERE id = ${userId}`;
+
       await (prisma as any).healthScore.delete({
         where: { id, userId },
       });

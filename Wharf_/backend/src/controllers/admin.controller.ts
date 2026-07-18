@@ -9,11 +9,44 @@ export const getDashboardData = async (req: Request, res: Response) => {
     const activeUsers = await prisma.user.count({
       where: { updatedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
     });
-    const totalReadmeGens = await prisma.generation.count();
-    const totalProfiles = await prisma.profileReadme.count();
-    const totalHealth = await prisma.healthScore.count();
-    const totalChangelogs = await prisma.changelog.count();
-    const totalChats = await prisma.chatSession.count();
+
+    const [dynamicReadmeGens, dynamicProfiles, dynamicHealth, dynamicChangelogs, dynamicChats] =
+      await Promise.all([
+        prisma.generation.count(),
+        prisma.profileReadme.count(),
+        prisma.healthScore.count(),
+        prisma.changelog.count(),
+        prisma.chatSession.count(),
+      ]);
+
+    // Raw SQL sum of lifetime counters — bypasses stale Prisma client types
+    const lifetimeRows = await prisma.$queryRaw<
+      Array<{
+        totalTokens: bigint;
+        totalReadmes: bigint;
+        totalProfiles: bigint;
+        totalHealthChecks: bigint;
+        totalChangelogs: bigint;
+        totalChats: bigint;
+      }>
+    >`
+      SELECT
+        SUM("lifetimeTokens") as "totalTokens",
+        SUM("lifetimeReadmes") as "totalReadmes",
+        SUM("lifetimeProfiles") as "totalProfiles",
+        SUM("lifetimeHealthChecks") as "totalHealthChecks",
+        SUM("lifetimeChangelogs") as "totalChangelogs",
+        SUM("lifetimeChats") as "totalChats"
+      FROM "User"
+    `;
+    const lt = lifetimeRows[0];
+
+    const totalReadmeGens = Math.max(dynamicReadmeGens, Number(lt.totalReadmes) || 0);
+    const totalProfiles = Math.max(dynamicProfiles, Number(lt.totalProfiles) || 0);
+    const totalHealth = Math.max(dynamicHealth, Number(lt.totalHealthChecks) || 0);
+    const totalChangelogs = Math.max(dynamicChangelogs, Number(lt.totalChangelogs) || 0);
+    const totalChats = Math.max(dynamicChats, Number(lt.totalChats) || 0);
+
     const totalGenerations =
       totalReadmeGens + totalProfiles + totalHealth + totalChangelogs + totalChats;
 
@@ -330,7 +363,17 @@ export const getDashboardData = async (req: Request, res: Response) => {
       );
       const healthTokens = healthStats._count * 213;
 
-      chatTokens += readmeTokens + profileTokens + changelogTokens + healthTokens;
+      const dynamicTotal =
+        chatTokens + readmeTokens + profileTokens + changelogTokens + healthTokens;
+
+      // Use Raw SQL For Lifetime Tokens To Avoid TypeScript Errors
+      const lifetimeTokenResult = await prisma.$queryRaw<Array<{ totalTokens: bigint }>>`
+        SELECT SUM("lifetimeTokens") as "totalTokens" FROM "User"
+      `;
+      const totalLifetime = Number(lifetimeTokenResult[0]?.totalTokens) || 0;
+
+      // High-Water Mark Logic To Elegantly Survive Deletions
+      chatTokens = Math.max(dynamicTotal, totalLifetime);
 
       tokenData = Object.entries(providerHits)
         .map(([provider, hits]) => ({

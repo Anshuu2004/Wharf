@@ -280,17 +280,68 @@ export const getUsageStats = async (req: Request, res: Response) => {
     const healthTokens = healthChecks * 213;
 
     const chatTokens = analytics._sum.totalTokens || 0;
-    const totalTokens = chatTokens + readmeTokens + profileTokens + changelogTokens + healthTokens;
+    const dynamicTotalTokens =
+      chatTokens + readmeTokens + profileTokens + changelogTokens + healthTokens;
+
+    // Raw SQL Read — Bypasses Stale Prisma Client Types
+    const lifetimeRows = await prisma.$queryRaw<
+      Array<{
+        lifetimeTokens: bigint;
+        lifetimeReadmes: bigint;
+        lifetimeProfiles: bigint;
+        lifetimeHealthChecks: bigint;
+        lifetimeChangelogs: bigint;
+        lifetimeChats: bigint;
+      }>
+    >`
+      SELECT "lifetimeTokens", "lifetimeReadmes", "lifetimeProfiles",
+             "lifetimeHealthChecks", "lifetimeChangelogs", "lifetimeChats"
+      FROM "User" WHERE id = ${userId}
+    `;
+    const lt = lifetimeRows[0] || {};
+
+    let totalTokens = Number(lt.lifetimeTokens) || 0;
+    let finalReadmes = Number(lt.lifetimeReadmes) || 0;
+    let finalProfiles = Number(lt.lifetimeProfiles) || 0;
+    let finalHealthChecks = Number(lt.lifetimeHealthChecks) || 0;
+    let finalChangelogs = Number(lt.lifetimeChangelogs) || 0;
+    let finalChats = Number(lt.lifetimeChats) || 0;
+
+    // High-Water Mark Sync: If Dynamic Is Higher, Persist It Via Raw SQL
+    if (dynamicTotalTokens > totalTokens) {
+      totalTokens = dynamicTotalTokens;
+      await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = ${totalTokens} WHERE id = ${userId}`;
+    }
+    if (readmesGenerated > finalReadmes) {
+      finalReadmes = readmesGenerated;
+      await prisma.$executeRaw`UPDATE "User" SET "lifetimeReadmes" = ${finalReadmes} WHERE id = ${userId}`;
+    }
+    if (profilesGenerated > finalProfiles) {
+      finalProfiles = profilesGenerated;
+      await prisma.$executeRaw`UPDATE "User" SET "lifetimeProfiles" = ${finalProfiles} WHERE id = ${userId}`;
+    }
+    if (healthChecks > finalHealthChecks) {
+      finalHealthChecks = healthChecks;
+      await prisma.$executeRaw`UPDATE "User" SET "lifetimeHealthChecks" = ${finalHealthChecks} WHERE id = ${userId}`;
+    }
+    if (changelogsGenerated > finalChangelogs) {
+      finalChangelogs = changelogsGenerated;
+      await prisma.$executeRaw`UPDATE "User" SET "lifetimeChangelogs" = ${finalChangelogs} WHERE id = ${userId}`;
+    }
+    if (chats > finalChats) {
+      finalChats = chats;
+      await prisma.$executeRaw`UPDATE "User" SET "lifetimeChats" = ${finalChats} WHERE id = ${userId}`;
+    }
 
     const data = {
       totalRequests:
-        readmesGenerated + chats + profilesGenerated + healthChecks + changelogsGenerated,
+        finalReadmes + finalChats + finalProfiles + finalHealthChecks + finalChangelogs,
       totalTokens,
-      readmesGenerated,
-      chats,
-      profilesGenerated,
-      healthChecks,
-      changelogsGenerated,
+      readmesGenerated: finalReadmes,
+      chats: finalChats,
+      profilesGenerated: finalProfiles,
+      healthChecks: finalHealthChecks,
+      changelogsGenerated: finalChangelogs,
       lastActive: new Date().toISOString(),
     };
 

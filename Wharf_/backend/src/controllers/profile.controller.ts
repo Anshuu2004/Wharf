@@ -89,12 +89,13 @@ export const generate = async (req: Request, res: Response) => {
         console.log(
           `[DB SAVE] Attempting to save profile readme for user ${userId}, username ${username}`
         );
+        const wordCount = generatedMarkdown.split(/\s+/).filter(Boolean).length;
         const record = await prisma.profileReadme.create({
           data: {
             userId,
             username,
             content: generatedMarkdown,
-            wordCount: generatedMarkdown.split(/\s+/).filter(Boolean).length,
+            wordCount,
             template,
             theme,
             badges: options.githubBadges || [],
@@ -104,6 +105,10 @@ export const generate = async (req: Request, res: Response) => {
           },
         });
         console.log(`[DB SAVE SUCCESS] Saved profile readme with ID: ${record.id}`);
+
+        // Permanently Bank These Tokens — Raw SQL Bypasses Stale Prisma Client Types
+        const tokensGenerated = Math.round(wordCount * 1.37);
+        await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeProfiles" = "lifetimeProfiles" + 1 WHERE id = ${userId}`;
 
         // Update stats
         const stats = await prisma.profileStats.findFirst();
@@ -231,6 +236,10 @@ export const deleteProfileItem = async (req: Request, res: Response) => {
     if (!record || record.userId !== userId) {
       return res.status(404).json({ success: false, error: 'Record not found' });
     }
+
+    // High-Water Mark Prerequisite Sync
+    const dynamicProfiles = await prisma.profileReadme.count({ where: { userId } });
+    await prisma.$executeRaw`UPDATE "User" SET "lifetimeProfiles" = GREATEST("lifetimeProfiles", ${dynamicProfiles}) WHERE id = ${userId}`;
 
     await prisma.profileReadme.delete({ where: { id } });
     res.json({ success: true, message: 'Deleted successfully' });

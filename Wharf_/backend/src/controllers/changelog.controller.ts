@@ -85,12 +85,13 @@ export class ChangelogController {
       const userId = (req as any).user?.id || (req as any).user?.userId;
       if (userId) {
         try {
+          const wordCount = fullContent.split(/\s+/).filter(Boolean).length;
           await prisma.changelog.create({
             data: {
               repoUrl,
               repoName: extractRepoName(repoUrl),
               content: fullContent,
-              wordCount: fullContent.split(/\s+/).filter(Boolean).length,
+              wordCount,
               format: options.format || 'keep-a-changelog',
               commitCount: Number(options.commitCount) || 100,
               includeTags: options.includeTags ?? true,
@@ -99,6 +100,9 @@ export class ChangelogController {
               userId,
             },
           });
+          // Permanently Bank These Tokens
+          const tokensGenerated = Math.round(wordCount * 1.37);
+          await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeChangelogs" = "lifetimeChangelogs" + 1 WHERE id = ${userId}`;
         } catch (dbError) {
           console.error('DB Save Error:', dbError);
         }
