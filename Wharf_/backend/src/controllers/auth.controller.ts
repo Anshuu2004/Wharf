@@ -73,6 +73,11 @@ export const githubCallback = async (req: Request, res: Response) => {
 
     // 4. Create JWT
     const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+    const ADMIN_IDS = (process.env.ADMIN_IDS || '').split(',');
+
+    // Check If The User Is An Admin
+    const isAdmin = ADMIN_IDS.includes(user.id.toString());
+
     const token = jwt.sign(
       {
         userId: user.id,
@@ -80,6 +85,7 @@ export const githubCallback = async (req: Request, res: Response) => {
         githubCreatedAt: (user as any).githubCreatedAt,
         email: user.email,
         avatar: user.avatar,
+        isAdmin: isAdmin,
       },
       JWT_SECRET,
       { expiresIn: '7d' }
