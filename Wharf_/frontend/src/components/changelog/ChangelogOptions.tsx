@@ -202,8 +202,8 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
         <div className="flex flex-col md:flex-row md:items-center gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2.5 mb-1">
-              <div className="p-1 rounded-lg bg-wharf-pink/30">
-                <GitBranch className="w-4 h-4 text-wharf-pink-darker" />
+              <div className="p-1 rounded-lg bg-wharf-cyan/30">
+                <GitBranch className="w-4 h-4 text-wharf-cyan-darker" />
               </div>
               <h4 className="font-mono font-bold text-sm uppercase tracking-wider">Commit Count</h4>
             </div>
@@ -221,7 +221,7 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
               </div>
               <div className="h-1.5 w-full bg-wharf-border-secondary rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-wharf-pink-dark transition-all duration-300 rounded-full"
+                  className="h-full bg-wharf-cyan-dark transition-all duration-300 rounded-full"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -235,7 +235,7 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
                 className={`p-2 rounded-lg border-2 transition-all cursor-pointer ${
                   options.commitCount <= 1
                     ? 'border-wharf-border-secondary text-wharf-text-tertiary/40 cursor-not-allowed'
-                    : 'border-wharf-border-secondary hover:border-wharf-pink hover:bg-wharf-pink/10 text-wharf-text-secondary hover:text-wharf-pink'
+                    : 'border-wharf-border-secondary hover:border-wharf-cyan hover:bg-wharf-cyan/10 text-wharf-text-secondary hover:text-wharf-cyan'
                 }`}
               >
                 <Minus className="w-4 h-4" />
@@ -249,7 +249,7 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
                   onFocus={handleInputFocus}
                   onBlur={handleInputBlur}
                   onKeyDown={handleKeyDown}
-                  className="w-20 px-3 py-2 text-center font-display font-black text-xl border-2 border-wharf-border-primary rounded-xl bg-wharf-surface-primary focus:border-wharf-pink focus:ring-2 focus:ring-wharf-pink/20 outline-none transition-all"
+                  className="w-20 px-3 py-2 text-center font-display font-black text-xl border-2 border-wharf-border-primary rounded-xl bg-wharf-surface-primary focus:border-wharf-cyan focus:ring-2 focus:ring-wharf-cyan/20 outline-none transition-all"
                 />
                 <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 font-mono text-[10px] text-wharf-text-secondary whitespace-nowrap">
                   / {maxCommits}
@@ -262,7 +262,7 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
                 className={`p-2 rounded-lg border-2 transition-all cursor-pointer ${
                   options.commitCount >= maxCommits
                     ? 'border-wharf-border-secondary text-wharf-text-tertiary/40 cursor-not-allowed'
-                    : 'border-wharf-border-secondary hover:border-wharf-pink hover:bg-wharf-pink/10 text-wharf-text-secondary hover:text-wharf-pink'
+                    : 'border-wharf-border-secondary hover:border-wharf-cyan hover:bg-wharf-cyan/10 text-wharf-text-secondary hover:text-wharf-cyan'
                 }`}
               >
                 <Plus className="w-4 h-4" />
@@ -285,8 +285,8 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
               }}
               className={`px-3 py-1 rounded-lg border font-mono text-xs transition-all cursor-pointer ${
                 options.commitCount === Math.min(num, maxCommits)
-                  ? 'border-wharf-pink-dark bg-wharf-pink/10 text-wharf-pink-darker'
-                  : 'border-wharf-border-secondary hover:border-wharf-pink-dark text-wharf-text-secondary hover:text-wharf-pink-darker'
+                  ? 'border-wharf-cyan-dark bg-wharf-cyan/10 text-wharf-cyan-darker'
+                  : 'border-wharf-border-secondary hover:border-wharf-cyan-dark text-wharf-text-secondary hover:text-wharf-cyan-darker'
               }`}
               disabled={num > maxCommits}
             >
@@ -300,8 +300,8 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
               }}
               className={`px-3 py-1 rounded-lg border font-mono text-xs transition-all cursor-pointer ${
                 options.commitCount === maxCommits
-                  ? 'border-wharf-pink bg-wharf-pink/10 text-wharf-pink'
-                  : 'border-wharf-border-secondary hover:border-wharf-pink-dark text-wharf-text-secondary hover:text-wharf-pink-darker'
+                  ? 'border-wharf-cyan bg-wharf-cyan/10 text-wharf-cyan'
+                  : 'border-wharf-border-secondary hover:border-wharf-cyan-dark text-wharf-text-secondary hover:text-wharf-cyan-darker'
               }`}
             >
               All ({maxCommits})
@@ -330,7 +330,7 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
                 onClick={() => onChange({ ...options, format: format.id })}
                 className={`group p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
                   isSelected
-                    ? 'border-wharf-pink-dark bg-wharf-pink/5 ring-2 ring-wharf-pink/20'
+                    ? 'border-wharf-cyan-dark bg-wharf-cyan/5 ring-2 ring-wharf-cyan/20'
                     : 'border-wharf-border-secondary hover:border-wharf-border-primary hover:bg-wharf-surface-secondary'
                 }`}
               >
@@ -393,7 +393,7 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
                 key={toggle.id}
                 className={`group p-3 rounded-xl border-2 transition-all cursor-pointer ${
                   isChecked
-                    ? 'border-wharf-pink bg-wharf-pink/5'
+                    ? 'border-wharf-cyan bg-wharf-cyan/5'
                     : 'border-wharf-border-secondary hover:border-wharf-border-primary hover:bg-wharf-surface-secondary'
                 }`}
               >
@@ -402,7 +402,7 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
                     type="checkbox"
                     checked={isChecked}
                     onChange={(e) => onChange({ ...options, [toggle.id]: e.target.checked })}
-                    className="w-4 h-4 border-2 border-wharf-border-primary accent-wharf-pink cursor-pointer"
+                    className="w-4 h-4 border-2 border-wharf-border-primary accent-wharf-cyan cursor-pointer"
                   />
                   <div
                     className={`p-1.5 rounded-lg transition-colors bg-wharf-surface-tertiary/70`}
@@ -463,3 +463,4 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
     </div>
   );
 };
+

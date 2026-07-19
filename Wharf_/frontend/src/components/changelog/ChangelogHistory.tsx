@@ -146,8 +146,8 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
 
   const getFormatColor = (format: string) => {
     const colors: Record<string, string> = {
-      'keep-a-changelog': 'bg-wharf-cyan-darker',
-      simple: 'bg-wharf-green-dark',
+      'keep-a-changelog': 'bg-wharf-yellow-darker',
+      simple: 'bg-wharf-green-darker',
       json: 'bg-wharf-purple-darker',
       default: 'bg-wharf-text-secondary',
     };
@@ -187,7 +187,7 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
         <div className="flex items-center justify-between">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink-darker transition-colors group cursor-pointer"
+            className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-cyan-darker transition-colors group cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back To Dashboard
@@ -234,7 +234,7 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="px-4 py-2 border-2 border-wharf-border-primary font-mono text-sm font-bold bg-wharf-surface-primary focus:outline-none focus:border-wharf-pink rounded-2xl cursor-pointer"
+            className="px-4 py-2 border-2 border-wharf-border-primary font-mono text-sm font-bold bg-wharf-surface-primary focus:outline-none focus:border-wharf-cyan rounded-2xl cursor-pointer"
           >
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
@@ -258,8 +258,8 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
                     setSearchQuery(format);
                   }
                 }}
-                className={`px-2 border border-wharf-border-secondary font-mono text-xs hover:border-wharf-pink transition-colors cursor-pointer ${
-                  searchQuery.includes(format) ? 'bg-wharf-pink border-wharf-border-primary' : ''
+                className={`px-2 border border-wharf-border-secondary font-mono text-xs hover:border-wharf-cyan transition-colors cursor-pointer ${
+                  searchQuery.includes(format) ? 'bg-wharf-cyan border-wharf-border-primary' : ''
                 }`}
               >
                 {format}
@@ -315,7 +315,7 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
               : "You haven't generated any changelogs yet."}
           </p>
           {!searchQuery && onBack && (
-            <Button variant="primary" size="sm" className="mt-4" onClick={onBack}>
+            <Button variant="cyan" size="sm" className="mt-4" onClick={onBack}>
               Generate Your First Changelog
             </Button>
           )}
@@ -338,7 +338,7 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       {/* Avatar/Icon */}
                       <div className="w-10 h-10 border-2 border-wharf-border-primary flex items-center justify-center flex-shrink-0 bg-wharf-surface-secondary rounded-lg">
-                        <span className="font-display font-black text-base text-wharf-pink">
+                        <span className="font-display font-black text-base text-wharf-cyan-darker">
                           {getInitials(item.repoName)}
                         </span>
                       </div>
@@ -375,7 +375,7 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
                   {/* Action Buttons */}
                   <div className="flex flex-wrap items-center gap-3 pt-3 border-t-2 border-wharf-border-secondary">
                     <Button
-                      variant="secondary"
+                      variant="primary"
                       size="sm"
                       rounded="md"
                       onClick={() => handleCopy(item.repoUrl, item.repoName)}
@@ -385,7 +385,7 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
                       <span className="hidden sm:inline text-xs">Copy</span>
                     </Button>
                     <Button
-                      variant="primary"
+                      variant="cyan"
                       size="sm"
                       rounded="md"
                       onClick={() => handleDownload(item.repoUrl, item.repoName)}
@@ -460,3 +460,4 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
     </div>
   );
 };
+

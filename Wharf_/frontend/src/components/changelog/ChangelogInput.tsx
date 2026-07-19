@@ -110,8 +110,8 @@ export const ChangelogInput = ({
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center gap-2 border-b-2 border-wharf-border-primary pb-3 mb-4">
-          <div className="p-1.5 rounded-lg bg-wharf-pink/10">
-            <FaGithub className="w-4 h-4 text-wharf-pink" />
+          <div className="p-1.5 rounded-lg bg-wharf-cyan/10">
+            <FaGithub className="w-4 h-4 text-wharf-cyan" />
           </div>
           <span className="font-mono font-bold text-sm uppercase tracking-wider">
             Generate Changelog
@@ -129,7 +129,7 @@ export const ChangelogInput = ({
               <div className="absolute left-3 top-1/2 -translate-y-1/2">
                 <Link2
                   className={`w-4 h-4 transition-colors ${
-                    isFocused ? 'text-wharf-pink' : 'text-wharf-text-tertiary'
+                    isFocused ? 'text-wharf-cyan' : 'text-wharf-text-tertiary'
                   }`}
                 />
               </div>
@@ -147,7 +147,7 @@ export const ChangelogInput = ({
                 }}
                 onPaste={handlePaste}
                 className={`pl-9 font-mono text-sm transition-all duration-300 rounded-2xl ${
-                  isFocused ? 'border-wharf-pink ring-2 ring-wharf-pink/20' : ''
+                  isFocused ? 'border-wharf-cyan ring-2 ring-wharf-cyan/20' : ''
                 } ${touched && repoUrl ? (isValid ? 'border-wharf-green/50' : 'border-wharf-error/50') : ''}`}
               />
 
@@ -164,7 +164,7 @@ export const ChangelogInput = ({
             </div>
 
             <Button
-              variant="primary"
+              variant="cyan"
               rounded="2xl"
               onClick={handleAnalyze}
               loading={isLoading}
@@ -177,7 +177,7 @@ export const ChangelogInput = ({
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </span>
               {!isLoading && (
-                <div className="absolute inset-0 bg-gradient-to-r from-wharf-pink to-wharf-pink-dark opacity-0 group-hover:opacity-10 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-r from-wharf-cyan to-wharf-cyan-dark opacity-0 group-hover:opacity-10 transition-opacity" />
               )}
             </Button>
           </div>
@@ -216,7 +216,7 @@ export const ChangelogInput = ({
                 <button
                   key={example.name}
                   onClick={() => handleExampleClick(example.name)}
-                  className="group relative p-3 border-2 border-wharf-border-secondary hover:border-wharf-pink hover:bg-wharf-pink/5 transition-all rounded-xl text-left cursor-pointer"
+                  className="group relative p-3 border-2 border-wharf-border-secondary hover:border-wharf-cyan hover:bg-wharf-cyan/5 transition-all rounded-xl text-left cursor-pointer"
                 >
                   <div className="flex items-start justify-between">
                     <div className="min-w-0 flex-1">
@@ -226,7 +226,7 @@ export const ChangelogInput = ({
                       </p>
                     </div>
                   </div>
-                  <div className="absolute inset-0 border-2 border-transparent group-hover:border-wharf-pink/20 rounded-xl transition-colors pointer-events-none" />
+                  <div className="absolute inset-0 border-2 border-transparent group-hover:border-wharf-cyan/20 rounded-xl transition-colors pointer-events-none" />
                 </button>
               ))}
             </div>
@@ -236,3 +236,4 @@ export const ChangelogInput = ({
     </Card>
   );
 };
+
