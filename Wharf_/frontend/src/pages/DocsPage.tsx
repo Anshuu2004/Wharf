@@ -731,10 +731,7 @@ export const DocsPage = () => {
       <section id="settings-byok" className="py-20 bg-wharf-surface-primary scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
-            <Badge
-              variant="default"
-              className="mb-4 gap-2 mx-auto w-fit text-wharf-text-primary"
-            >
+            <Badge variant="default" className="mb-4 gap-2 mx-auto w-fit text-wharf-text-primary">
               <Settings className="w-3 h-3" />
               Configuration
             </Badge>
