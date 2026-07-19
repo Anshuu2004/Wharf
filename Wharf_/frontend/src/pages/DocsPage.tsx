@@ -167,7 +167,7 @@ export const DocsPage = () => {
       {/* 1. Getting Started */}
       <section
         id="getting-started"
-        className="py-20 bg-wharf-background-primary border-y-4 border-wharf-border-primary w-full scroll-mt-24"
+        className="py-20 bg-wharf-background-primary border-y-4 border-wharf-border-primary w-full rounded-3xl scroll-mt-24"
       >
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
@@ -364,7 +364,7 @@ export const DocsPage = () => {
       {/* 3. Profile Generator */}
       <section
         id="profile-generator"
-        className="py-20 bg-wharf-background-primary border-y-4 border-wharf-border-primary w-full scroll-mt-24"
+        className="py-20 bg-wharf-background-primary border-y-4 border-wharf-border-primary w-full rounded-3xl scroll-mt-24"
       >
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
@@ -587,7 +587,7 @@ export const DocsPage = () => {
       {/* 5. Health & Changelogs */}
       <section
         id="health-changelog"
-        className="py-20 bg-wharf-background-primary border-y-4 border-wharf-border-primary w-full scroll-mt-24"
+        className="py-20 bg-wharf-background-primary border-y-4 border-wharf-border-primary w-full rounded-3xl scroll-mt-24"
       >
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
@@ -733,7 +733,7 @@ export const DocsPage = () => {
           <div className="text-center mb-12">
             <Badge
               variant="default"
-              className="mb-4 gap-2 mx-auto w-fit bg-yellow-500/10 text-yellow-600 border-yellow-500/30"
+              className="mb-4 gap-2 mx-auto w-fit text-wharf-text-primary"
             >
               <Settings className="w-3 h-3" />
               Configuration
