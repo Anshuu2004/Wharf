@@ -9,22 +9,22 @@ interface FooterProps {
 export const Footer = ({ year = new Date().getFullYear(), version = 'v1.0.0' }: FooterProps) => {
   const footerLinks = {
     product: [
-      { label: 'Generator', href: '#generator', description: 'AI-powered README generation' },
-      { label: 'Tree Map', href: '#treemap', description: 'Visualize repo structure' },
-      { label: 'Health Score', href: '#health', description: 'Check documentation quality' },
-      { label: 'Changelog', href: '#changelog', description: 'Auto-generate changelogs' },
+      { label: 'README Generator', href: '/generator', description: 'AI-powered README generation' },
+      { label: 'Profile Generator', href: '/profile', description: 'Create standout GitHub profiles' },
+      { label: 'Codebase Chat', href: '/chat', description: 'AI architecture exploration' },
+      { label: 'Changelogs', href: '/changelog', description: 'Automate version releases' },
     ],
     resources: [
-      { label: 'Documentation', href: '#docs', description: 'Guides & tutorials' },
-      { label: 'API Reference', href: '#api', description: 'REST API endpoints' },
-      { label: 'GitHub', href: 'https://github.com', description: 'Open source' },
+      { label: 'Documentation', href: '/docs', description: 'Platform guides & tutorials' },
+      { label: 'Settings (BYOK)', href: '/settings', description: 'Manage custom API keys' },
+      { label: 'GitHub Repository', href: 'https://github.com/FrostByte-49/Wharf', description: 'Open source codebase' },
       { label: 'Status', href: '#status', description: 'System status' },
     ],
     company: [
-      { label: 'About', href: '#about', description: 'Our story' },
+      { label: 'About WHARF', href: '/about', description: 'Our story and mission' },
       { label: 'Blog', href: '#blog', description: 'Latest updates' },
-      { label: 'Terms', href: '#terms', description: 'Terms of service' },
-      { label: 'Privacy', href: '#privacy', description: 'Privacy policy' },
+      { label: 'Terms of Service', href: '/terms', description: 'Usage boundaries & rules' },
+      { label: 'Privacy Policy', href: '/privacy', description: 'Data handling practices' },
     ],
   };
 
@@ -149,14 +149,14 @@ export const Footer = ({ year = new Date().getFullYear(), version = 'v1.0.0' }: 
 
                 {/* Resources Column */}
                 <div>
-                  <h3 className="font-mono font-bold text-sm uppercase tracking-wider mb-4 text-wharf-text-primary border-l-3 border-wharf-success pl-2">
+                  <h3 className="font-mono font-bold text-sm uppercase tracking-wider mb-4 text-wharf-text-primary border-l-3 border-wharf-green-darker pl-2">
                     Resources
                   </h3>
                   <ul className="space-y-4">
                     {footerLinks.resources.map((link) => (
                       <li key={link.label}>
                         <a href={link.href} className="group flex flex-col gap-0.5">
-                          <span className="font-mono text-sm text-wharf-text-secondary hover:text-wharf-success transition-colors flex items-center gap-1">
+                          <span className="font-mono text-sm text-wharf-text-secondary hover:text-wharf-green-darker transition-colors flex items-center gap-1">
                             {link.label}
                             <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                           </span>
@@ -171,14 +171,14 @@ export const Footer = ({ year = new Date().getFullYear(), version = 'v1.0.0' }: 
 
                 {/* Company Column */}
                 <div>
-                  <h3 className="font-mono font-bold text-sm uppercase tracking-wider mb-4 text-wharf-text-primary border-l-3 border-wharf-warning pl-2">
+                  <h3 className="font-mono font-bold text-sm uppercase tracking-wider mb-4 text-wharf-text-primary border-l-3 border-yellow-500 pl-2">
                     Company
                   </h3>
                   <ul className="space-y-4">
                     {footerLinks.company.map((link) => (
                       <li key={link.label}>
                         <a href={link.href} className="group flex flex-col gap-0.5">
-                          <span className="font-mono text-sm text-wharf-text-secondary hover:text-wharf-warning transition-colors flex items-center gap-1">
+                          <span className="font-mono text-sm text-wharf-text-secondary hover:text-yellow-500 transition-colors flex items-center gap-1">
                             {link.label}
                             <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                           </span>

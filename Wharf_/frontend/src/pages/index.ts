@@ -6,4 +6,8 @@ export * from './HealthPage';
 export * from './ChangelogPage';
 export * from './SettingsPage';
 export * from './AdminDashboard';
+export * from './AboutPage';
+export * from './TermsPage';
+export * from './PrivacyPage';
+export * from './DocsPage';
 export * from './AuthCallback';
