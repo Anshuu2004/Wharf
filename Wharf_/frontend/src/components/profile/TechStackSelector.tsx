@@ -415,7 +415,7 @@ export const TechStackSelector = ({
           onClick={handleMagicAutofill}
           className="flex items-center gap-2 h-11.5 rounded-xl"
         >
-          <Zap className="w-4 h-4 text-wharf-pink-dark" />
+          <Zap className="w-4 h-4 text-wharf-yellow-dark" />
           Auto-Fill
         </Button>
       </div>
@@ -448,7 +448,7 @@ export const TechStackSelector = ({
                 <Badge
                   key={skill}
                   variant="cyan"
-                  className="cursor-pointer gap-1.5 group hover:bg-wharf-pink transition-colors rounded-lg"
+                  className="cursor-pointer gap-1.5 group hover:bg-wharf-yellow transition-colors rounded-lg"
                   onClick={() => handleToggle(skill)}
                 >
                   {iconUrl && (
@@ -581,3 +581,4 @@ export const TechStackSelector = ({
     </div>
   );
 };
+

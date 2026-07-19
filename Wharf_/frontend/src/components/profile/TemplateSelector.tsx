@@ -33,10 +33,10 @@ const templates = [
     name: 'Creative',
     icon: Palette,
     description: 'Visual & colorful',
-    color: 'border-wharf-pink/40',
-    textColor: 'text-wharf-pink-darker',
-    hoverBg: 'hover:bg-wharf-pink/15',
-    activeBg: 'bg-wharf-pink/25',
+    color: 'border-wharf-yellow/40',
+    textColor: 'text-wharf-yellow-darker',
+    hoverBg: 'hover:bg-wharf-yellow/15',
+    activeBg: 'bg-wharf-yellow/25',
     badgeColor: 'pink',
   },
   {
@@ -125,3 +125,4 @@ export const TemplateSelector = ({ selected, onChange }: TemplateSelectorProps) 
     </div>
   );
 };
+

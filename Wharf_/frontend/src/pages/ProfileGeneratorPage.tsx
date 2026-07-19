@@ -237,7 +237,7 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
       label: 'Last Generated',
       value: isLoading ? '--' : stats.lastGenerated,
       icon: Clock,
-      color: 'bg-wharf-orange',
+      color: 'bg-wharf-yellow',
       description: 'Most recent activity',
     },
   ];
@@ -255,7 +255,7 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
               Sign in to see Your Profile Stats
             </p>
             <Button
-              variant="primary"
+              variant="yellow"
               size="sm"
               className="mt-3"
               onClick={() => (window.location.href = '/login')}
@@ -278,7 +278,7 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
           </Badge>
           <h2 className="font-display font-black text-4xl md:text-5xl tracking-tighter mb-4">
             Your{' '}
-            <span className="bg-gradient-to-r from-wharf-green-dark to-wharf-green-darker bg-clip-text text-transparent">
+            <span className="bg-wharf-green-darker bg-clip-text text-transparent">
               Profile Activity
             </span>
           </h2>
@@ -631,7 +631,7 @@ export const ProfileGeneratorPage = () => {
             </Badge>
             <h2 className="font-display font-black text-4xl md:text-5xl tracking-tighter mb-4">
               How It{' '}
-              <span className="bg-gradient-to-r from-wharf-cyan-dark to-wharf-cyan-darker bg-clip-text text-transparent">
+              <span className="bg-wharf-cyan-darker bg-clip-text text-transparent">
                 Works
               </span>
             </h2>
@@ -647,7 +647,7 @@ export const ProfileGeneratorPage = () => {
                 title: 'Enter Username',
                 desc: 'Enter your GitHub username or profile URL',
                 icon: User,
-                color: 'bg-wharf-pink',
+                color: 'bg-wharf-yellow',
               },
               {
                 step: '02',
@@ -748,7 +748,7 @@ export const ProfileGeneratorPage = () => {
           <div className="space-y-6 animate-fadeInUp">
             <button
               onClick={() => setAppState('landing')}
-              className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink-dark transition-colors group cursor-pointer"
+              className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-yellow-dark transition-colors group cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               Back To Dashboard
@@ -772,7 +772,7 @@ export const ProfileGeneratorPage = () => {
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setAppState('landing')}
-                className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink-dark transition-colors group cursor-pointer"
+                className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-yellow-dark transition-colors group cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                 Back To Dashboard
@@ -789,7 +789,7 @@ export const ProfileGeneratorPage = () => {
             <div className="relative">
               <div className="absolute top-5 left-0 right-0 h-0.5 bg-wharf-border-secondary -z-0" />
               <div
-                className="absolute top-5 left-0 h-0.5 bg-wharf-pink transition-all duration-500 -z-0"
+                className="absolute top-5 left-0 h-0.5 bg-wharf-yellow transition-all duration-500 -z-0"
                 style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
               />
 
@@ -815,12 +815,12 @@ export const ProfileGeneratorPage = () => {
                         w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all
                         ${
                           isActive
-                            ? 'bg-wharf-pink border-wharf-border-primary shadow-brutal-sm'
+                            ? 'bg-wharf-yellow border-wharf-border-primary shadow-brutal-sm'
                             : isCompleted
                               ? 'bg-wharf-green border-wharf-border-primary'
                               : 'bg-wharf-surface-secondary border-wharf-border-secondary'
                         }
-                        ${isAccessible && !isActive && !isCompleted ? 'hover:border-wharf-pink hover:bg-wharf-pink/10' : ''}
+                        ${isAccessible && !isActive && !isCompleted ? 'hover:border-wharf-yellow hover:bg-wharf-yellow/10' : ''}
                         ${!isAccessible ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                       `}
                       >
@@ -834,7 +834,7 @@ export const ProfileGeneratorPage = () => {
                       </div>
                       <span
                         className={`font-mono text-xs font-bold hidden sm:block ${
-                          isActive ? 'text-wharf-pink' : 'text-wharf-text-tertiary'
+                          isActive ? 'text-wharf-yellow' : 'text-wharf-text-tertiary'
                         }`}
                       >
                         {s.label}
@@ -919,9 +919,9 @@ export const ProfileGeneratorPage = () => {
                                   id: 'social',
                                   label: 'Social',
                                   icon: User,
-                                  activeBg: 'bg-wharf-pink/20',
-                                  activeText: 'text-wharf-pink-darker',
-                                  borderColor: 'border-wharf-pink/40',
+                                  activeBg: 'bg-wharf-yellow/20',
+                                  activeText: 'text-wharf-yellow-darker',
+                                  borderColor: 'border-wharf-yellow/40',
                                 },
                                 {
                                   id: 'widgets',
@@ -974,7 +974,7 @@ export const ProfileGeneratorPage = () => {
                                           <Star className="w-4 h-4 text-wharf-green-dark fill-wharf-green-dark stroke-wharf-border-primary stroke-[1.5] drop-shadow-[0_0_12px_rgba(255,107,157,0.5)]" />
                                           {/* Pulsing Glow */}
                                           <span className="absolute inset-0 animate-ping opacity-67">
-                                            <Star className="w-4 h-4 text-wharf-pink fill-wharf-pink" />
+                                            <Star className="w-4 h-4 text-wharf-yellow fill-wharf-yellow" />
                                           </span>
                                         </div>
                                       </span>
@@ -1132,14 +1132,14 @@ export const ProfileGeneratorPage = () => {
                                   </div>
                                   <div className="relative flex justify-center">
                                     <span className="px-4 py-0.5 bg-wharf-surface-primary border border-wharf-border-secondary font-mono text-[10px] text-wharf-text-secondary flex items-center gap-2">
-                                      <Code className="w-3 h-3 text-wharf-pink-darker" />
+                                      <Code className="w-3 h-3 text-wharf-yellow-darker" />
                                       Step 5: Social Connections
                                     </span>
                                   </div>
                                 </div>
 
                                 <div className="flex items-center gap-2 mb-2">
-                                  <User className="w-5 h-5 text-wharf-pink-darker" />
+                                  <User className="w-5 h-5 text-wharf-yellow-darker" />
                                   <h4 className="font-display font-black text-lg tracking-tighter">
                                     Social Links
                                   </h4>
@@ -1167,7 +1167,7 @@ export const ProfileGeneratorPage = () => {
                                   </div>
                                   <div className="relative flex justify-center">
                                     <span className="px-4 py-0.5 bg-wharf-surface-primary border border-wharf-border-secondary font-mono text-[10px] text-wharf-text-secondary flex items-center gap-2">
-                                      <Code className="w-3 h-3 text-wharf-pink-darker" />
+                                      <Code className="w-3 h-3 text-wharf-yellow-darker" />
                                       Step 6: Widgets
                                     </span>
                                   </div>
@@ -1322,13 +1322,13 @@ export const ProfileGeneratorPage = () => {
                                 <span className="font-mono text-[11px] text-wharf-text-secondary uppercase">
                                   Completion
                                 </span>
-                                <span className="font-mono text-sm font-bold text-wharf-pink-dark">
+                                <span className="font-mono text-sm font-bold text-wharf-yellow-dark">
                                   {completionScore}%
                                 </span>
                               </div>
                               <div className="w-full h-1.5 border border-wharf-border-primary bg-wharf-surface-secondary overflow-hidden">
                                 <div
-                                  className="h-full bg-wharf-pink-dark transition-all duration-500"
+                                  className="h-full bg-wharf-yellow-dark transition-all duration-500"
                                   style={{ width: `${completionScore}%` }}
                                 />
                               </div>
@@ -1366,7 +1366,7 @@ export const ProfileGeneratorPage = () => {
                                   {options.techStack.length >= 5 && options.social.length === 0 && (
                                     <span>
                                       Connect your{' '}
-                                      <span className="text-wharf-pink-dark font-bold">
+                                      <span className="text-wharf-yellow-dark font-bold">
                                         social profiles
                                       </span>{' '}
                                       to build trust & make it easy for people to reach out...
@@ -1434,7 +1434,7 @@ export const ProfileGeneratorPage = () => {
                             </span>
                           )}
                           <Button
-                            variant="primary"
+                            variant="yellow"
                             size="lg"
                             rounded="2xl"
                             onClick={handleGenerate}
@@ -1469,11 +1469,11 @@ export const ProfileGeneratorPage = () => {
                         <div className="flex items-center gap-4">
                           <div className="flex-1 h-2 border border-wharf-border-primary bg-wharf-surface-secondary overflow-hidden">
                             <div
-                              className="h-full bg-wharf-pink transition-all duration-500"
+                              className="h-full bg-wharf-yellow transition-all duration-500"
                               style={{ width: `${generationProgress}%` }}
                             />
                           </div>
-                          <span className="font-mono text-sm font-bold text-wharf-pink">
+                          <span className="font-mono text-sm font-bold text-wharf-yellow">
                             {generationProgress}%
                           </span>
                         </div>
@@ -1502,7 +1502,7 @@ export const ProfileGeneratorPage = () => {
                             Back to Customize
                           </Button>
                           <Button
-                            variant="primary"
+                            variant="yellow"
                             onClick={() => setCurrentStep(4)}
                             iconPosition="right"
                             icon={<ArrowRight className="w-4 h-4" />}
@@ -1537,7 +1537,7 @@ export const ProfileGeneratorPage = () => {
                       <>
                         <div className="bg-wharf-surface-secondary border-2 border-wharf-border-primary p-4 mb-4">
                           <div className="flex items-center gap-2 mb-2">
-                            <FileText className="w-4 h-4 text-wharf-pink" />
+                            <FileText className="w-4 h-4 text-wharf-yellow" />
                             <span className="font-mono font-bold text-sm">
                               {profileData?.username || 'profile'}-README.md
                             </span>
@@ -1588,3 +1588,4 @@ export const ProfileGeneratorPage = () => {
     </PageWrapper>
   );
 };
+

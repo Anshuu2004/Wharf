@@ -56,7 +56,7 @@ const COMMON_PROVIDERS = [
   { id: 'Medium', icon: AtSign, color: 'text-wharf-green-dark' },
   { id: 'Dev.to', icon: Code2, color: 'text-wharf-orange-dark' },
   { id: 'Stack Overflow', icon: Globe, color: 'text-wharf-orange-dark' },
-  { id: 'Instagram', icon: FaInstagram, color: 'text-wharf-pink-darker' },
+  { id: 'Instagram', icon: FaInstagram, color: 'text-wharf-yellow-darker' },
   { id: 'Twitch', icon: FaTwitch, color: 'text-wharf-purple-dark' },
 ];
 
@@ -188,7 +188,7 @@ export const SocialBadgesInput = ({ links, onChange }: SocialBadgesInputProps) =
                   setProvider(e.target.value);
                   setError('');
                 }}
-                className="w-full h-10 bg-wharf-surface-primary border-2 border-wharf-border-primary text-wharf-text-primary px-3 py-2 pr-8 font-mono text-sm focus:outline-none focus:border-wharf-pink appearance-none cursor-pointer"
+                className="w-full h-10 bg-wharf-surface-primary border-2 border-wharf-border-primary text-wharf-text-primary px-3 py-2 pr-8 font-mono text-sm focus:outline-none focus:border-wharf-yellow appearance-none cursor-pointer"
               >
                 {COMMON_PROVIDERS.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -227,7 +227,7 @@ export const SocialBadgesInput = ({ links, onChange }: SocialBadgesInputProps) =
 
             <Button
               onClick={handleAdd}
-              variant="primary"
+              variant="yellow"
               rounded="2xl"
               disabled={!url.trim() || (provider === 'Custom' && !customProvider.trim())}
               className="px-4 whitespace-nowrap cursor-pointer"
@@ -335,3 +335,4 @@ export const SocialBadgesInput = ({ links, onChange }: SocialBadgesInputProps) =
     </div>
   );
 };
+

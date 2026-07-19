@@ -153,7 +153,7 @@ export const ProfileHistoryView = ({
     const colors: Record<string, string> = {
       minimal: 'bg-wharf-cyan-darker',
       professional: 'bg-wharf-purple-darker',
-      creative: 'bg-wharf-pink-darker',
+      creative: 'bg-wharf-yellow-darker',
       developer: 'bg-wharf-orange-darker',
       terminal: 'bg-wharf-green-dark',
       modern: 'bg-wharf-teal-darker',
@@ -188,7 +188,7 @@ export const ProfileHistoryView = ({
         <div className="flex items-center justify-between">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink transition-colors group capitalize"
+            className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-yellow transition-colors group capitalize"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back To Dashboard
@@ -235,7 +235,7 @@ export const ProfileHistoryView = ({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="px-4 py-2 border-2 border-wharf-border-primary font-mono text-sm font-bold bg-wharf-surface-primary focus:outline-none focus:border-wharf-pink rounded-2xl cursor-pointer"
+            className="px-4 py-2 border-2 border-wharf-border-primary font-mono text-sm font-bold bg-wharf-surface-primary focus:outline-none focus:border-wharf-yellow rounded-2xl cursor-pointer"
           >
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
@@ -259,8 +259,8 @@ export const ProfileHistoryView = ({
                     setSearchQuery(template);
                   }
                 }}
-                className={`px-2 border border-wharf-border-secondary font-mono text-xs hover:border-wharf-pink transition-colors cursor-pointer ${
-                  searchQuery.includes(template) ? 'bg-wharf-pink border-wharf-border-primary' : ''
+                className={`px-2 border border-wharf-border-secondary font-mono text-xs hover:border-wharf-yellow transition-colors cursor-pointer ${
+                  searchQuery.includes(template) ? 'bg-wharf-yellow border-wharf-border-primary' : ''
                 }`}
               >
                 {template}
@@ -317,7 +317,7 @@ export const ProfileHistoryView = ({
               : "You Haven't Generated Any Profile READMEs Yet..."}
           </p>
           {!searchQuery && onBack && (
-            <Button variant="primary" size="sm" className="mt-4" onClick={onBack}>
+            <Button variant="yellow" size="sm" className="mt-4" onClick={onBack}>
               Create Your First Profile README
             </Button>
           )}
@@ -347,7 +347,7 @@ export const ProfileHistoryView = ({
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <span className="font-display font-black text-base text-wharf-pink">
+                          <span className="font-display font-black text-base text-wharf-yellow">
                             {getInitials(item.username)}
                           </span>
                         )}
@@ -401,7 +401,7 @@ export const ProfileHistoryView = ({
                       <span className="hidden sm:inline text-xs">Download</span>
                     </Button>
                     <Button
-                      variant="primary"
+                      variant="yellow"
                       size="sm"
                       rounded="md"
                       onClick={() => handleView(item.content)}
@@ -476,3 +476,4 @@ export const ProfileHistoryView = ({
     </div>
   );
 };
+

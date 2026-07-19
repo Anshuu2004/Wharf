@@ -127,7 +127,7 @@ export const ProfileForm = ({ user, onFetch, isLoading }: ProfileFormProps) => {
   return (
     <Card variant="hard" rounded="3xl" className="overflow-visible">
       <div className="flex items-center gap-2 border-b-2 border-wharf-border-primary pb-3 mb-4">
-        <FaGithub className="w-5 h-5 text-wharf-pink-dark" />
+        <FaGithub className="w-5 h-5 text-wharf-yellow-dark" />
         <span className="font-mono font-bold text-sm uppercase tracking-wider">GitHub Profile</span>
         {user && (
           <Badge variant="cyan" size="sm" className="ml-auto">
@@ -188,7 +188,7 @@ export const ProfileForm = ({ user, onFetch, isLoading }: ProfileFormProps) => {
             )}
           </div>
           <Button
-            variant="primary"
+            variant="yellow"
             rounded="2xl"
             type="submit"
             loading={isLoading}
@@ -236,7 +236,7 @@ export const ProfileForm = ({ user, onFetch, isLoading }: ProfileFormProps) => {
               key={example}
               type="button"
               onClick={() => handleExampleClick(example)}
-              className="px-2 py-1 border border-wharf-border-secondary font-mono text-xs hover:border-wharf-pink hover:bg-wharf-pink/10 transition-colors cursor-pointer"
+              className="px-2 py-1 border border-wharf-border-secondary font-mono text-xs hover:border-wharf-yellow hover:bg-wharf-yellow/10 transition-colors cursor-pointer"
             >
               {example}
             </button>
@@ -254,7 +254,7 @@ export const ProfileForm = ({ user, onFetch, isLoading }: ProfileFormProps) => {
                   setUsername(user.login || user.username || '');
                   onFetch(user.login || user.username || '');
                 }}
-                className="text-wharf-pink-dark cursor-pointer hover:font-bold"
+                className="text-wharf-yellow-dark cursor-pointer hover:font-bold"
               >
                 {user.login || user.username}
               </button>
@@ -265,3 +265,4 @@ export const ProfileForm = ({ user, onFetch, isLoading }: ProfileFormProps) => {
     </Card>
   );
 };
+
