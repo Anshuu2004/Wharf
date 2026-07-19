@@ -126,8 +126,8 @@ export const HealthRepoInput = ({
     <Card variant="hard" rounded="3xl" className="overflow-visible">
       {/* Header */}
       <div className="flex items-center gap-2 border-b-2 border-wharf-border-primary pb-3 mb-4">
-        <div className="p-1.5 bg-wharf-pink/10 border border-wharf-pink/20 rounded-lg">
-          <FaGithub className="w-4 h-4 text-wharf-pink-dark" />
+        <div className="p-1.5 bg-wharf-green/10 border border-wharf-green/20 rounded-lg">
+          <FaGithub className="w-4 h-4 text-wharf-green-dark" />
         </div>
         <span className="font-mono font-bold text-sm uppercase tracking-wider">
           Repository Health Check
@@ -146,7 +146,7 @@ export const HealthRepoInput = ({
             <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10">
               <div
                 className={`p-1 rounded-md transition-colors ${
-                  isFocused ? 'bg-wharf-pink/10 text-wharf-pink' : 'text-wharf-text-tertiary'
+                  isFocused ? 'bg-wharf-green/10 text-wharf-green' : 'text-wharf-text-tertiary'
                 }`}
               ></div>
             </div>
@@ -167,7 +167,7 @@ export const HealthRepoInput = ({
                 setTimeout(() => setShowRecent(false), 200);
               }}
               className={`pl-12 font-mono text-sm transition-all duration-300 rounded-2xl ${
-                isFocused ? 'border-wharf-pink ring-2 ring-wharf-pink/20' : ''
+                isFocused ? 'border-wharf-green ring-2 ring-wharf-green/20' : ''
               } ${touched && repoUrl ? (isValid ? 'border-wharf-green/50' : 'border-wharf-error/50') : ''}`}
             />
 
@@ -184,7 +184,7 @@ export const HealthRepoInput = ({
           </div>
 
           <Button
-            variant="primary"
+            variant="green"
             rounded="2xl"
             onClick={handleAnalyze}
             loading={isLoading}
@@ -239,7 +239,7 @@ export const HealthRepoInput = ({
               <button
                 key={example.name}
                 onClick={() => handleExampleClick(example.name)}
-                className="group relative p-3 border-2 border-wharf-border-secondary hover:border-wharf-pink hover:bg-wharf-pink/10 transition-all rounded-xl text-left cursor-pointer"
+                className="group relative p-3 border-2 border-wharf-border-secondary hover:border-wharf-green hover:bg-wharf-green/10 transition-all rounded-xl text-left cursor-pointer"
               >
                 <div className="flex items-start justify-between">
                   <div className="min-w-0 flex-1">
@@ -257,7 +257,7 @@ export const HealthRepoInput = ({
                     </span>
                   </div>
                 </div>
-                <div className="absolute inset-0 border-2 border-transparent group-hover:border-wharf-pink/20 rounded-xl transition-colors pointer-events-none" />
+                <div className="absolute inset-0 border-2 border-transparent group-hover:border-wharf-green/20 rounded-xl transition-colors pointer-events-none" />
               </button>
             ))}
           </div>
@@ -291,3 +291,4 @@ export const HealthRepoInput = ({
     </Card>
   );
 };
+

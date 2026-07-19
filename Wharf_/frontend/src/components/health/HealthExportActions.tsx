@@ -89,8 +89,8 @@ ${healthData.contributionScore ? `## 🤝 Contribution Readiness\n\n**Score:** $
     <Card variant="hard-sm" rounded="2xl" className="p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <div className="p-2 rounded-lg bg-wharf-pink/10 border border-wharf-pink-dark">
-            <Zap className="w-5 h-5 text-wharf-pink" />
+          <div className="p-2 rounded-lg bg-wharf-green/10 border border-wharf-green-dark">
+            <Zap className="w-5 h-5 text-wharf-green-darker" />
           </div>
           <div>
             <p className="font-mono text-sm font-bold text-wharf-text-primary">Export Report</p>
@@ -128,3 +128,4 @@ ${healthData.contributionScore ? `## 🤝 Contribution Readiness\n\n**Score:** $
     </Card>
   );
 };
+
