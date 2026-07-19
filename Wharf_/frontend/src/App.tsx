@@ -30,6 +30,18 @@ const SettingsPage = React.lazy(() =>
 const AdminDashboard = React.lazy(() =>
   import('./pages/AdminDashboard').then((m) => ({ default: m.AdminDashboard }))
 );
+const AboutPage = React.lazy(() =>
+  import('./pages/AboutPage').then((m) => ({ default: m.AboutPage }))
+);
+const TermsPage = React.lazy(() =>
+  import('./pages/TermsPage').then((m) => ({ default: m.TermsPage }))
+);
+const PrivacyPage = React.lazy(() =>
+  import('./pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage }))
+);
+const DocsPage = React.lazy(() =>
+  import('./pages/DocsPage').then((m) => ({ default: m.DocsPage }))
+);
 
 function App() {
   const location = useLocation();
@@ -52,6 +64,7 @@ function App() {
             }
           >
             <Routes>
+              {/* Main Pages */}
               <Route path="/" element={<HomePage />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/generator" element={<GeneratorPage />} />
@@ -61,6 +74,13 @@ function App() {
               <Route path="/changelog" element={<ChangelogPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/admin" element={<AdminDashboard />} />
+
+              {/* Documentation Pages */}
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/docs" element={<DocsPage />} />
+
               <Route path="*" element={<HomePage />} />
             </Routes>
           </Suspense>
