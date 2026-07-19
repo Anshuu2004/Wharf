@@ -257,7 +257,7 @@ const UserStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) => {
           </Badge>
           <h2 className="font-display font-black text-4xl md:text-5xl tracking-tighter mb-4">
             Your{' '}
-            <span className="bg-gradient-to-r from-wharf-green-dark to-wharf-green-darker bg-clip-text text-transparent">
+            <span className="bg-wharf-green-darker bg-clip-text text-transparent">
               Activity
             </span>
           </h2>
@@ -535,7 +535,7 @@ export const GeneratorPage = () => {
             </Badge>
             <h2 className="font-display font-black text-4xl md:text-5xl tracking-tighter mb-4">
               How It{' '}
-              <span className="bg-gradient-to-r from-wharf-cyan-dark to-wharf-cyan-darker bg-clip-text text-transparent">
+              <span className="bg-wharf-cyan-darker bg-clip-text text-transparent">
                 Works
               </span>
             </h2>
