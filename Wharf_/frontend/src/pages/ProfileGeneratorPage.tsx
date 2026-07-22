@@ -1157,7 +1157,7 @@ export const ProfileGeneratorPage = () => {
                                 </div>
 
                                 <p className="font-mono text-sm text-wharf-text-secondary capitalize">
-                                  Customize the fields that will appear on your terminal SVG output.
+                                  Customize the fields that will appear on your terminal SVG output...
                                 </p>
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-wharf-surface-secondary p-4 border border-wharf-border-secondary rounded-lg">
