@@ -95,7 +95,7 @@ export const ScoreSuggestions = ({
     >
       {/* Gradient Line */}
       <div
-        className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r ${isReadme ? 'from-wharf-cyan via-wharf-blue to-wharf-cyan' : 'from-wharf-purple via-wharf-pink to-wharf-purple'} opacity-60`}
+        className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r ${isReadme ? 'from-wharf-cyan via-wharf-blue to-wharf-cyan' : 'from-wharf-purple via-wharf-green to-wharf-purple'} opacity-60`}
       />
 
       {/* Header */}
@@ -175,3 +175,4 @@ export const ScoreSuggestions = ({
     </Card>
   );
 };
+

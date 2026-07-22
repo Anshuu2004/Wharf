@@ -183,7 +183,7 @@ export const HealthHistory = ({ onSelect, onBack, onCountChange }: HealthHistory
         <div className="flex items-center justify-between">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink transition-colors group capitalize"
+            className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-green transition-colors group capitalize"
           >
             <span className="group-hover:-translate-x-1 transition-transform">←</span>
             Back To Dashboard
@@ -246,7 +246,7 @@ export const HealthHistory = ({ onSelect, onBack, onCountChange }: HealthHistory
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="px-4 py-2 border-2 border-wharf-border-primary font-mono text-sm font-bold bg-wharf-surface-primary focus:outline-none focus:border-wharf-pink rounded-2xl cursor-pointer"
+            className="px-4 py-2 border-2 border-wharf-border-primary font-mono text-sm font-bold bg-wharf-surface-primary focus:outline-none focus:border-wharf-green rounded-2xl cursor-pointer"
           >
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
@@ -269,8 +269,8 @@ export const HealthHistory = ({ onSelect, onBack, onCountChange }: HealthHistory
                 onClick={() => setSelectedScoreRange(range as typeof selectedScoreRange)}
                 className={`px-3 py-1 border border-wharf-border-secondary font-mono text-xs transition-colors cursor-pointer rounded-full ${
                   selectedScoreRange === range
-                    ? 'bg-wharf-pink/80 border-wharf-pink'
-                    : 'hover:border-wharf-pink'
+                    ? 'bg-wharf-green/80 border-wharf-green'
+                    : 'hover:border-wharf-green'
                 }`}
               >
                 {getScoreRangeLabel(range)}
@@ -331,7 +331,7 @@ export const HealthHistory = ({ onSelect, onBack, onCountChange }: HealthHistory
               : "You haven't analyzed any repositories yet..."}
           </p>
           {!searchQuery && onBack && (
-            <Button variant="primary" size="sm" className="mt-4" onClick={onBack}>
+            <Button variant="green" size="sm" className="mt-4" onClick={onBack}>
               Analyze Your First Repository
             </Button>
           )}
@@ -418,7 +418,7 @@ export const HealthHistory = ({ onSelect, onBack, onCountChange }: HealthHistory
 
                       <div className="flex items-center gap-3">
                         <Button
-                          variant="primary"
+                          variant="green"
                           size="sm"
                           rounded="md"
                           onClick={(e) => {
@@ -523,3 +523,4 @@ export const HealthHistory = ({ onSelect, onBack, onCountChange }: HealthHistory
     </div>
   );
 };
+

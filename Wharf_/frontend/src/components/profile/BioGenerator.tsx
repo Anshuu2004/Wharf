@@ -21,7 +21,7 @@ interface BioGeneratorProps {
 
 const bioTones = [
   { id: 'professional', label: 'Professional', icon: Briefcase, color: 'text-wharf-cyan-darker' },
-  { id: 'creative', label: 'Creative', icon: Palette, color: 'text-wharf-pink-darker' },
+  { id: 'creative', label: 'Creative', icon: Palette, color: 'text-wharf-yellow-darker' },
   { id: 'technical', label: 'Technical', icon: Code, color: 'text-wharf-purple-darker' },
   { id: 'fun', label: 'Fun', icon: Smile, color: 'text-wharf-yellow-darker' },
 ];
@@ -232,14 +232,14 @@ export const BioGenerator = ({ bio, onGenerate }: BioGeneratorProps) => {
               p-1.5 border-2 transition-all duration-200 cursor-pointer rounded-md
               ${
                 isEditing
-                  ? 'border-wharf-pink bg-wharf-pink/10'
-                  : 'border-wharf-border-primary hover:border-wharf-pink hover:bg-wharf-pink/50'
+                  ? 'border-wharf-yellow bg-wharf-yellow/10'
+                  : 'border-wharf-border-primary hover:border-wharf-yellow hover:bg-wharf-yellow/50'
               }
             `}
             title={isEditing ? 'Save changes' : 'Edit bio'}
           >
             {isEditing ? (
-              <Check className="w-3.5 h-3.5 text-wharf-pink-dark" />
+              <Check className="w-3.5 h-3.5 text-wharf-yellow-dark" />
             ) : (
               <Edit2 className="w-3.5 h-3.5 text-wharf-text-secondary" />
             )}
@@ -290,7 +290,7 @@ export const BioGenerator = ({ bio, onGenerate }: BioGeneratorProps) => {
             </button>
             <button
               onClick={handleSaveEdit}
-              className="flex items-center gap-1 px-2 py-1 border border-wharf-border-primary bg-wharf-pink hover:bg-wharf-pink/90 transition-colors font-mono text-[10px] rounded-md font-bold text-wharf-black"
+              className="flex items-center gap-1 px-2 py-1 border border-wharf-border-primary bg-wharf-yellow hover:bg-wharf-yellow/90 transition-colors font-mono text-[10px] rounded-md font-bold text-wharf-black"
             >
               <Check className="w-3 h-3" />
               Save
@@ -320,3 +320,4 @@ export const BioGenerator = ({ bio, onGenerate }: BioGeneratorProps) => {
     </div>
   );
 };
+

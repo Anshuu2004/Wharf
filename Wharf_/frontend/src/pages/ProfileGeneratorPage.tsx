@@ -21,6 +21,7 @@ import {
   Code,
   Eye,
   RotateCcw,
+  Terminal,
 } from 'lucide-react';
 import { FaGithub } from 'react-icons/fa';
 import {
@@ -80,6 +81,22 @@ interface ProfileOptionsType {
   showContributions: boolean;
   showTrophies: boolean;
   showStreak: boolean;
+  birthday?: string;
+  terminalConfig?: {
+    os: string;
+    host: string;
+    kernel: string;
+    ide: string;
+    programming: string;
+    computer: string;
+    real: string;
+    software: string;
+    hardware: string;
+    email: string;
+    linkedin: string;
+    discord: string;
+    species: string;
+  };
 }
 
 // Profile Stats Section
@@ -237,7 +254,7 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
       label: 'Last Generated',
       value: isLoading ? '--' : stats.lastGenerated,
       icon: Clock,
-      color: 'bg-wharf-orange',
+      color: 'bg-wharf-yellow',
       description: 'Most recent activity',
     },
   ];
@@ -255,7 +272,7 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
               Sign in to see Your Profile Stats
             </p>
             <Button
-              variant="primary"
+              variant="yellow"
               size="sm"
               className="mt-3"
               onClick={() => (window.location.href = '/login')}
@@ -278,7 +295,7 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
           </Badge>
           <h2 className="font-display font-black text-4xl md:text-5xl tracking-tighter mb-4">
             Your{' '}
-            <span className="bg-gradient-to-r from-wharf-green-dark to-wharf-green-darker bg-clip-text text-transparent">
+            <span className="bg-wharf-green-darker bg-clip-text text-transparent">
               Profile Activity
             </span>
           </h2>
@@ -365,6 +382,22 @@ export const ProfileGeneratorPage = () => {
       showContributions: true,
       showTrophies: true,
       showStreak: true,
+      birthday: '2000-01-01',
+      terminalConfig: {
+        os: 'Arch Linux, Windows 11',
+        host: 'Localhost',
+        kernel: 'Developer',
+        ide: 'VS Code, Neovim',
+        programming: 'TypeScript, Python, Rust',
+        computer: 'JSON, YAML, Markdown',
+        real: 'English',
+        software: 'Open Source',
+        hardware: 'Custom Keyboards',
+        email: 'hello@example.com',
+        linkedin: 'username',
+        discord: 'username',
+        species: 'Human',
+      },
     })
   );
 
@@ -379,15 +412,18 @@ export const ProfileGeneratorPage = () => {
     options.showStreak ||
     options.showTrophies;
 
-  const completionScore = Math.min(
-    25 +
-      (options.techStack.length > 0 ? 15 : 0) +
-      (options.social.length > 0 ? 15 : 0) +
-      (options.template !== 'minimal' ? 15 : 0) +
-      (options.theme !== 'default' ? 15 : 0) +
-      (hasWidgets ? 15 : 0),
-    100
-  );
+  const completionScore =
+    options.template === 'terminal'
+      ? 100
+      : Math.min(
+          25 +
+            (options.techStack.length > 0 ? 15 : 0) +
+            (options.social.length > 0 ? 15 : 0) +
+            (options.template !== 'minimal' ? 15 : 0) +
+            (options.theme !== 'default' ? 15 : 0) +
+            (hasWidgets ? 15 : 0),
+          100
+        );
 
   // Persist State To Sync Across Page Refreshes
   useEffect(() => {
@@ -631,9 +667,7 @@ export const ProfileGeneratorPage = () => {
             </Badge>
             <h2 className="font-display font-black text-4xl md:text-5xl tracking-tighter mb-4">
               How It{' '}
-              <span className="bg-gradient-to-r from-wharf-cyan-dark to-wharf-cyan-darker bg-clip-text text-transparent">
-                Works
-              </span>
+              <span className="bg-wharf-cyan-darker bg-clip-text text-transparent">Works</span>
             </h2>
             <p className="font-mono text-base text-wharf-text-secondary max-w-2xl mx-auto capitalize">
               Three simple steps to create your perfect GitHub profile README
@@ -647,7 +681,7 @@ export const ProfileGeneratorPage = () => {
                 title: 'Enter Username',
                 desc: 'Enter your GitHub username or profile URL',
                 icon: User,
-                color: 'bg-wharf-pink',
+                color: 'bg-wharf-yellow',
               },
               {
                 step: '02',
@@ -748,7 +782,7 @@ export const ProfileGeneratorPage = () => {
           <div className="space-y-6 animate-fadeInUp">
             <button
               onClick={() => setAppState('landing')}
-              className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink-dark transition-colors group cursor-pointer"
+              className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-yellow-dark transition-colors group cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               Back To Dashboard
@@ -772,7 +806,7 @@ export const ProfileGeneratorPage = () => {
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setAppState('landing')}
-                className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink-dark transition-colors group cursor-pointer"
+                className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-yellow-dark transition-colors group cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                 Back To Dashboard
@@ -789,7 +823,7 @@ export const ProfileGeneratorPage = () => {
             <div className="relative">
               <div className="absolute top-5 left-0 right-0 h-0.5 bg-wharf-border-secondary -z-0" />
               <div
-                className="absolute top-5 left-0 h-0.5 bg-wharf-pink transition-all duration-500 -z-0"
+                className="absolute top-5 left-0 h-0.5 bg-wharf-yellow transition-all duration-500 -z-0"
                 style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
               />
 
@@ -815,12 +849,12 @@ export const ProfileGeneratorPage = () => {
                         w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all
                         ${
                           isActive
-                            ? 'bg-wharf-pink border-wharf-border-primary shadow-brutal-sm'
+                            ? 'bg-wharf-yellow border-wharf-border-primary shadow-brutal-sm'
                             : isCompleted
                               ? 'bg-wharf-green border-wharf-border-primary'
                               : 'bg-wharf-surface-secondary border-wharf-border-secondary'
                         }
-                        ${isAccessible && !isActive && !isCompleted ? 'hover:border-wharf-pink hover:bg-wharf-pink/10' : ''}
+                        ${isAccessible && !isActive && !isCompleted ? 'hover:border-wharf-yellow hover:bg-wharf-yellow/10' : ''}
                         ${!isAccessible ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                       `}
                       >
@@ -834,7 +868,7 @@ export const ProfileGeneratorPage = () => {
                       </div>
                       <span
                         className={`font-mono text-xs font-bold hidden sm:block ${
-                          isActive ? 'text-wharf-pink' : 'text-wharf-text-tertiary'
+                          isActive ? 'text-wharf-yellow' : 'text-wharf-text-tertiary'
                         }`}
                       >
                         {s.label}
@@ -897,7 +931,9 @@ export const ProfileGeneratorPage = () => {
                         <div className="space-y-6 min-w-0">
                           {/* Tab Navigation */}
                           <div className="w-full bg-wharf-surface-primary border-2 border-wharf-border-primary rounded-lg p-2 shadow-brutal-sm">
-                            <div className="grid grid-cols-5 gap-4 w-full">
+                            <div
+                              className={`grid gap-4 w-full ${options.template === 'terminal' ? 'grid-cols-3' : 'grid-cols-2 md:grid-cols-5'}`}
+                            >
                               {[
                                 {
                                   id: 'layout',
@@ -907,30 +943,43 @@ export const ProfileGeneratorPage = () => {
                                   activeText: 'text-wharf-cyan-darker',
                                   borderColor: 'border-wharf-cyan/40',
                                 },
-                                {
-                                  id: 'stack',
-                                  label: 'Tech Stack',
-                                  icon: Code,
-                                  activeBg: 'bg-wharf-purple/20',
-                                  activeText: 'text-wharf-purple-darker',
-                                  borderColor: 'border-wharf-purple/40',
-                                },
-                                {
-                                  id: 'social',
-                                  label: 'Social',
-                                  icon: User,
-                                  activeBg: 'bg-wharf-pink/20',
-                                  activeText: 'text-wharf-pink-darker',
-                                  borderColor: 'border-wharf-pink/40',
-                                },
-                                {
-                                  id: 'widgets',
-                                  label: 'Widgets',
-                                  icon: Star,
-                                  activeBg: 'bg-wharf-yellow/20',
-                                  activeText: 'text-wharf-yellow-darker',
-                                  borderColor: 'border-wharf-text-primary',
-                                },
+                                ...(options.template === 'terminal'
+                                  ? [
+                                      {
+                                        id: 'terminal_config',
+                                        label: 'Config',
+                                        icon: Terminal,
+                                        activeBg: 'bg-wharf-orange/20',
+                                        activeText: 'text-wharf-orange-darker',
+                                        borderColor: 'border-wharf-orange/40',
+                                      },
+                                    ]
+                                  : [
+                                      {
+                                        id: 'stack',
+                                        label: 'Tech Stack',
+                                        icon: Code,
+                                        activeBg: 'bg-wharf-purple/20',
+                                        activeText: 'text-wharf-purple-darker',
+                                        borderColor: 'border-wharf-purple/40',
+                                      },
+                                      {
+                                        id: 'social',
+                                        label: 'Social',
+                                        icon: User,
+                                        activeBg: 'bg-wharf-yellow/20',
+                                        activeText: 'text-wharf-yellow-darker',
+                                        borderColor: 'border-wharf-yellow/40',
+                                      },
+                                      {
+                                        id: 'widgets',
+                                        label: 'Widgets',
+                                        icon: Star,
+                                        activeBg: 'bg-wharf-yellow/20',
+                                        activeText: 'text-wharf-yellow-darker',
+                                        borderColor: 'border-wharf-text-primary',
+                                      },
+                                    ]),
                                 {
                                   id: 'preview',
                                   label: 'Preview',
@@ -974,7 +1023,7 @@ export const ProfileGeneratorPage = () => {
                                           <Star className="w-4 h-4 text-wharf-green-dark fill-wharf-green-dark stroke-wharf-border-primary stroke-[1.5] drop-shadow-[0_0_12px_rgba(255,107,157,0.5)]" />
                                           {/* Pulsing Glow */}
                                           <span className="absolute inset-0 animate-ping opacity-67">
-                                            <Star className="w-4 h-4 text-wharf-pink fill-wharf-pink" />
+                                            <Star className="w-4 h-4 text-wharf-yellow fill-wharf-yellow" />
                                           </span>
                                         </div>
                                       </span>
@@ -1023,65 +1072,364 @@ export const ProfileGeneratorPage = () => {
                                 </div>
 
                                 {/* Divider - Theme Selection */}
-                                <div className="relative py-2 mt-12 mb-2">
+                                {options.template !== 'terminal' && (
+                                  <>
+                                    <div className="relative py-2 mt-12 mb-2">
+                                      <div className="absolute inset-0 flex items-center">
+                                        <div className="w-full border-t-2 border-wharf-border-secondary"></div>
+                                      </div>
+                                      <div className="relative flex justify-center">
+                                        <span className="px-4 py-0.5 bg-wharf-surface-primary border border-wharf-border-secondary font-mono text-[10px] text-wharf-text-secondary flex items-center gap-2">
+                                          <Palette className="w-3 h-3 text-wharf-yellow-darker" />
+                                          Step 2: Pick Colors
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Theme Section */}
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-4">
+                                        <Palette className="w-5 h-5 text-wharf-yellow-darker" />
+                                        <h4 className="font-display font-black text-lg tracking-tighter">
+                                          Choose Theme
+                                        </h4>
+                                        <span className="ml-auto font-mono text-[10px] text-wharf-text-tertiary bg-wharf-surface-secondary px-2 py-0.5 border border-wharf-border-secondary capitalize">
+                                          {options.theme}
+                                        </span>
+                                      </div>
+                                      <ThemePicker
+                                        selected={options.theme}
+                                        onChange={(t: string) =>
+                                          setOptions({ ...options, theme: t })
+                                        }
+                                      />
+                                    </div>
+
+                                    {/* Divider - Bio Section */}
+                                    <div className="relative py-2 mt-12 mb-2">
+                                      <div className="absolute inset-0 flex items-center">
+                                        <div className="w-full border-t-2 border-wharf-border-secondary"></div>
+                                      </div>
+                                      <div className="relative flex justify-center">
+                                        <span className="px-4 py-0.5 bg-wharf-surface-primary border border-wharf-border-secondary font-mono text-[10px] text-wharf-text-secondary flex items-center gap-2">
+                                          <Pencil className="w-3 h-3 text-wharf-green-darker" />
+                                          Step 3: Personalize
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Bio Section */}
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-4">
+                                        <Pencil className="w-5 h-5 text-wharf-green-darker" />
+                                        <h4 className="font-display font-black text-lg tracking-tighter">
+                                          Edit Bio
+                                        </h4>
+                                        <span className="ml-auto font-mono text-[10px] text-wharf-text-tertiary bg-wharf-surface-secondary px-2 py-0.5 border border-wharf-border-secondary capitalize">
+                                          {profileData.bio?.length || 0} chars
+                                        </span>
+                                      </div>
+                                      <BioGenerator
+                                        bio={profileData.bio}
+                                        onGenerate={(newBio: string) =>
+                                          setProfileData({ ...profileData, bio: newBio })
+                                        }
+                                      />
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Terminal Configuration Section */}
+                            {activeTab === 'terminal_config' && (
+                              <div className="space-y-6">
+                                <div className="relative py-2 mt-4 mb-2">
                                   <div className="absolute inset-0 flex items-center">
                                     <div className="w-full border-t-2 border-wharf-border-secondary"></div>
                                   </div>
                                   <div className="relative flex justify-center">
                                     <span className="px-4 py-0.5 bg-wharf-surface-primary border border-wharf-border-secondary font-mono text-[10px] text-wharf-text-secondary flex items-center gap-2">
-                                      <Palette className="w-3 h-3 text-wharf-yellow-darker" />
-                                      Step 2: Pick Colors
+                                      <Terminal className="w-3 h-3 text-wharf-orange-darker" />
+                                      Terminal Customization
                                     </span>
                                   </div>
                                 </div>
 
-                                {/* Theme Section */}
-                                <div>
-                                  <div className="flex items-center gap-2 mb-4">
-                                    <Palette className="w-5 h-5 text-wharf-yellow-darker" />
-                                    <h4 className="font-display font-black text-lg tracking-tighter">
-                                      Choose Theme
-                                    </h4>
-                                    <span className="ml-auto font-mono text-[10px] text-wharf-text-tertiary bg-wharf-surface-secondary px-2 py-0.5 border border-wharf-border-secondary capitalize">
-                                      {options.theme}
-                                    </span>
+                                <p className="font-mono text-sm text-wharf-text-secondary capitalize">
+                                  Customize the fields that will appear on your terminal SVG output...
+                                </p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-wharf-surface-secondary p-4 border border-wharf-border-secondary rounded-lg">
+                                  <div>
+                                    <label className="block font-mono text-xs font-bold mb-1">
+                                      Birthdate (Uptime)
+                                    </label>
+                                    <input
+                                      type="date"
+                                      value={options.birthday || '2000-01-01'}
+                                      onChange={(e) =>
+                                        setOptions({ ...options, birthday: e.target.value })
+                                      }
+                                      className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
+                                    />
                                   </div>
-                                  <ThemePicker
-                                    selected={options.theme}
-                                    onChange={(t: string) => setOptions({ ...options, theme: t })}
-                                  />
+                                  <div>
+                                    <label className="block font-mono text-xs font-bold mb-1">
+                                      OS
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={options.terminalConfig?.os || ''}
+                                      onChange={(e) =>
+                                        setOptions({
+                                          ...options,
+                                          terminalConfig: {
+                                            ...options.terminalConfig!,
+                                            os: e.target.value,
+                                          },
+                                        })
+                                      }
+                                      className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block font-mono text-xs font-bold mb-1">
+                                      Species
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={options.terminalConfig?.species || ''}
+                                      onChange={(e) =>
+                                        setOptions({
+                                          ...options,
+                                          terminalConfig: {
+                                            ...options.terminalConfig!,
+                                            species: e.target.value,
+                                          },
+                                        })
+                                      }
+                                      className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block font-mono text-xs font-bold mb-1">
+                                      Host
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={options.terminalConfig?.host || ''}
+                                      onChange={(e) =>
+                                        setOptions({
+                                          ...options,
+                                          terminalConfig: {
+                                            ...options.terminalConfig!,
+                                            host: e.target.value,
+                                          },
+                                        })
+                                      }
+                                      className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block font-mono text-xs font-bold mb-1">
+                                      Kernel (Role)
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={options.terminalConfig?.kernel || ''}
+                                      onChange={(e) =>
+                                        setOptions({
+                                          ...options,
+                                          terminalConfig: {
+                                            ...options.terminalConfig!,
+                                            kernel: e.target.value,
+                                          },
+                                        })
+                                      }
+                                      className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block font-mono text-xs font-bold mb-1">
+                                      IDE
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={options.terminalConfig?.ide || ''}
+                                      onChange={(e) =>
+                                        setOptions({
+                                          ...options,
+                                          terminalConfig: {
+                                            ...options.terminalConfig!,
+                                            ide: e.target.value,
+                                          },
+                                        })
+                                      }
+                                      className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
+                                    />
+                                  </div>
                                 </div>
 
-                                {/* Divider - Bio Section */}
-                                <div className="relative py-2 mt-12 mb-2">
-                                  <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t-2 border-wharf-border-secondary"></div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-wharf-surface-secondary p-4 border border-wharf-border-secondary rounded-lg">
+                                  <div>
+                                    <label className="block font-mono text-xs font-bold mb-1">
+                                      Programming Languages
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={options.terminalConfig?.programming || ''}
+                                      onChange={(e) =>
+                                        setOptions({
+                                          ...options,
+                                          terminalConfig: {
+                                            ...options.terminalConfig!,
+                                            programming: e.target.value,
+                                          },
+                                        })
+                                      }
+                                      className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
+                                    />
                                   </div>
-                                  <div className="relative flex justify-center">
-                                    <span className="px-4 py-0.5 bg-wharf-surface-primary border border-wharf-border-secondary font-mono text-[10px] text-wharf-text-secondary flex items-center gap-2">
-                                      <Pencil className="w-3 h-3 text-wharf-green-darker" />
-                                      Step 3: Personalize
-                                    </span>
+                                  <div>
+                                    <label className="block font-mono text-xs font-bold mb-1">
+                                      Markup / Tools
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={options.terminalConfig?.computer || ''}
+                                      onChange={(e) =>
+                                        setOptions({
+                                          ...options,
+                                          terminalConfig: {
+                                            ...options.terminalConfig!,
+                                            computer: e.target.value,
+                                          },
+                                        })
+                                      }
+                                      className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
+                                    />
+                                  </div>
+                                  <div className="col-span-1 md:col-span-2">
+                                    <label className="block font-mono text-xs font-bold mb-1">
+                                      Real Languages
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={options.terminalConfig?.real || ''}
+                                      onChange={(e) =>
+                                        setOptions({
+                                          ...options,
+                                          terminalConfig: {
+                                            ...options.terminalConfig!,
+                                            real: e.target.value,
+                                          },
+                                        })
+                                      }
+                                      className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
+                                    />
                                   </div>
                                 </div>
 
-                                {/* Bio Section */}
-                                <div>
-                                  <div className="flex items-center gap-2 mb-4">
-                                    <Pencil className="w-5 h-5 text-wharf-green-darker" />
-                                    <h4 className="font-display font-black text-lg tracking-tighter">
-                                      Edit Bio
-                                    </h4>
-                                    <span className="ml-auto font-mono text-[10px] text-wharf-text-tertiary bg-wharf-surface-secondary px-2 py-0.5 border border-wharf-border-secondary capitalize">
-                                      {profileData.bio?.length || 0} chars
-                                    </span>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-wharf-surface-secondary p-4 border border-wharf-border-secondary rounded-lg">
+                                  <div>
+                                    <label className="block font-mono text-xs font-bold mb-1">
+                                      Software Hobbies
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={options.terminalConfig?.software || ''}
+                                      onChange={(e) =>
+                                        setOptions({
+                                          ...options,
+                                          terminalConfig: {
+                                            ...options.terminalConfig!,
+                                            software: e.target.value,
+                                          },
+                                        })
+                                      }
+                                      className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
+                                    />
                                   </div>
-                                  <BioGenerator
-                                    bio={profileData.bio}
-                                    onGenerate={(newBio: string) =>
-                                      setProfileData({ ...profileData, bio: newBio })
-                                    }
-                                  />
+                                  <div>
+                                    <label className="block font-mono text-xs font-bold mb-1">
+                                      Hardware Hobbies
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={options.terminalConfig?.hardware || ''}
+                                      onChange={(e) =>
+                                        setOptions({
+                                          ...options,
+                                          terminalConfig: {
+                                            ...options.terminalConfig!,
+                                            hardware: e.target.value,
+                                          },
+                                        })
+                                      }
+                                      className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-wharf-surface-secondary p-4 border border-wharf-border-secondary rounded-lg">
+                                  <div>
+                                    <label className="block font-mono text-xs font-bold mb-1">
+                                      Email
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={options.terminalConfig?.email || ''}
+                                      onChange={(e) =>
+                                        setOptions({
+                                          ...options,
+                                          terminalConfig: {
+                                            ...options.terminalConfig!,
+                                            email: e.target.value,
+                                          },
+                                        })
+                                      }
+                                      className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block font-mono text-xs font-bold mb-1">
+                                      LinkedIn ID
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={options.terminalConfig?.linkedin || ''}
+                                      onChange={(e) =>
+                                        setOptions({
+                                          ...options,
+                                          terminalConfig: {
+                                            ...options.terminalConfig!,
+                                            linkedin: e.target.value,
+                                          },
+                                        })
+                                      }
+                                      className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block font-mono text-xs font-bold mb-1">
+                                      Discord ID
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={options.terminalConfig?.discord || ''}
+                                      onChange={(e) =>
+                                        setOptions({
+                                          ...options,
+                                          terminalConfig: {
+                                            ...options.terminalConfig!,
+                                            discord: e.target.value,
+                                          },
+                                        })
+                                      }
+                                      className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
+                                    />
+                                  </div>
                                 </div>
                               </div>
                             )}
@@ -1132,14 +1480,14 @@ export const ProfileGeneratorPage = () => {
                                   </div>
                                   <div className="relative flex justify-center">
                                     <span className="px-4 py-0.5 bg-wharf-surface-primary border border-wharf-border-secondary font-mono text-[10px] text-wharf-text-secondary flex items-center gap-2">
-                                      <Code className="w-3 h-3 text-wharf-pink-darker" />
+                                      <Code className="w-3 h-3 text-wharf-yellow-darker" />
                                       Step 5: Social Connections
                                     </span>
                                   </div>
                                 </div>
 
                                 <div className="flex items-center gap-2 mb-2">
-                                  <User className="w-5 h-5 text-wharf-pink-darker" />
+                                  <User className="w-5 h-5 text-wharf-yellow-darker" />
                                   <h4 className="font-display font-black text-lg tracking-tighter">
                                     Social Links
                                   </h4>
@@ -1167,7 +1515,7 @@ export const ProfileGeneratorPage = () => {
                                   </div>
                                   <div className="relative flex justify-center">
                                     <span className="px-4 py-0.5 bg-wharf-surface-primary border border-wharf-border-secondary font-mono text-[10px] text-wharf-text-secondary flex items-center gap-2">
-                                      <Code className="w-3 h-3 text-wharf-pink-darker" />
+                                      <Code className="w-3 h-3 text-wharf-yellow-darker" />
                                       Step 6: Widgets
                                     </span>
                                   </div>
@@ -1322,13 +1670,13 @@ export const ProfileGeneratorPage = () => {
                                 <span className="font-mono text-[11px] text-wharf-text-secondary uppercase">
                                   Completion
                                 </span>
-                                <span className="font-mono text-sm font-bold text-wharf-pink-dark">
+                                <span className="font-mono text-sm font-bold text-wharf-yellow-dark">
                                   {completionScore}%
                                 </span>
                               </div>
                               <div className="w-full h-1.5 border border-wharf-border-primary bg-wharf-surface-secondary overflow-hidden">
                                 <div
-                                  className="h-full bg-wharf-pink-dark transition-all duration-500"
+                                  className="h-full bg-wharf-yellow-dark transition-all duration-500"
                                   style={{ width: `${completionScore}%` }}
                                 />
                               </div>
@@ -1366,7 +1714,7 @@ export const ProfileGeneratorPage = () => {
                                   {options.techStack.length >= 5 && options.social.length === 0 && (
                                     <span>
                                       Connect your{' '}
-                                      <span className="text-wharf-pink-dark font-bold">
+                                      <span className="text-wharf-yellow-dark font-bold">
                                         social profiles
                                       </span>{' '}
                                       to build trust & make it easy for people to reach out...
@@ -1434,7 +1782,7 @@ export const ProfileGeneratorPage = () => {
                             </span>
                           )}
                           <Button
-                            variant="primary"
+                            variant="yellow"
                             size="lg"
                             rounded="2xl"
                             onClick={handleGenerate}
@@ -1469,11 +1817,11 @@ export const ProfileGeneratorPage = () => {
                         <div className="flex items-center gap-4">
                           <div className="flex-1 h-2 border border-wharf-border-primary bg-wharf-surface-secondary overflow-hidden">
                             <div
-                              className="h-full bg-wharf-pink transition-all duration-500"
+                              className="h-full bg-wharf-yellow transition-all duration-500"
                               style={{ width: `${generationProgress}%` }}
                             />
                           </div>
-                          <span className="font-mono text-sm font-bold text-wharf-pink">
+                          <span className="font-mono text-sm font-bold text-wharf-yellow">
                             {generationProgress}%
                           </span>
                         </div>
@@ -1502,7 +1850,7 @@ export const ProfileGeneratorPage = () => {
                             Back to Customize
                           </Button>
                           <Button
-                            variant="primary"
+                            variant="yellow"
                             onClick={() => setCurrentStep(4)}
                             iconPosition="right"
                             icon={<ArrowRight className="w-4 h-4" />}
@@ -1537,7 +1885,7 @@ export const ProfileGeneratorPage = () => {
                       <>
                         <div className="bg-wharf-surface-secondary border-2 border-wharf-border-primary p-4 mb-4">
                           <div className="flex items-center gap-2 mb-2">
-                            <FileText className="w-4 h-4 text-wharf-pink" />
+                            <FileText className="w-4 h-4 text-wharf-yellow" />
                             <span className="font-mono font-bold text-sm">
                               {profileData?.username || 'profile'}-README.md
                             </span>

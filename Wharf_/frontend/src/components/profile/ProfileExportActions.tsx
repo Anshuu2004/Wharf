@@ -46,7 +46,7 @@ export const ProfileExportActions = ({ content, username }: ProfileExportActions
         <Download className="w-4 h-4" />
         Download
       </Button>
-      <Button size="sm" variant="primary" onClick={handlePushToGitHub}>
+      <Button size="sm" variant="yellow" onClick={handlePushToGitHub}>
         <FaGithub className="w-4 h-4" />
         Push to Profile
       </Button>

@@ -34,9 +34,27 @@ export const generatePreviewMarkdown = (
     showContributions: boolean;
     showTrophies: boolean;
     showStreak: boolean;
+    birthday?: string;
   }
 ): string => {
   if (!profileData) return '';
+
+  if (options.template === 'terminal') {
+    return `
+# 🖥️ Terminal Profile Setup Guide
+
+Your personalized Terminal profile will run entirely on your own GitHub account using GitHub Actions.
+
+When you click **Generate**, we will output your personalized code package including:
+- \`README.md\` (With the dynamic SVGs)
+- \`today.py\` (Customized tracker with your username and precise birthdate ${options.birthday || '2000-01-01'})
+- \`.github/workflows/update-readme.yml\` (To run daily)
+- \`.env.example\`
+
+The final generated template will allow you to display live metrics of your commits based on the viral Andrew6rant tracker. Click **Generate** below to proceed!
+`;
+  }
+
   const tech = options.techStack.length > 0 ? options.techStack : profileData.techStack;
 
   const mapTechToIcon = (name: string): string => {

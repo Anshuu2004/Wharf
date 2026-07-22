@@ -105,7 +105,7 @@ export const ChangelogExport = ({ content, repoName }: ChangelogExportProps) => 
 
         <Button
           size="sm"
-          variant="primary"
+          variant="cyan"
           onClick={handleGist}
           loading={isGistLoading}
           className="min-w-[100px]"
@@ -122,3 +122,4 @@ export const ChangelogExport = ({ content, repoName }: ChangelogExportProps) => 
     </Card>
   );
 };
+

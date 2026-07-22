@@ -412,7 +412,7 @@ export const ChangelogPage = () => {
                 Sign in to see Your Personal Stats
               </p>
               <Button
-                variant="primary"
+                variant="cyan"
                 size="sm"
                 className="mt-3"
                 onClick={() => (window.location.href = '/login')}
@@ -544,7 +544,7 @@ export const ChangelogPage = () => {
             </Badge>
             <h2 className="font-display font-black text-4xl md:text-5xl tracking-tighter mb-4">
               How It{' '}
-              <span className="bg-gradient-to-r from-wharf-pink to-wharf-pink-dark bg-clip-text text-transparent">
+              <span className="bg-wharf-cyan-darker bg-clip-text text-transparent">
                 Works
               </span>
             </h2>
@@ -567,7 +567,7 @@ export const ChangelogPage = () => {
                 title: 'Configure Settings',
                 desc: 'Choose commit range, tags & format',
                 icon: Settings2,
-                color: 'bg-wharf-pink',
+                color: 'bg-wharf-yellow',
               },
               {
                 step: '03',
@@ -631,7 +631,7 @@ export const ChangelogPage = () => {
           <div className="space-y-6 animate-fadeInUp">
             <button
               onClick={() => setAppState('landing')}
-              className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink-dark transition-colors group cursor-pointer"
+              className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-cyan-darker transition-colors group cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               Back To Dashboard
@@ -646,7 +646,7 @@ export const ChangelogPage = () => {
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setAppState('landing')}
-                className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink-dark transition-colors group cursor-pointer"
+                className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-cyan-darker transition-colors group cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                 Back To Dashboard
@@ -663,7 +663,7 @@ export const ChangelogPage = () => {
             <div className="relative">
               <div className="absolute top-5 left-0 right-0 h-0.5 bg-wharf-border-secondary -z-0" />
               <div
-                className="absolute top-5 left-0 h-0.5 bg-wharf-pink transition-all duration-500 -z-0"
+                className="absolute top-5 left-0 h-0.5 bg-wharf-cyan transition-all duration-500 -z-0"
                 style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
               />
 
@@ -689,12 +689,12 @@ export const ChangelogPage = () => {
                         w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all
                         ${
                           isActive
-                            ? 'bg-wharf-pink border-wharf-border-primary shadow-brutal-sm'
+                            ? 'bg-wharf-cyan border-wharf-border-primary shadow-brutal-sm'
                             : isCompleted
                               ? 'bg-wharf-green border-wharf-border-primary'
                               : 'bg-wharf-surface-secondary border-wharf-border-secondary'
                         }
-                        ${isAccessible && !isActive && !isCompleted ? 'hover:border-wharf-pink hover:bg-wharf-pink/10' : ''}
+                        ${isAccessible && !isActive && !isCompleted ? 'hover:border-wharf-cyan hover:bg-wharf-cyan/10' : ''}
                         ${!isAccessible ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                       `}
                       >
@@ -708,7 +708,7 @@ export const ChangelogPage = () => {
                       </div>
                       <span
                         className={`font-mono text-xs font-bold hidden sm:block ${
-                          isActive ? 'text-wharf-pink' : 'text-wharf-text-tertiary'
+                          isActive ? 'text-wharf-cyan' : 'text-wharf-text-tertiary'
                         }`}
                       >
                         {s.label}
@@ -772,7 +772,7 @@ export const ChangelogPage = () => {
                         Back
                       </Button>
                       <Button
-                        variant="primary"
+                        variant="cyan"
                         rounded="2xl"
                         onClick={handleGenerateChangelog}
                         icon={<Zap className="w-4 h-4" />}
@@ -803,11 +803,11 @@ export const ChangelogPage = () => {
                         <div className="flex items-center gap-4">
                           <div className="flex-1 h-2 border border-wharf-border-primary bg-wharf-surface-secondary overflow-hidden">
                             <div
-                              className="h-full bg-wharf-pink transition-all duration-500"
+                              className="h-full bg-wharf-cyan transition-all duration-500"
                               style={{ width: `${generationProgress}%` }}
                             />
                           </div>
-                          <span className="font-mono text-sm font-bold text-wharf-pink">
+                          <span className="font-mono text-sm font-bold text-wharf-cyan">
                             {generationProgress}%
                           </span>
                         </div>
@@ -838,7 +838,7 @@ export const ChangelogPage = () => {
                             Back to Options
                           </Button>
                           <Button
-                            variant="primary"
+                            variant="cyan"
                             rounded="2xl"
                             onClick={() => setCurrentStep(4)}
                             iconPosition="right"
@@ -874,7 +874,7 @@ export const ChangelogPage = () => {
                       <>
                         <div className="bg-wharf-surface-secondary border-2 border-wharf-border-primary p-4 mb-4">
                           <div className="flex items-center gap-2 mb-2">
-                            <FileText className="w-4 h-4 text-wharf-pink" />
+                            <FileText className="w-4 h-4 text-wharf-cyan" />
                             <span className="font-mono font-bold text-sm">CHANGELOG.md</span>
                             <Badge variant="green" size="sm" className="ml-auto">
                               Ready
@@ -922,3 +922,4 @@ export const ChangelogPage = () => {
     </PageWrapper>
   );
 };
+

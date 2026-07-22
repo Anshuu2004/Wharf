@@ -213,7 +213,7 @@ export const HealthPage = () => {
             </Badge>
             <h2 className="font-display font-black text-4xl md:text-5xl tracking-tighter mb-4">
               How It{' '}
-              <span className="bg-gradient-to-r from-wharf-cyan-darker to-wharf-cyan-dark bg-clip-text text-transparent">
+              <span className="bg-wharf-cyan-darker bg-clip-text text-transparent">
                 Works
               </span>
             </h2>
@@ -229,21 +229,21 @@ export const HealthPage = () => {
                 title: 'Select Repository',
                 desc: 'Enter your GitHub repo URL or pick from history',
                 icon: GitBranch,
-                color: 'bg-wharf-pink',
+                color: 'bg-wharf-cyan',
               },
               {
                 step: '02',
                 title: 'Analyze Health',
                 desc: 'Our AI checks README quality & contribution guidelines',
                 icon: Activity,
-                color: 'bg-wharf-cyan',
+                color: 'bg-wharf-green',
               },
               {
                 step: '03',
                 title: 'Get Insights',
                 desc: 'Receive actionable suggestions for improvement',
                 icon: TrendingUp,
-                color: 'bg-wharf-green',
+                color: 'bg-wharf-yellow',
               },
             ].map((item, index) => (
               <div key={item.step} className="relative w-full">
@@ -297,7 +297,7 @@ export const HealthPage = () => {
           <div className="space-y-6 animate-fadeInUp">
             <button
               onClick={() => setAppState('landing')}
-              className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink-dark transition-colors group cursor-pointer"
+              className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-green-darker transition-colors group cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               Back To Dashboard
@@ -313,7 +313,7 @@ export const HealthPage = () => {
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setAppState('landing')}
-                className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink-dark transition-colors group cursor-pointer"
+                className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-green-darker transition-colors group cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                 Back To Dashboard
@@ -324,7 +324,7 @@ export const HealthPage = () => {
             <div className="relative">
               <div className="absolute top-5 left-0 right-0 h-0.5 bg-wharf-border-secondary -z-0" />
               <div
-                className="absolute top-5 left-0 h-0.5 bg-wharf-pink transition-all duration-500 -z-0"
+                className="absolute top-5 left-0 h-0.5 bg-wharf-green transition-all duration-500 -z-0"
                 style={{ width: `${(currentStep - 1) * 100}%` }}
               />
 
@@ -350,12 +350,12 @@ export const HealthPage = () => {
                         w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all bg-wharf-background-primary
                         ${
                           isActive
-                            ? 'bg-wharf-pink border-wharf-border-primary shadow-brutal-sm'
+                            ? 'bg-wharf-green border-wharf-border-primary shadow-brutal-sm'
                             : isCompleted
                               ? 'bg-wharf-green border-wharf-border-primary'
                               : 'border-wharf-border-secondary text-wharf-border-secondary'
                         }
-                        ${isActive ? '' : isAccessible && !isCompleted ? 'hover:border-wharf-pink hover:bg-wharf-pink/10 hover:text-wharf-pink' : ''}
+                        ${isActive ? '' : isAccessible && !isCompleted ? 'hover:border-wharf-green hover:bg-wharf-green/10 hover:text-wharf-green' : ''}
                         ${!isAccessible ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                       `}
                       >
@@ -369,7 +369,7 @@ export const HealthPage = () => {
                       </div>
                       <span
                         className={`font-mono text-xs font-bold hidden sm:block ${
-                          isActive ? 'text-wharf-pink' : 'text-wharf-text-tertiary'
+                          isActive ? 'text-wharf-green' : 'text-wharf-text-tertiary'
                         }`}
                       >
                         {s.label}
@@ -470,3 +470,4 @@ export const HealthPage = () => {
     </PageWrapper>
   );
 };
+
