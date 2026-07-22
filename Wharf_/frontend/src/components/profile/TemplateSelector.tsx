@@ -1,4 +1,4 @@
-import { LayoutTemplate, Code, Palette, Briefcase, Terminal, Star } from 'lucide-react';
+import { Code, Terminal } from 'lucide-react';
 
 interface TemplateSelectorProps {
   selected: string;
@@ -6,17 +6,6 @@ interface TemplateSelectorProps {
 }
 
 const templates = [
-  {
-    id: 'minimal',
-    name: 'Minimal',
-    icon: LayoutTemplate,
-    description: 'Clean & simple',
-    color: 'border-wharf-cyan/40',
-    textColor: 'text-wharf-cyan-darker',
-    hoverBg: 'hover:bg-wharf-cyan/15',
-    activeBg: 'bg-wharf-cyan/25',
-    badgeColor: 'cyan',
-  },
   {
     id: 'developer',
     name: 'Developer',
@@ -27,28 +16,6 @@ const templates = [
     hoverBg: 'hover:bg-wharf-purple/15',
     activeBg: 'bg-wharf-purple/25',
     badgeColor: 'purple',
-  },
-  {
-    id: 'creative',
-    name: 'Creative',
-    icon: Palette,
-    description: 'Visual & colorful',
-    color: 'border-wharf-yellow/40',
-    textColor: 'text-wharf-yellow-darker',
-    hoverBg: 'hover:bg-wharf-yellow/15',
-    activeBg: 'bg-wharf-yellow/25',
-    badgeColor: 'pink',
-  },
-  {
-    id: 'professional',
-    name: 'Professional',
-    icon: Briefcase,
-    description: 'Corporate style',
-    color: 'border-wharf-green/40',
-    textColor: 'text-wharf-green-darker',
-    hoverBg: 'hover:bg-wharf-green/15',
-    activeBg: 'bg-wharf-green/25',
-    badgeColor: 'green',
   },
   {
     id: 'terminal',
@@ -66,7 +33,7 @@ const templates = [
 export const TemplateSelector = ({ selected, onChange }: TemplateSelectorProps) => {
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 gap-8">
         {templates.map((template) => {
           const isActive = selected === template.id;
           const Icon = template.icon;
@@ -109,15 +76,6 @@ export const TemplateSelector = ({ selected, onChange }: TemplateSelectorProps) 
               >
                 {template.description}
               </span>
-
-              {/* Active Indicator */}
-              {isActive && (
-                <span className="absolute -top-2 -right-2 flex items-center justify-center">
-                  <div className="relative">
-                    <Star className="w-4 h-4 text-wharf-green-dark fill-wharf-green-dark stroke-wharf-border-primary stroke-[1.5] drop-shadow-[0_0_12px_rgba(255,107,157,0.5)]" />
-                  </div>
-                </span>
-              )}
             </button>
           );
         })}
@@ -125,4 +83,3 @@ export const TemplateSelector = ({ selected, onChange }: TemplateSelectorProps) 
     </div>
   );
 };
-
