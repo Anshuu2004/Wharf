@@ -314,8 +314,23 @@ export const ReadmePreview = ({
 
       // Inline Code
       if (!className) {
+        const textToCopy = String(children);
         return (
           <code
+            onClick={(e) => {
+              e.preventDefault();
+              navigator.clipboard.writeText(textToCopy);
+              const target = e.currentTarget;
+              const originalBg = target.style.backgroundColor;
+              target.style.backgroundColor = 'rgba(63, 185, 80, 0.3)';
+              target.title = 'Copied!';
+              setTimeout(() => {
+                target.style.backgroundColor = originalBg;
+                target.title = 'Click to copy';
+              }, 500);
+            }}
+            title="Click to copy"
+            className="cursor-pointer hover:bg-wharf-surface-secondary transition-colors"
             style={{
               backgroundColor: 'rgba(175,184,193,0.2)',
               color: '#24292f',
@@ -332,24 +347,44 @@ export const ReadmePreview = ({
       }
 
       // Code Blocks
+      const codeString = String(children).replace(/\n$/, '');
       return (
-        <SyntaxHighlighter
-          language={language || 'text'}
-          PreTag="div"
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          style={oneLight as any}
-          customStyle={{
-            margin: '16px 0',
-            borderRadius: '6px',
-            border: '1px solid #d0d7de',
-            background: '#f6f8fa',
-            padding: '16px',
-            fontSize: '14px',
-          }}
-          {...props}
-        >
-          {String(children).replace(/\n$/, '')}
-        </SyntaxHighlighter>
+        <div className="relative group my-4">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              navigator.clipboard.writeText(codeString);
+              const btn = e.currentTarget;
+              const originalHTML = btn.innerHTML;
+              btn.innerHTML =
+                '<svg class="w-4 h-4 text-wharf-success" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+              setTimeout(() => {
+                btn.innerHTML = originalHTML;
+              }, 2000);
+            }}
+            className="absolute top-2 right-2 p-1.5 bg-wharf-surface-primary border border-wharf-border-primary rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-wharf-surface-secondary cursor-pointer"
+            title="Copy code"
+          >
+            <Copy className="w-4 h-4 text-wharf-text-secondary" />
+          </button>
+          <SyntaxHighlighter
+            language={language || 'text'}
+            PreTag="div"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            style={oneLight as any}
+            customStyle={{
+              margin: '0',
+              borderRadius: '6px',
+              border: '1px solid #d0d7de',
+              background: '#f6f8fa',
+              padding: '16px',
+              fontSize: '14px',
+            }}
+            {...props}
+          >
+            {codeString}
+          </SyntaxHighlighter>
+        </div>
       );
     },
 
