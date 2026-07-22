@@ -74,14 +74,31 @@ export const generate = async (req: Request, res: Response) => {
       return res.end();
     }
 
-    const generatedMarkdown = await aiService.generateProfileStream(
-      profileData,
-      options,
-      userId,
-      (chunk) => {
+    let generatedMarkdown;
+    if (template === 'terminal') {
+      const { generateTerminalReadmeDocs } = require('../utils/terminalTemplate');
+      generatedMarkdown = generateTerminalReadmeDocs(
+        username,
+        options.birthday,
+        options.terminalConfig,
+        profileData.avatarUrl
+      );
+      const chunkSize = 100;
+      for (let i = 0; i < generatedMarkdown.length; i += chunkSize) {
+        const chunk = generatedMarkdown.slice(i, i + chunkSize);
         res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+        await new Promise((resolve) => setTimeout(resolve, 5));
       }
-    );
+    } else {
+      generatedMarkdown = await aiService.generateProfileStream(
+        profileData,
+        options,
+        userId,
+        (chunk) => {
+          res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+        }
+      );
+    }
 
     await cacheService.setProfileReadme(username, template, theme, hash, generatedMarkdown);
 
