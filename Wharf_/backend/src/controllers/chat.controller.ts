@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { chatService } from '../services/chat.service';
 import prisma from '../db';
+import { loggerService, saveRequestLog } from '../utils/logger';
 
 export const analyzeRepository = async (req: Request, res: Response) => {
   try {
@@ -17,6 +18,8 @@ export const analyzeRepository = async (req: Request, res: Response) => {
 };
 
 export const sendMessage = async (req: Request, res: Response) => {
+  const reqStart = Date.now();
+  const reqId = String((req as any).id);
   try {
     const { sessionId, question, persona, repoUrl, history = [] } = req.body;
 
@@ -66,7 +69,29 @@ export const sendMessage = async (req: Request, res: Response) => {
 
     res.write('data: "[DONE]"\n\n');
     res.end();
+
+    loggerService.info('chat.generation.completed', 'Chat generated successfully', {
+      repository: repoUrl,
+      durationMs: Date.now() - reqStart,
+    });
+    await saveRequestLog({
+      route: req.baseUrl + req.path,
+      method: req.method,
+      feature: 'CHAT',
+      statusCode: 200,
+      cacheHit: false,
+      totalDurationMs: Date.now() - reqStart,
+    });
   } catch (error: any) {
+    loggerService.error('chat.generation.error', 'Chat generation error', error);
+    await saveRequestLog({
+      route: req.baseUrl + req.path,
+      method: req.method,
+      feature: 'CHAT',
+      statusCode: 500,
+      error: error.message,
+      totalDurationMs: Date.now() - reqStart,
+    });
     if (!res.headersSent) {
       res.status(500).json({ success: false, error: error.message });
     } else {
