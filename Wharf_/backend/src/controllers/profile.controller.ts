@@ -7,6 +7,7 @@ import { decrypt } from '../utils/encryption';
 import crypto from 'crypto';
 import { recordDailyGeneration } from '../utils/dailyStats';
 import { loggerService, saveRequestLog } from '../utils/logger';
+import { getContextData } from '../utils/asyncContext';
 
 export const getProfile = async (req: Request, res: Response) => {
   const reqStart = Date.now();
@@ -149,9 +150,11 @@ export const generate = async (req: Request, res: Response) => {
       try {
         const wordCount = generatedMarkdown.split(/\s+/).filter(Boolean).length;
         const dbStart = loggerService.stepStart();
+        const { username: appUsername } = getContextData();
         const record = await prisma.profileReadme.create({
           data: {
             userId,
+            appUsername,
             username,
             content: generatedMarkdown,
             wordCount,
