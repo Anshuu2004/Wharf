@@ -124,7 +124,8 @@ model SystemKey {
 model ProfileReadme {
   id            String   @id @default(cuid())
   userId        String?
-  username      String   // GitHub username
+  appUsername   String?  // The Wharf authenticated user who generated it
+  username      String   // GitHub username of the target
   content       String   @db.Text  // Generated README content
   wordCount     Int?     // Token estimation via word count
   template      String   // minimal, developer, creative, professional, terminal
@@ -321,4 +322,28 @@ model DailyStats {
   totalTokens   Int     @default(0)
   errors        Int     @default(0)
   newUsers      Int     @default(0)
+}
+
+// ─── Request Logging ────────────────────────────────────────────────────────
+model RequestLog {
+  id              String   @id @default(cuid())
+  requestId       String
+  route           String
+  method          String
+  feature         String?  // 'README', 'PROFILE', 'CHAT', 'CHANGELOG', 'HEALTH'
+  finalProvider   String?
+  fallbackUsed    Boolean  @default(false)
+  totalDurationMs Int?     // milliseconds
+  statusCode      Int?
+  cacheHit        Boolean?
+  error           String?  @db.Text
+  userId          String?
+  appUsername     String?
+  targetUsername  String?
+  targetRepo      String?
+  timestamp       DateTime @default(now())
+
+  @@index([requestId])
+  @@index([timestamp])
+  @@index([route])
 }
