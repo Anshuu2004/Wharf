@@ -1,5 +1,6 @@
 import cron from 'node-cron';
 import { KeyRouterService } from '../services/keyRouter.service';
+import { loggerService } from './logger';
 
 const keyRouter = new KeyRouterService();
 
@@ -7,14 +8,15 @@ const keyRouter = new KeyRouterService();
 export function initCronJobs() {
   // Reset Exhausted Keys Every 30 Minutes
   cron.schedule('*/30 * * * *', async () => {
-    console.log('[CRON] Resetting Exhausted API Keys...');
+    const start = Date.now();
+    loggerService.cronStarted('ResetExhaustedKeys');
     try {
       await keyRouter.resetAllExhaustedKeys();
-      console.log('[CRON] Successfully Reset All Exhausted Keys.');
+      loggerService.cronCompleted('ResetExhaustedKeys', Date.now() - start, 0);
     } catch (error) {
-      console.error('[CRON] Failed to Reset Exhausted Keys:', error);
+      loggerService.error('cron.failed', 'Failed to Reset Exhausted Keys', error, { job: 'ResetExhaustedKeys' });
     }
   });
 
-  console.log('[CRON] Background jobs initialized.');
+  loggerService.info('cron.initialized', 'Background jobs initialized.');
 }

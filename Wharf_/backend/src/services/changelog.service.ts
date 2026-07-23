@@ -83,7 +83,7 @@ export class ChangelogService {
     repoUrl: string,
     options: ChangelogOptions,
     githubToken?: string
-  ): Promise<AsyncGenerator<string>> {
+  ): Promise<{ stream: AsyncGenerator<string>; provider: string }> {
     const gh = githubToken ? new GithubService({ token: githubToken }) : this.githubService;
     const { owner, repo } = this.extractOwnerRepo(repoUrl);
 

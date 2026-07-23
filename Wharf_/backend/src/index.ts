@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import morgan from 'morgan';
+import pinoHttp from 'pino-http';
 import dotenv from 'dotenv';
 
 import authRoutes from './routes/auth.routes';
@@ -14,6 +14,9 @@ import healthRoutes from './routes/health.routes';
 import changelogRoutes from './routes/changelog.routes';
 import adminRoutes from './routes/admin.routes';
 import { initCronJobs } from './utils/cron';
+import { logger } from './utils/logger';
+import { requestIdMiddleware } from './middleware/requestId.middleware';
+import { contextMiddleware } from './middleware/context.middleware';
 
 // Load Environment Variables
 dotenv.config();
@@ -26,7 +29,25 @@ initCronJobs();
 
 // Middleware
 app.use(helmet());
-app.use(morgan('dev'));
+app.use(requestIdMiddleware);
+app.use(contextMiddleware);
+app.use(
+  pinoHttp({
+    logger,
+    genReqId: (req: any) => req.id,
+    quietReqLogger: true,
+    serializers: {
+      req: (req) => ({
+        id: req.id,
+        method: req.method,
+        url: req.url,
+      }),
+      res: (res) => ({
+        statusCode: res.statusCode,
+      }),
+    },
+  })
+);
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',

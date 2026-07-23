@@ -27,6 +27,11 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
       installationId: dbUser?.installationId,
     };
 
+    if ((req as any).contextStore) {
+      (req as any).contextStore.userId = decoded.userId || decoded.id;
+      (req as any).contextStore.username = decoded.username || decoded.githubUsername;
+    }
+
     next();
   } catch (error: any) {
     next();

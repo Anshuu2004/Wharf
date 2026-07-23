@@ -5,9 +5,12 @@ import prisma from '../db';
 import { parseGithubUrl } from '../utils/parseGithubUrl';
 import { decrypt } from '../utils/encryption';
 import { recordDailyGeneration } from '../utils/dailyStats';
+import { loggerService } from '../utils/logger';
 
 export class HealthController {
   async analyzeReadmeHealth(req: Request, res: Response) {
+    const reqStart = Date.now();
+    const reqId = String((req as any).id);
     const { repoUrl } = req.body;
     if (!repoUrl) {
       return res.status(400).json({ success: false, error: 'repoUrl is required' });
@@ -57,11 +60,16 @@ export class HealthController {
 
       res.json({ success: true, data: result });
     } catch (error: any) {
+      loggerService.error('health.analysis.error', 'Health check failed', error, {
+        repository: req.body.repoUrl,
+      });
       res.status(500).json({ success: false, error: error.message });
     }
   }
 
   async analyzeContributionReadiness(req: Request, res: Response) {
+    const reqStart = Date.now();
+    const reqId = String((req as any).id);
     const { repoUrl } = req.body;
     if (!repoUrl) {
       return res.status(400).json({ success: false, error: 'repoUrl is required' });
@@ -107,6 +115,9 @@ export class HealthController {
 
       res.json({ success: true, data: result });
     } catch (error: any) {
+      loggerService.error('health.contribution.error', 'Contribution analysis failed', error, {
+        repository: req.body.repoUrl,
+      });
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -146,6 +157,9 @@ export class HealthController {
       });
       res.json({ success: true });
     } catch (err) {
+      loggerService.error('database.delete.error', 'Failed to delete health history', err, {
+        paramId: id,
+      });
       res.status(400).json({ success: false, error: 'Record not found' });
     }
   }
