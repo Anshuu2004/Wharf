@@ -1,5 +1,6 @@
 import { GithubService, RepoMeta } from './github.service';
 import { detectFrameworks, getCommands } from '../utils/frameworkDetector';
+import { loggerService } from '../utils/logger';
 import { parseGithubUrl } from '../utils/parseGithubUrl';
 import { cacheService } from './cache.service';
 
@@ -28,13 +29,19 @@ export class RepoService {
 
     // Try To Get From Cache First
     if (!options?.bypassCache) {
-      const cachedAnalysis = await cacheService.getAnalysis(owner, repo);
-      if (cachedAnalysis) {
-        console.log(`[Cache] Found cached analysis for ${owner}/${repo}`);
-        return cachedAnalysis;
+      const cacheLookupStart = loggerService.stepStart();
+      const cached = await cacheService.getAnalysis(owner, repo);
+      // If We Got A Result, Cache Lookup & Parse Are Handled via Standard Fallback Routes
+      if (cached) {
+        loggerService.stepEnd('cache.lookup.completed', 'Redis Lookup', cacheLookupStart, {
+          repository: `${owner}/${repo}`,
+        });
+        // Assume Minimal Parse Time Since It's Already An Object, Or We Just Leave Caching As Is
+        return cached;
       }
     }
 
+    const githubStart = loggerService.stepStart();
     // 1. Fetch Metadata
     const meta = await this.githubService.fetchRepoMeta(owner, repo);
 
@@ -75,7 +82,11 @@ export class RepoService {
         if (content) keyFiles[file] = content;
       }
     }
+    loggerService.stepEnd('github.fetch.completed', 'GitHub Fetch', githubStart, {
+      repository: `${owner}/${repo}`,
+    });
 
+    const parseStart = loggerService.stepStart();
     // 4. Detect Frameworks
     let packageJson = null;
     if (keyFiles['package.json']) {
@@ -128,6 +139,9 @@ export class RepoService {
       treePreview,
       keyFiles,
     };
+    loggerService.stepEnd('repository.parse.completed', 'Repository Parse', parseStart, {
+      repository: `${owner}/${repo}`,
+    });
 
     // Cache The Result
     await cacheService.setAnalysis(owner, repo, result);

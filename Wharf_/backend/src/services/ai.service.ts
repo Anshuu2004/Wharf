@@ -1,4 +1,5 @@
 import { KeyRouterService } from './keyRouter.service';
+import { loggerService } from '../utils/logger';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Groq from 'groq-sdk';
 import OpenAI from 'openai';
@@ -20,7 +21,7 @@ export class AiService {
     sections: string[],
     userId?: string,
     onChunk?: (text: string) => void
-  ): Promise<string> {
+  ): Promise<{ text: string; provider: string }> {
     const preferredProviders = ['GEMINI', 'GROQ', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK'];
     let keyInfo = null;
 
@@ -46,11 +47,17 @@ export class AiService {
       );
     }
 
-    console.log(`[AI] Using ${keyInfo.isSystem ? 'System' : 'User'} key for ${keyInfo.provider}`);
+    loggerService.providerSelected(keyInfo.provider.toUpperCase(), { keyType: keyInfo.isSystem ? 'system' : 'user', feature: 'README' });
+    
+    const promptStart = loggerService.stepStart();
     const prompt = buildReadmePrompt(context, tone, sections);
+    loggerService.stepEnd('prompt.construction.completed', 'Prompt Construction', promptStart, { feature: 'README' });
+    
     let fullText = '';
+    const aiStart = loggerService.stepStart();
 
     try {
+      loggerService.providerStarted(keyInfo.provider.toUpperCase(), { feature: 'README' });
       switch (keyInfo.provider.toUpperCase()) {
         case 'GEMINI': {
           const genAI = new GoogleGenerativeAI(keyInfo.key);
@@ -148,7 +155,8 @@ export class AiService {
         default:
           throw new Error(`Unsupported provider: ${keyInfo.provider}`);
       }
-      return fullText;
+      loggerService.providerCompleted(keyInfo.provider.toUpperCase(), Date.now() - aiStart, { feature: 'README' });
+      return { text: fullText, provider: keyInfo.provider.toUpperCase() };
     } catch (error: any) {
       if (
         error.status === 429 ||
@@ -163,12 +171,11 @@ export class AiService {
         error.message?.includes('Overloaded') ||
         error.message?.includes('Access denied')
       ) {
-        console.warn(
-          `[AI] Key ${keyInfo.id} exhausted or stream failed (503/429/403). Marking as exhausted and retrying with next provider...`
-        );
+        loggerService.providerFallback(keyInfo.provider.toUpperCase(), 'NEXT_AVAILABLE', error);
         await this.keyRouter.markAsExhausted(keyInfo.id, keyInfo.isSystem);
         return this.generateReadmeStream(context, tone, sections, userId, onChunk);
       }
+      loggerService.providerFailed(keyInfo.provider.toUpperCase(), error);
       throw error;
     }
   }
@@ -178,7 +185,7 @@ export class AiService {
     options: ProfileOptions,
     userId?: string,
     onChunk?: (text: string) => void
-  ): Promise<string> {
+  ): Promise<{ text: string; provider: string }> {
     const preferredProviders = ['GEMINI', 'GROQ', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK'];
     let keyInfo = null;
 
@@ -204,13 +211,13 @@ export class AiService {
       );
     }
 
-    console.log(
-      `[AI] Using ${keyInfo.isSystem ? 'System' : 'User'} key for ${keyInfo.provider} [Profile]`
-    );
+    loggerService.providerSelected(keyInfo.provider.toUpperCase(), { keyType: keyInfo.isSystem ? 'system' : 'user', feature: 'PROFILE' });
     const prompt = buildProfilePrompt(profileData, options);
     let fullText = '';
+    const aiStart = loggerService.stepStart();
 
     try {
+      loggerService.providerStarted(keyInfo.provider.toUpperCase(), { feature: 'PROFILE' });
       switch (keyInfo.provider.toUpperCase()) {
         case 'GEMINI': {
           const genAI = new GoogleGenerativeAI(keyInfo.key);
@@ -308,7 +315,8 @@ export class AiService {
         default:
           throw new Error(`Unsupported provider: ${keyInfo.provider}`);
       }
-      return fullText;
+      loggerService.providerCompleted(keyInfo.provider.toUpperCase(), Date.now() - aiStart, { feature: 'PROFILE' });
+      return { text: fullText, provider: keyInfo.provider.toUpperCase() };
     } catch (error: any) {
       if (
         error.status === 429 ||
@@ -323,17 +331,16 @@ export class AiService {
         error.message?.includes('Overloaded') ||
         error.message?.includes('Access denied')
       ) {
-        console.warn(
-          `[AI] Key ${keyInfo.id} exhausted or stream failed (503/429/403). Marking as exhausted and retrying with next provider...`
-        );
+        loggerService.providerFallback(keyInfo.provider.toUpperCase(), 'NEXT_AVAILABLE', error);
         await this.keyRouter.markAsExhausted(keyInfo.id, keyInfo.isSystem);
         return this.generateProfileStream(profileData, options, userId, onChunk);
       }
+      loggerService.providerFailed(keyInfo.provider.toUpperCase(), error);
       throw error;
     }
   }
 
-  async *generateChangelogStream(prompt: string, userId?: string): AsyncGenerator<string> {
+  async generateChangelogStream(prompt: string, userId?: string): Promise<{ stream: AsyncGenerator<string>; provider: string }> {
     const preferredProviders = ['GEMINI', 'GROQ', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK'];
     let keyInfo = null;
 
@@ -346,15 +353,20 @@ export class AiService {
       throw new Error('No API keys available for any supported provider.');
     }
 
+    let generator: AsyncGenerator<string>;
+
     try {
+      loggerService.providerStarted(keyInfo.provider.toUpperCase(), { feature: 'CHANGELOG' });
       switch (keyInfo.provider.toUpperCase()) {
         case 'GEMINI': {
           const genAI = new GoogleGenerativeAI(keyInfo.key);
           const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
           const result = await model.generateContentStream(prompt);
-          for await (const chunk of result.stream) {
-            yield chunk.text();
-          }
+          generator = (async function* () {
+            for await (const chunk of result.stream) {
+              yield chunk.text();
+            }
+          })();
           break;
         }
 
@@ -365,9 +377,11 @@ export class AiService {
             messages: [{ role: 'user', content: prompt }],
             stream: true,
           });
-          for await (const chunk of stream) {
-            yield chunk.choices[0]?.delta?.content || '';
-          }
+          generator = (async function* () {
+            for await (const chunk of stream) {
+              yield chunk.choices[0]?.delta?.content || '';
+            }
+          })();
           break;
         }
 
@@ -378,9 +392,11 @@ export class AiService {
             messages: [{ role: 'user', content: prompt }],
             stream: true,
           });
-          for await (const chunk of stream) {
-            yield chunk.choices[0]?.delta?.content || '';
-          }
+          generator = (async function* () {
+            for await (const chunk of stream) {
+              yield chunk.choices[0]?.delta?.content || '';
+            }
+          })();
           break;
         }
 
@@ -392,11 +408,13 @@ export class AiService {
             messages: [{ role: 'user', content: prompt }],
             stream: true,
           });
-          for await (const event of stream) {
-            if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-              yield event.delta.text;
+          generator = (async function* () {
+            for await (const event of stream) {
+              if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+                yield event.delta.text;
+              }
             }
-          }
+          })();
           break;
         }
 
@@ -410,9 +428,11 @@ export class AiService {
             messages: [{ role: 'user', content: prompt }],
             stream: true,
           });
-          for await (const chunk of stream) {
-            yield chunk.choices[0]?.delta?.content || '';
-          }
+          generator = (async function* () {
+            for await (const chunk of stream) {
+              yield chunk.choices[0]?.delta?.content || '';
+            }
+          })();
           break;
         }
 
@@ -423,15 +443,18 @@ export class AiService {
             messages: [{ role: 'user', content: prompt }],
             stream: true,
           });
-          for await (const chunk of stream) {
-            yield chunk.choices[0]?.delta?.content || '';
-          }
+          generator = (async function* () {
+            for await (const chunk of stream) {
+              yield chunk.choices[0]?.delta?.content || '';
+            }
+          })();
           break;
         }
 
         default:
           throw new Error(`Unsupported provider: ${keyInfo.provider}`);
       }
+      return { stream: generator, provider: keyInfo.provider.toUpperCase() };
     } catch (error: any) {
       if (
         error.status === 429 ||
@@ -439,11 +462,12 @@ export class AiService {
         error.status === 403 ||
         error.message?.includes('429')
       ) {
+        loggerService.providerFallback(keyInfo.provider.toUpperCase(), 'NEXT_AVAILABLE', error);
         await this.keyRouter.markAsExhausted(keyInfo.id, keyInfo.isSystem);
-        yield* this.generateChangelogStream(prompt, userId);
-      } else {
-        throw error;
+        return this.generateChangelogStream(prompt, userId);
       }
+      loggerService.providerFailed(keyInfo.provider.toUpperCase(), error);
+      throw error;
     }
   }
 }
