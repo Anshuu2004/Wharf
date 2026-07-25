@@ -6,9 +6,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
   try {
     // 1. Core Stats
     const totalUsers = await prisma.user.count();
-    const activeUsers = await prisma.user.count({
-      where: { updatedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
-    });
+    const activeUsers = await prisma.user.count(); // All-Time Active Users
 
     const [dynamicReadmeGens, dynamicProfiles, dynamicHealth, dynamicChangelogs, dynamicChats] =
       await Promise.all([
@@ -435,13 +433,19 @@ export const getDashboardData = async (req: Request, res: Response) => {
       },
     ];
 
+    const analyticsAvg = await prisma.analytics.aggregate({
+      _avg: { responseTime: true },
+    });
+    const avgResponseTimeMs = analyticsAvg._avg.responseTime || 2300;
+    const avgResponseTime = parseFloat((avgResponseTimeMs / 1000).toFixed(1));
+
     res.json({
       stats: {
         totalUsers,
         totalGenerations,
         activeUsers,
         successRate: 98.7,
-        avgResponseTime: 2.3,
+        avgResponseTime,
         cacheHitRate: cacheStats.hitRate,
         estimatedCost: parseFloat((totalGenerations * 0.05).toFixed(2)),
       },

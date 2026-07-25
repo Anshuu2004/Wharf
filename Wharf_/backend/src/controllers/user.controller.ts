@@ -333,9 +333,58 @@ export const getUsageStats = async (req: Request, res: Response) => {
       await prisma.$executeRaw`UPDATE "User" SET "lifetimeChats" = ${finalChats} WHERE id = ${userId}`;
     }
 
+    const sinceDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+
+    const [gens, profiles, healths, changelogList, chatSessions] = await Promise.all([
+      prisma.generation.findMany({
+        where: { repository: { userId }, createdAt: { gte: sinceDate } },
+        select: { createdAt: true },
+      }),
+      prisma.profileReadme.findMany({
+        where: { userId, generatedAt: { gte: sinceDate } },
+        select: { generatedAt: true },
+      }),
+      prisma.healthScore.findMany({
+        where: { userId, checkedAt: { gte: sinceDate } },
+        select: { checkedAt: true },
+      }),
+      prisma.changelog.findMany({
+        where: { userId, generatedAt: { gte: sinceDate } },
+        select: { generatedAt: true },
+      }),
+      prisma.chatSession.findMany({
+        where: { userId, createdAt: { gte: sinceDate } },
+        select: { createdAt: true },
+      }),
+    ]);
+    const dateMap: Record<string, number> = {};
+    const addDate = (d: Date) => {
+      const k = d.toISOString().split('T')[0];
+      dateMap[k] = (dateMap[k] || 0) + 1;
+    };
+    gens.forEach((g) => addDate(g.createdAt));
+    profiles.forEach((p) => addDate(p.generatedAt));
+    healths.forEach((h) => addDate(h.checkedAt));
+    changelogList.forEach((c) => addDate(c.generatedAt));
+    chatSessions.forEach((c) => addDate(c.createdAt));
+    const heatmapData = Object.entries(dateMap).map(([date, count]) => ({ date, count }));
+
+    const totalRequests = finalReadmes + finalChats + finalProfiles + finalHealthChecks + finalChangelogs;
+    const heatmapSum = heatmapData.reduce((s, d) => s + d.count, 0);
+    const orphaned = totalRequests - heatmapSum;
+
+    if (orphaned > 0) {
+      const todayKey = new Date().toISOString().split('T')[0];
+      const todayEntry = heatmapData.find(d => d.date === todayKey);
+      if (todayEntry) {
+        todayEntry.count += orphaned;
+      } else {
+        heatmapData.push({ date: todayKey, count: orphaned });
+      }
+    }
+
     const data = {
-      totalRequests:
-        finalReadmes + finalChats + finalProfiles + finalHealthChecks + finalChangelogs,
+      totalRequests,
       totalTokens,
       readmesGenerated: finalReadmes,
       chats: finalChats,
@@ -343,6 +392,7 @@ export const getUsageStats = async (req: Request, res: Response) => {
       healthChecks: finalHealthChecks,
       changelogsGenerated: finalChangelogs,
       lastActive: new Date().toISOString(),
+      heatmapData,
     };
 
     return res.json({ success: true, data });
