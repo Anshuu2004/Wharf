@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Menu,
@@ -10,27 +10,30 @@ import {
   Calendar,
   Bell,
   BellDot,
-  CheckCircle,
-  AlertCircle,
   FileText,
-  Users,
   Home,
   GitBranch,
   Activity,
   BarChart3,
   Settings,
+  Rocket,
+  RefreshCw,
+  Wrench,
+  Shield,
+  Hammer,
+  Newspaper,
 } from 'lucide-react';
-import { Button } from '../ui/Button';
-import { useToast } from '../ui/useToast';
+import { Button, useToast } from '../ui';
 import { useAuthStore } from '../../stores/authStore';
+import api from '../../lib/api';
 
 interface Notification {
   id: string;
   title: string;
   message: string;
-  time: string;
-  read: boolean;
-  type: 'success' | 'info' | 'warning' | 'mention';
+  publishedAt: string;
+  isRead: boolean;
+  type: 'FEATURE' | 'UPDATE' | 'FIX' | 'SECURITY' | 'MAINTENANCE' | 'NEWS';
 }
 
 export const Header = () => {
@@ -41,46 +44,13 @@ export const Header = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      title: 'Documentation Generated',
-      message: 'Your README for "awesome-project" has been generated successfully.',
-      time: '2 min ago',
-      read: false,
-      type: 'success',
-    },
-    {
-      id: '2',
-      title: 'New Feature',
-      message: 'Tree map generator is now available! Visualize your repo structure.',
-      time: '1 hour ago',
-      read: false,
-      type: 'info',
-    },
-    {
-      id: '3',
-      title: 'Health Score Updated',
-      message: 'Your repository health score has been recalculated.',
-      time: '3 hours ago',
-      read: true,
-      type: 'success',
-    },
-    {
-      id: '4',
-      title: 'Mentioned in Discussion',
-      message: '@developer mentioned you in a documentation thread.',
-      time: '1 day ago',
-      read: true,
-      type: 'mention',
-    },
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
   const notificationButtonRef = useRef<HTMLButtonElement>(null);
 
-  // User State is handled by authStore
+  // User State Is Handled By authStore
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -97,6 +67,25 @@ export const Header = () => {
     window.addEventListener('auth:expired', handleAuthExpired);
     return () => window.removeEventListener('auth:expired', handleAuthExpired);
   }, [logout, showToast, navigate]);
+
+  // Fetch Notifications
+  const fetchNotifications = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data } = await api.get('/user/notifications');
+      setNotifications(data);
+    } catch (err) {
+      console.error('Failed to load notifications:', err);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchNotifications();
+
+    // Poll Every 5 Minutes
+    const interval = setInterval(fetchNotifications, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
 
   // Handle Scroll Effect
   useEffect(() => {
@@ -163,15 +152,28 @@ export const Header = () => {
     setShowUserMenu(false);
   };
 
-  const markAsRead = (id: string, e: React.MouseEvent) => {
+  const markAsRead = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setNotifications((prev) =>
-      prev.map((notif) => (notif.id === id ? { ...notif, read: true } : notif))
+    // Optimistic Update
+    const prev = [...notifications];
+    setNotifications((prevList) =>
+      prevList.map((notif) => (notif.id === id ? { ...notif, isRead: true } : notif))
     );
+    try {
+      await api.post(`/user/notifications/${id}/read`);
+    } catch {
+      setNotifications(prev);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
+  const markAllAsRead = async () => {
+    const prev = [...notifications];
+    setNotifications((prevList) => prevList.map((notif) => ({ ...notif, isRead: true })));
+    try {
+      await api.post('/user/notifications/read-all');
+    } catch {
+      setNotifications(prev);
+    }
   };
 
   const clearNotification = (id: string, e: React.MouseEvent) => {
@@ -191,7 +193,7 @@ export const Header = () => {
     return 'U';
   };
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   // Mobile Navigation Links
   const mobileNavLinks = [
@@ -205,28 +207,46 @@ export const Header = () => {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'success':
-        return <CheckCircle className="w-4 h-4 text-wharf-green" />;
-      case 'warning':
-        return <AlertCircle className="w-4 h-4 text-wharf-yellow" />;
-      case 'mention':
-        return <Users className="w-4 h-4 text-wharf-purple" />;
+      case 'FEATURE':
+        return <Rocket className="w-4 h-4 text-wharf-cyan-darker" />;
+      case 'UPDATE':
+        return <RefreshCw className="w-4 h-4 text-wharf-purple-darker" />;
+      case 'FIX':
+        return <Wrench className="w-4 h-4 text-yellow-500" />;
+      case 'SECURITY':
+        return <Shield className="w-4 h-4 text-wharf-error" />;
+      case 'MAINTENANCE':
+        return <Hammer className="w-4 h-4 text-wharf-orange-darker" />;
+      case 'NEWS':
+        return <Newspaper className="w-4 h-4 text-wharf-pink-darker" />;
       default:
-        return <FileText className="w-4 h-4 text-wharf-cyan" />;
+        return <FileText className="w-4 h-4 text-wharf-cyan-darker" />;
     }
+  };
+
+  const formatRelativeTime = (dateStr: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    return `${Math.floor(diffInSeconds / 86400)}d ago`;
   };
 
   // Notification Dropdown Component
   const NotificationDropdown = () => (
-    <div className="absolute -right-14 mt-2 w-96 border-2 border-wharf-border-primary bg-wharf-surface-primary shadow-brutal z-50">
-      <div className="flex items-center justify-between p-4 border-b-2 border-wharf-border-primary bg-wharf-surface-secondary">
+    <div className="absolute -right-14 mt-2 w-120 border-2 border-wharf-border-primary bg-wharf-surface-primary shadow-brutal z-50 rounded-xl">
+      <div className="flex items-center justify-between p-4 border-b-2 border-wharf-border-primary bg-wharf-surface-secondary rounded-xl">
         <h3 className="font-display font-black text-lg tracking-tighter">Notifications</h3>
         {unreadCount > 0 && (
           <button
             onClick={markAllAsRead}
-            className="font-mono text-xs font-bold text-wharf-pink hover:underline"
+            className="font-mono text-xs font-bold text-wharf-pink-dark hover:text-wharf-pink-darker hover:scale-105 cursor-pointer"
           >
-            Mark all as read
+            Mark All As Read
           </button>
         )}
       </div>
@@ -234,15 +254,15 @@ export const Header = () => {
       <div className="max-h-96 overflow-y-auto">
         {notifications.length === 0 ? (
           <div className="p-8 text-center">
-            <Bell className="w-8 h-8 text-wharf-text-tertiary mx-auto mb-2" />
-            <p className="font-mono text-sm text-wharf-text-tertiary">No notifications yet</p>
+            <Bell className="w-8 h-8 text-wharf-text-secondary mx-auto mb-2" />
+            <p className="font-mono text-sm text-wharf-text-secondary">No Notifications Yet</p>
           </div>
         ) : (
           notifications.map((notification) => (
             <div
               key={notification.id}
-              className={`p-4 border-b border-wharf-border-secondary hover:bg-wharf-surface-secondary transition-colors cursor-pointer ${
-                !notification.read ? 'bg-wharf-pink/5' : ''
+              className={`p-4 border-b border-wharf-border-secondary hover:bg-wharf-surface-secondary transition-colors rounded-xl cursor-pointer ${
+                !notification.isRead ? 'bg-wharf-pink/20' : ''
               }`}
               onClick={(e) => markAsRead(notification.id, e)}
             >
@@ -250,40 +270,35 @@ export const Header = () => {
                 <div className="flex-shrink-0 mt-1">{getNotificationIcon(notification.type)}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="font-mono font-bold text-sm">{notification.title}</p>
-                    <span className="font-mono text-[10px] text-wharf-text-tertiary">
-                      {notification.time}
-                    </span>
+                    <p className="font-mono font-bold text-sm truncate">{notification.title}</p>
                   </div>
-                  <p className="font-mono text-xs text-wharf-text-secondary">
+                  <p className="font-mono text-xs text-wharf-text-secondary line-clamp-2">
                     {notification.message}
                   </p>
                 </div>
-                <button
-                  onClick={(e) => clearNotification(notification.id, e)}
-                  className="flex-shrink-0 text-wharf-text-tertiary hover:text-wharf-orange transition-colors"
-                >
-                  <X className="w-3 h-3" />
-                </button>
+                <div className="flex flex-col items-end justify-between flex-shrink-0 ml-1">
+                  <div className="flex items-center gap-4 -mt-1">
+                    {!notification.isRead && (
+                      <span className="font-mono text-[10px] font-bold text-wharf-pink-darker tracking-wider uppercase">
+                        Unread
+                      </span>
+                    )}
+                    <button
+                      onClick={(e) => clearNotification(notification.id, e)}
+                      className="text-wharf-text-secondary hover:text-wharf-error transition-colors cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <span className="font-mono text-[10px] text-wharf-text-secondary mt-2 text-right whitespace-nowrap">
+                    {formatRelativeTime(notification.publishedAt)}
+                  </span>
+                </div>
               </div>
             </div>
           ))
         )}
       </div>
-
-      {notifications.length > 0 && (
-        <div className="p-3 border-t-2 border-wharf-border-primary bg-wharf-surface-secondary">
-          <button
-            onClick={() => {
-              navigate('/notifications');
-              setShowNotifications(false);
-            }}
-            className="w-full font-mono text-sm font-bold text-center hover:text-wharf-pink transition-colors"
-          >
-            View All Notifications →
-          </button>
-        </div>
-      )}
     </div>
   );
 
@@ -334,7 +349,7 @@ export const Header = () => {
                   {unreadCount > 0 ? (
                     <>
                       <BellDot className="w-5 h-5" />
-                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-wharf-orange border border-wharf-border-primary text-[10px] font-black flex items-center justify-center">
+                      <span className="absolute -top-1 -right-2 w-4 h-4 bg-wharf-orange border border-wharf-border-primary text-[10px] font-black flex items-center justify-center rounded-full">
                         {unreadCount > 9 ? '9+' : unreadCount}
                       </span>
                     </>
