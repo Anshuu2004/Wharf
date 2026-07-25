@@ -173,25 +173,27 @@ export const generate = async (req: Request, res: Response) => {
 
         // Permanently Bank These Tokens — Raw SQL Bypasses Stale Prisma Client Types
         const tokensGenerated = Math.round(wordCount * 1.37);
-        await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeProfiles" = "lifetimeProfiles" + 1 WHERE id = ${userId}`;
-        // Record Today's Count In DailyStats So Heatmap/Trend Survive Deletions
-        await recordDailyGeneration(userId);
-
-        // Update Stats
-        const stats = await prisma.profileStats.findFirst();
-        if (stats) {
-          await prisma.profileStats.update({
-            where: { id: stats.id },
-            data: {
-              totalProfiles: { increment: 1 },
-              totalReadmes: { increment: 1 },
-            },
-          });
-        } else {
-          await prisma.profileStats.create({
-            data: { totalProfiles: 1, totalReadmes: 1 },
-          });
-        }
+        await Promise.all([
+          prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeProfiles" = "lifetimeProfiles" + 1 WHERE id = ${userId}`,
+          recordDailyGeneration(userId),
+          (async () => {
+            // Update Stats
+            const stats = await prisma.profileStats.findFirst();
+            if (stats) {
+              await prisma.profileStats.update({
+                where: { id: stats.id },
+                data: {
+                  totalProfiles: { increment: 1 },
+                  totalReadmes: { increment: 1 },
+                },
+              });
+            } else {
+              await prisma.profileStats.create({
+                data: { totalProfiles: 1, totalReadmes: 1 },
+              });
+            }
+          })()
+        ]);
       } catch (dbError: any) {
         loggerService.error(
           'database.save.error',
@@ -227,6 +229,9 @@ export const generate = async (req: Request, res: Response) => {
 
 export const getHistory = async (req: Request, res: Response) => {
   const userId = (req as any).user?.userId;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
+  const skip = (page - 1) * limit;
 
   if (!userId) {
     return res.status(401).json({ success: false, error: 'Authentication required' });
@@ -235,6 +240,8 @@ export const getHistory = async (req: Request, res: Response) => {
   try {
     const history = await prisma.profileReadme.findMany({
       where: { userId },
+      skip,
+      take: limit,
       orderBy: { generatedAt: 'desc' },
     });
 

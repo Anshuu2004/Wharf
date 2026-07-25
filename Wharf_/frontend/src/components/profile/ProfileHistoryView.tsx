@@ -455,14 +455,20 @@ export const ProfileHistoryView = ({
               </button>
               <button
                 onClick={async () => {
+                  if (!deleteConfirm) return;
+                  const tempId = deleteConfirm;
+                  const prevHistory = [...history];
+
+                  // Optimistic target
+                  setHistory((h) => h.filter((item) => item.id !== tempId));
+                  setDeleteConfirm(null);
+
                   try {
-                    await api.delete(`/profile/${deleteConfirm}`);
-                    setHistory((h) => h.filter((item) => item.id !== deleteConfirm));
+                    await api.delete(`/profile/${tempId}`);
                     showToast(`Deleted profile record`, 'info');
                   } catch {
+                    setHistory(prevHistory);
                     showToast('Failed to delete record', 'error');
-                  } finally {
-                    setDeleteConfirm(null);
                   }
                 }}
                 className="px-4 py-2 border-2 border-wharf-border-primary bg-wharf-error text-wharf-white font-mono text-xs font-bold hover:bg-wharf-error/80 transition-colors cursor-pointer"
