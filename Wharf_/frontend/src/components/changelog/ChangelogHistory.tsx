@@ -439,14 +439,20 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
               </button>
               <button
                 onClick={async () => {
+                  if (!confirmDeleteId) return;
+                  const tempId = confirmDeleteId;
+                  const prevHistory = [...history];
+
+                  // Optimistic T arget
+                  setHistory((h) => h.filter((item) => item.id !== tempId));
+                  setConfirmDeleteId(null);
+
                   try {
-                    await api.delete(`/changelog/${confirmDeleteId}`);
-                    setHistory((h) => h.filter((item) => item.id !== confirmDeleteId));
+                    await api.delete(`/changelog/${tempId}`);
                     showToast('Deleted changelog from history', 'info');
                   } catch {
+                    setHistory(prevHistory);
                     showToast('Failed to delete record', 'error');
-                  } finally {
-                    setConfirmDeleteId(null);
                   }
                 }}
                 className="px-4 py-2 border-2 border-wharf-border-primary bg-wharf-error text-wharf-white font-mono text-xs font-bold hover:bg-wharf-error/80 transition-colors cursor-pointer"
