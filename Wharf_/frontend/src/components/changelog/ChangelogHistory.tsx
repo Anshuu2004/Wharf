@@ -443,7 +443,7 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
                   const tempId = confirmDeleteId;
                   const prevHistory = [...history];
 
-                  // Optimistic T arget
+                  // Optimistic Target
                   setHistory((h) => h.filter((item) => item.id !== tempId));
                   setConfirmDeleteId(null);
 
