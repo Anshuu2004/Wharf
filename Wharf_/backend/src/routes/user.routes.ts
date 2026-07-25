@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getUserRepos } from '../controllers/user.controller';
 import { auth, requireAuth } from '../middleware/auth.middleware';
+import { UserNotificationController } from '../controllers/announcement.controller';
 
 const router = Router();
 
@@ -22,5 +23,11 @@ router.get('/preferences', auth, requireAuth, getPreferences);
 router.put('/preferences', auth, requireAuth, updatePreferences);
 router.delete('/data', auth, requireAuth, clearUserData);
 router.get('/export', auth, requireAuth, exportUserData);
+
+// Notifications
+router.get('/notifications', auth, requireAuth, UserNotificationController.getList);
+router.get('/notifications/unread-count', auth, requireAuth, UserNotificationController.getUnreadCount);
+router.post('/notifications/read-all', auth, requireAuth, UserNotificationController.markAllAsRead);
+router.post('/notifications/:id/read', auth, requireAuth, UserNotificationController.markAsRead);
 
 export default router;

@@ -1,5 +1,6 @@
 import express from 'express';
 import { getDashboardData } from '../controllers/admin.controller';
+import { AdminAnnouncementController } from '../controllers/announcement.controller';
 import { auth } from '../middleware/auth.middleware';
 
 const router = express.Router();
@@ -16,5 +17,17 @@ const adminAuth = (req: any, res: any, next: any) => {
 };
 
 router.get('/dashboard', auth, adminAuth, getDashboardData);
+
+// Announcements
+router.get('/announcements', auth, adminAuth, AdminAnnouncementController.getAll);
+router.post('/announcements', auth, adminAuth, AdminAnnouncementController.create);
+router.put('/announcements/:id', auth, adminAuth, AdminAnnouncementController.update);
+router.patch(
+  '/announcements/:id/publish',
+  auth,
+  adminAuth,
+  AdminAnnouncementController.togglePublish
+);
+router.delete('/announcements/:id', auth, adminAuth, AdminAnnouncementController.delete);
 
 export default router;
