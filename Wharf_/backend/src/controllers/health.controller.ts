@@ -53,9 +53,11 @@ export class HealthController {
 
       if (user?.userId) {
         const uid = user.userId;
-        await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + 213, "lifetimeHealthChecks" = "lifetimeHealthChecks" + 1 WHERE id = ${uid}`;
-        // Record Today's Count In DailyStats So Heatmap/Trend Survive Deletions
-        await recordDailyGeneration(uid);
+        await Promise.all([
+          prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + 213, "lifetimeHealthChecks" = "lifetimeHealthChecks" + 1 WHERE id = ${uid}`,
+          // Record Today's Count In DailyStats So Heatmap/Trend Survive Deletions
+          recordDailyGeneration(uid)
+        ]);
       }
 
       res.json({ success: true, data: result });
@@ -125,10 +127,16 @@ export class HealthController {
   async getHistory(req: Request, res: Response) {
     const user = (req as any).user;
     const userId = user?.userId;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
+    const skip = (page - 1) * limit;
+
     if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
     const history = await (prisma as any).healthScore.findMany({
       where: { userId },
+      skip,
+      take: limit,
       orderBy: { checkedAt: 'desc' },
       select: {
         id: true,

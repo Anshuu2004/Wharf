@@ -131,9 +131,10 @@ export class ChangelogController {
           });
           // Permanently Bank These Tokens
           const tokensGenerated = Math.round(wordCount * 1.37);
-          await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeChangelogs" = "lifetimeChangelogs" + 1 WHERE id = ${userId}`;
-          // Record Today's Count In DailyStats So Heatmap/Trend Survive Deletions
-          await recordDailyGeneration(userId);
+          await Promise.all([
+            prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeChangelogs" = "lifetimeChangelogs" + 1 WHERE id = ${userId}`,
+            recordDailyGeneration(userId)
+          ]);
         } catch (dbError) {
           loggerService.error('database.save.error', 'Changelog DB Save Error', dbError);
         }
@@ -177,10 +178,13 @@ export class ChangelogController {
   async getHistory(req: Request, res: Response) {
     try {
       const userId = (req as any).user?.id || (req as any).user?.userId;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 100;
+
       if (!userId) {
         return res.status(401).json({ success: false, error: 'Unauthorized' });
       }
-      const history = await this.changelogService.getHistory(userId);
+      const history = await this.changelogService.getHistory(userId, page, limit);
       res.json({ success: true, data: history });
     } catch (error: any) {
       loggerService.error('database.fetch.error', 'Changelog getHistory error', error);
