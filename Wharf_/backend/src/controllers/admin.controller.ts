@@ -1,9 +1,16 @@
 import { Request, Response } from 'express';
-import { getCacheStats } from '../utils/redis';
+import { getCacheStats, cacheGet, cacheSet } from '../utils/redis';
 import prisma from '../db';
 
 export const getDashboardData = async (req: Request, res: Response) => {
   try {
+    const periodStr = req.query.period === 'month' ? 'month' : 'week';
+    const cacheKey = `admin:dashboard:stats:${periodStr}`;
+    const cached = await cacheGet(cacheKey);
+    if (cached) {
+      return res.json(JSON.parse(cached));
+    }
+
     // 1. Core Stats
     const totalUsers = await prisma.user.count();
     const activeUsers = await prisma.user.count(); // All-Time Active Users
@@ -439,7 +446,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
     const avgResponseTimeMs = analyticsAvg._avg.responseTime || 2300;
     const avgResponseTime = parseFloat((avgResponseTimeMs / 1000).toFixed(1));
 
-    res.json({
+    const responsePayload = {
       stats: {
         totalUsers,
         totalGenerations,
@@ -459,7 +466,11 @@ export const getDashboardData = async (req: Request, res: Response) => {
       recentActivity,
       cacheStats,
       anomalyAlerts,
-    });
+    };
+
+    // Cache for 60 seconds
+    await cacheSet(cacheKey, JSON.stringify(responsePayload), 60);
+    res.json(responsePayload);
   } catch (error) {
     console.error('Error fetching admin dashboard data:', error);
     res.status(500).json({ error: `Failed to fetch dashboard data: ${(error as any)?.message}` });

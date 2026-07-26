@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import pinoHttp from 'pino-http';
 import dotenv from 'dotenv';
+import compression from 'compression';
 
 import authRoutes from './routes/auth.routes';
 import repoRoutes from './routes/repo.routes';
@@ -30,6 +31,7 @@ initCronJobs();
 
 // Middleware
 app.use(helmet());
+app.use(compression());
 app.use(cookieParser());
 app.use(requestIdMiddleware);
 app.use(contextMiddleware);
