@@ -91,10 +91,27 @@ export const githubCallback = async (req: Request, res: Response) => {
       { expiresIn: '7d' }
     );
 
-    // 5. Redirect Back To Frontend With Token
-    res.redirect(`${FRONTEND_URL}/auth/callback?token=${token}`);
+    // 5. Set Cookie And Redirect Back To Frontend Callback
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    res.redirect(`${FRONTEND_URL}/auth/callback`);
   } catch (error) {
     console.error('Auth error:', error);
     res.status(500).json({ error: 'Authentication failed' });
   }
+};
+
+export const getMe = (req: Request, res: Response) => {
+  const user = (req as any).user;
+  if (!user) return res.status(401).json({ success: false, error: 'Not authenticated' });
+  res.json({ success: true, data: user });
+};
+
+export const logout = (req: Request, res: Response) => {
+  res.clearCookie('token');
+  res.json({ success: true, message: 'Logged out successfully' });
 };

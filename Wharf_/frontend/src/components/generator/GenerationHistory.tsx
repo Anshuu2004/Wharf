@@ -429,21 +429,23 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
               </button>
               <button
                 onClick={async () => {
-                  if (!confirmDeleteId) return;
-                  const tempId = confirmDeleteId;
-                  const prevHistory = [...history];
+                  const targetId = confirmDeleteId;
+                  if (!targetId) return;
                   
-                  // Optimistic Update
-                  setHistory((prev) => prev.filter((record) => record.id !== tempId));
-                  setConfirmDeleteId(null);
+                  // Optimistic Snap
+                  const prev = [...history];
+                  
+                  // Instantly Update UI
+                  setHistory((h) => h.filter((item) => item.id !== targetId));
+                  setConfirmDeleteId(null); // Close Modal Instantly
                   
                   try {
-                    await api.delete(`/generate/history/${tempId}`);
+                    await api.delete(`/generate/history/${targetId}`);
                     showToast('Deleted record from history', 'info');
-                  } catch {
-                    // Rollback
-                    setHistory(prevHistory);
-                    showToast('Failed to delete record', 'error');
+                  } catch (error) {
+                    // Rollback On Failure
+                    setHistory(prev);
+                    showToast('Failed to delete record, restoring...', 'error');
                   }
                 }}
                 className="px-4 py-2 border-2 border-wharf-border-primary bg-wharf-error text-wharf-white font-mono text-xs font-bold hover:bg-wharf-error/80 transition-colors cursor-pointer"

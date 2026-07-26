@@ -1,12 +1,64 @@
 import { useState, useEffect } from 'react';
 import { Zap } from 'lucide-react';
-import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
+import { Link } from 'react-router-dom';
+import api from '../../lib/api';
+import { Badge, Button } from '../ui';
+
+const CountUp = ({ end, duration = 2000 }: { end: number, duration?: number }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTime: number | null = null;
+    let animationFrame: number;
+
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = timestamp - startTime;
+      const percentage = Math.min(progress / duration, 1);
+      
+      const easeOut = 1 - Math.pow(1 - percentage, 3);
+      setCount(Math.floor(end * easeOut));
+
+      if (progress < duration) {
+        animationFrame = requestAnimationFrame(animate);
+      } else {
+        setCount(end);
+      }
+    };
+
+    if (end > 0) {
+      animationFrame = requestAnimationFrame(animate);
+    } else {
+      setCount(0);
+    }
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [end, duration]);
+
+  const formatNumber = (num: number) => {
+    // Determine The Suffix Based On The *final* Target Value So It Doesn't Jump Aggressively
+    // Wait, If We Always Format The Current Tick, It Naturally Transitions!
+    return num > 999 ? (num / 1000).toFixed(1).replace('.0', '') + 'k+' : num.toString();
+  };
+
+  return <>{formatNumber(count)}</>;
+};
 
 export const Hero = () => {
   const [, setTypedText] = useState('');
   const [isTyping, setIsTyping] = useState(true);
-  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [stats, setStats] = useState({ totalGenerations: 0, totalTokens: 0 });
+
+  useEffect(() => {
+    api.get('/admin/public-stats')
+      .then(res => {
+        if (res.data?.success && res.data?.stats) {
+          setStats(res.data.stats);
+        }
+      })
+      .catch(err => console.error("Failed to load hero stats:", err));
+  }, []);
 
   const fullText = 'Paste any GitHub URL...';
 
@@ -26,31 +78,22 @@ export const Hero = () => {
   }, [isTyping, fullText]);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center -mt-3 overflow-hidden">
-      {/* Video Background */}
+    <section className="relative min-h-screen flex items-center justify-center -mt-3 border-b-4 border-wharf-border-primary overflow-hidden">
+      {/* Image Background */}
       <div className="absolute inset-0 w-full h-full z-0">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
-          onLoadedData={() => setVideoLoaded(true)}
-        >
-          <source
-            // src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260319_015952_e1deeb12-8fb7-4071-a42a-60779fc64ab6.mp4"
-            // src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260703_053131_1ec3dd1c-d627-44fb-ab20-6e1fce41b0d5.mp4"
-            // src=""
-            type="video/mp4"
-          />
-        </video>
+        <img
+          src="https://res.cloudinary.com/dhn92qb61/image/upload/f_auto,q_auto/v1785065871/hero_img_gc2zeo.webp"
+          alt="Wharf Hero Background"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+          onLoad={() => setImageLoaded(true)}
+        />
 
         {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black/20 z-[1]" />
+        <div className="absolute inset-0 bg-black/10 z-[1]" />
       </div>
 
       {/* Loading Placeholder */}
-      {!videoLoaded && <div className="absolute inset-0 bg-wharf-surface-primary z-0" />}
+      {!imageLoaded && <div className="absolute inset-0 bg-wharf-surface-primary z-0" />}
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto">
@@ -96,53 +139,58 @@ export const Hero = () => {
                 <h1 className="font-display font-black text-4xl md:text-6xl lg:text-7xl tracking-tighter mb-6">
                   Ship Code That
                   <br />
-                  <span className="text-wharf-pink-dark">Speaks For Itself</span>
+                  <span className="text-wharf-pink-darker">Speaks For Itself</span>
                 </h1>
 
                 {/* Description */}
                 <p className="font-mono text-sm md:text-base text-wharf-text-secondary max-w-2xl mx-auto mb-8 capitalize">
-                  Transform any GitHub repository into clean, professional, recruiter-ready
-                  documentation in seconds. No setup required.
+                  Your code is great, Your docs should be too ; <br />
+                  WHARF generates professional, recruiter-ready documentation in seconds ; <br />
+                  So you can focus on what matters: building amazing software ;
                 </p>
 
                 {/* CTA Buttons */}
                 <div className="max-w-2xl mx-auto mb-8">
                   <div className="flex flex-col sm:flex-row gap-8 justify-center">
-                    <Button variant="primary" size="lg" rounded="2xl" className="gap-2 group">
-                      Generate Repository README
-                    </Button>
-                    <Button variant="outline" size="lg" rounded="2xl" className="group">
-                      Generate Profile README
-                    </Button>
+                    <Link to="/generator" className="w-full sm:w-auto">
+                      <Button variant="primary" size="lg" rounded="2xl" className="gap-2 group w-full">
+                        Generate Repository README
+                      </Button>
+                    </Link>
+                    <Link to="/profile" className="w-full sm:w-auto">
+                      <Button variant="outline" size="lg" rounded="2xl" className="group w-full">
+                        Generate Profile README
+                      </Button>
+                    </Link>
                   </div>
                 </div>
 
                 {/* Stats */}
-                <div className="hidden md:flex flex-wrap justify-center gap-6 md:gap-16 pt-8 border-t-2 border-wharf-border-secondary max-w-2xl mx-auto">
-                  <div className="text-center group cursor-default">
+                <div className="hidden md:flex flex-wrap justify-center gap-6 md:gap-20 pt-8 border-t-2 border-wharf-border-secondary max-w-2xl mx-auto">
+                  <div className="text-center group cursor-pointer">
                     <div className="flex items-center gap-1 justify-center">
-                      <span className="font-display font-black text-2xl group-hover:text-wharf-pink transition-colors">
-                        10k+
+                      <span className="font-display font-black text-2xl group-hover:text-wharf-pink-darker transition-colors w-[120px]">
+                        <CountUp end={stats.totalGenerations} />
                       </span>
                     </div>
-                    <p className="font-mono text-xs text-wharf-text-tertiary">Repos Documented</p>
+                    <p className="font-mono text-xs text-wharf-text-secondary">Repos Documented</p>
                   </div>
-                  <div className="text-center group cursor-default">
+                  <div className="text-center group cursor-pointer">
                     <div className="flex items-center gap-1 justify-center">
-                      <span className="font-display font-black text-2xl group-hover:text-wharf-pink transition-colors">
-                        99%
+                      <span className="font-display font-black text-2xl group-hover:text-wharf-pink-darker transition-colors w-[120px]">
+                        <CountUp end={stats.totalTokens} />
                       </span>
                     </div>
-                    <p className="font-mono text-xs text-wharf-text-tertiary">Accuracy Rate</p>
+                    <p className="font-mono text-xs text-wharf-text-secondary">Tokens Burned</p>
                   </div>
-                  <div className="text-center group cursor-default">
+                  <div className="text-center group cursor-pointer">
                     <div className="flex items-center gap-1 justify-center">
-                      <span className="font-display font-black text-2xl group-hover:text-wharf-pink transition-colors">
+                      <span className="font-display font-black text-2xl group-hover:text-wharf-pink-darker transition-colors">
                         &lt;30s
                       </span>
                     </div>
-                    <p className="font-mono text-xs text-wharf-text-tertiary">
-                      Avg Generation Time
+                    <p className="font-mono text-xs text-wharf-text-secondary">
+                      Avg Gen Time
                     </p>
                   </div>
                 </div>

@@ -12,3 +12,4 @@ export { AdminCostEstimate } from './AdminCostEstimate';
 export { AdminAnomalyAlert } from './AdminAnamolyAlert';
 export { AdminNav } from './AdminNav';
 export { AdminTokenUsage } from './AdminTokenUsage';
+export { AdminAnnouncements } from './AdminAnnouncements';

@@ -1,7 +1,5 @@
 import { ArrowRight, Zap, Rocket, CheckCircle } from 'lucide-react';
-import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
-import { Badge } from '../ui/Badge';
+import { Badge, Button, Card } from '../ui';
 
 export const CTASection = () => {
   return (
@@ -28,7 +26,7 @@ export const CTASection = () => {
           <h2 className="font-display font-black text-4xl md:text-5xl lg:text-6xl tracking-tighter mb-6">
             Ready to Transform Your
             <br />
-            <span className="bg-gradient-to-r from-wharf-pink-dark to-wharf-pink-darker bg-clip-text text-transparent">
+            <span className="bg-wharf-pink-darker bg-clip-text text-transparent">
               Documentation?
             </span>
           </h2>

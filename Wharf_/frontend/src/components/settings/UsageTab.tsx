@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BarChart3, Zap, FileText, MessageSquare, User, Clock } from 'lucide-react';
 import { Card, Badge } from '../ui';
 import api from '../../lib/api';
+import { UserHeatmap } from './UserHeatmap';
 
 interface UsageStats {
   totalRequests: number;
@@ -12,6 +13,7 @@ interface UsageStats {
   healthChecks: number;
   changelogsGenerated: number;
   lastActive: string;
+  heatmapData: { date: string; count: number }[];
 }
 
 export const UsageTab = () => {
@@ -83,7 +85,7 @@ export const UsageTab = () => {
   if (!stats) {
     return (
       <div className="text-center py-12">
-        <p className="font-mono text-wharf-text-tertiary">No usage data available.</p>
+        <p className="font-mono text-wharf-text-secondary capitalize">No usage data available...</p>
       </div>
     );
   }
@@ -158,6 +160,8 @@ export const UsageTab = () => {
           <Badge variant="pink">Free Plan</Badge>
         </div>
       </div>
+
+      {stats.heatmapData && <UserHeatmap data={stats.heatmapData} />}
     </div>
   );
 };

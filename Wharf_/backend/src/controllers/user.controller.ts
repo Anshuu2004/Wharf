@@ -319,34 +319,90 @@ export const getUsageStats = async (req: Request, res: Response) => {
     let finalChats = Number(lt.lifetimeChats) || 0;
 
     // High-Water Mark Sync: If Dynamic Is Higher, Persist It Via Raw SQL
+    const updates: string[] = [];
     if (dynamicTotalTokens > totalTokens) {
       totalTokens = dynamicTotalTokens;
-      await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = ${totalTokens} WHERE id = ${userId}`;
+      updates.push(`"lifetimeTokens" = ${totalTokens}`);
     }
     if (readmesGenerated > finalReadmes) {
       finalReadmes = readmesGenerated;
-      await prisma.$executeRaw`UPDATE "User" SET "lifetimeReadmes" = ${finalReadmes} WHERE id = ${userId}`;
+      updates.push(`"lifetimeReadmes" = ${finalReadmes}`);
     }
     if (profilesGenerated > finalProfiles) {
       finalProfiles = profilesGenerated;
-      await prisma.$executeRaw`UPDATE "User" SET "lifetimeProfiles" = ${finalProfiles} WHERE id = ${userId}`;
+      updates.push(`"lifetimeProfiles" = ${finalProfiles}`);
     }
     if (healthChecks > finalHealthChecks) {
       finalHealthChecks = healthChecks;
-      await prisma.$executeRaw`UPDATE "User" SET "lifetimeHealthChecks" = ${finalHealthChecks} WHERE id = ${userId}`;
+      updates.push(`"lifetimeHealthChecks" = ${finalHealthChecks}`);
     }
     if (changelogsGenerated > finalChangelogs) {
       finalChangelogs = changelogsGenerated;
-      await prisma.$executeRaw`UPDATE "User" SET "lifetimeChangelogs" = ${finalChangelogs} WHERE id = ${userId}`;
+      updates.push(`"lifetimeChangelogs" = ${finalChangelogs}`);
     }
     if (chats > finalChats) {
       finalChats = chats;
-      await prisma.$executeRaw`UPDATE "User" SET "lifetimeChats" = ${finalChats} WHERE id = ${userId}`;
+      updates.push(`"lifetimeChats" = ${finalChats}`);
+    }
+
+    if (updates.length > 0) {
+      await prisma.$executeRawUnsafe(
+        `UPDATE "User" SET ${updates.join(', ')} WHERE id = '${userId.replace(/'/g, "''")}'`
+      );
+    }
+
+    const sinceDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+
+    const [gens, profiles, healths, changelogList, chatSessions] = await Promise.all([
+      prisma.generation.findMany({
+        where: { repository: { userId }, createdAt: { gte: sinceDate } },
+        select: { createdAt: true },
+      }),
+      prisma.profileReadme.findMany({
+        where: { userId, generatedAt: { gte: sinceDate } },
+        select: { generatedAt: true },
+      }),
+      prisma.healthScore.findMany({
+        where: { userId, checkedAt: { gte: sinceDate } },
+        select: { checkedAt: true },
+      }),
+      prisma.changelog.findMany({
+        where: { userId, generatedAt: { gte: sinceDate } },
+        select: { generatedAt: true },
+      }),
+      prisma.chatSession.findMany({
+        where: { userId, createdAt: { gte: sinceDate } },
+        select: { createdAt: true },
+      }),
+    ]);
+    const dateMap: Record<string, number> = {};
+    const addDate = (d: Date) => {
+      const k = d.toISOString().split('T')[0];
+      dateMap[k] = (dateMap[k] || 0) + 1;
+    };
+    gens.forEach((g) => addDate(g.createdAt));
+    profiles.forEach((p) => addDate(p.generatedAt));
+    healths.forEach((h) => addDate(h.checkedAt));
+    changelogList.forEach((c) => addDate(c.generatedAt));
+    chatSessions.forEach((c) => addDate(c.createdAt));
+    const heatmapData = Object.entries(dateMap).map(([date, count]) => ({ date, count }));
+
+    const totalRequests = finalReadmes + finalChats + finalProfiles + finalHealthChecks + finalChangelogs;
+    const heatmapSum = heatmapData.reduce((s, d) => s + d.count, 0);
+    const orphaned = totalRequests - heatmapSum;
+
+    if (orphaned > 0) {
+      const todayKey = new Date().toISOString().split('T')[0];
+      const todayEntry = heatmapData.find(d => d.date === todayKey);
+      if (todayEntry) {
+        todayEntry.count += orphaned;
+      } else {
+        heatmapData.push({ date: todayKey, count: orphaned });
+      }
     }
 
     const data = {
-      totalRequests:
-        finalReadmes + finalChats + finalProfiles + finalHealthChecks + finalChangelogs,
+      totalRequests,
       totalTokens,
       readmesGenerated: finalReadmes,
       chats: finalChats,
@@ -354,6 +410,7 @@ export const getUsageStats = async (req: Request, res: Response) => {
       healthChecks: finalHealthChecks,
       changelogsGenerated: finalChangelogs,
       lastActive: new Date().toISOString(),
+      heatmapData,
     };
 
     return res.json({ success: true, data });
@@ -408,11 +465,7 @@ export const clearUserData = async (req: Request, res: Response) => {
     if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
     await prisma.$transaction([
-      prisma.profileReadme.updateMany({ where: { userId }, data: { userId: null } }),
-      prisma.healthScore.updateMany({ where: { userId }, data: { userId: null } }),
-      prisma.changelog.updateMany({ where: { userId }, data: { userId: null } }),
-      prisma.chatSession.deleteMany({ where: { userId } }),
-      prisma.repository.deleteMany({ where: { userId } }),
+      // Reset User Profile Stats
       prisma.userProfile.update({
         where: { userId },
         data: {
@@ -423,6 +476,22 @@ export const clearUserData = async (req: Request, res: Response) => {
           gistsCount: 0,
         },
       }),
+      // Clear Associated Data While Preserving The Records
+      prisma.profileReadme.updateMany({ 
+        where: { userId }, 
+        data: { userId: null } 
+      }),
+      prisma.healthScore.updateMany({ 
+        where: { userId }, 
+        data: { userId: null } 
+      }),
+      prisma.changelog.updateMany({ 
+        where: { userId }, 
+        data: { userId: null } 
+      }),
+      // Delete User-Specific Data
+      prisma.chatSession.deleteMany({ where: { userId } }),
+      prisma.repository.deleteMany({ where: { userId } })
     ]);
 
     return res.json({ success: true, message: 'Data Cleared Successfully' });
