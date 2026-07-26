@@ -2,6 +2,56 @@ import { Request, Response } from 'express';
 import { getCacheStats, cacheGet, cacheSet } from '../utils/redis';
 import prisma from '../db';
 
+export const getPublicStats = async (req: Request, res: Response) => {
+  try {
+    // 1. Try To Instantly Read The Rich Admin Dashboard Cache
+    const cached = await cacheGet('admin:dashboard:stats:week');
+    if (cached) {
+      const data = JSON.parse(cached);
+      if (data?.stats) {
+        // We Calculate totalTokens By Summing The tokenData Array
+        const totalTokens = (data.tokenData || []).reduce(
+          (sum: number, t: any) => sum + (t.tokens || 0),
+          0
+        );
+        return res.json({
+          success: true,
+          stats: {
+            totalGenerations: data.stats.totalGenerations,
+            totalTokens: totalTokens || data.stats.totalTokens || 0,
+          },
+        });
+      }
+    }
+
+    // 2. Fallback To Fast Lifetime Sum Directly From Users
+    const lifetimeRows = await prisma.$queryRaw<any[]>`
+      SELECT
+        SUM("lifetimeTokens") as "totalTokens",
+        SUM("lifetimeReadmes") as "totalReadmes",
+        SUM("lifetimeProfiles") as "totalProfiles",
+        SUM("lifetimeHealthChecks") as "totalHealthChecks",
+        SUM("lifetimeChangelogs") as "totalChangelogs",
+        SUM("lifetimeChats") as "totalChats"
+      FROM "User"
+    `;
+    const lt = lifetimeRows[0] || {};
+    const totalGenerations =
+      (Number(lt.totalReadmes) || 0) +
+      (Number(lt.totalProfiles) || 0) +
+      (Number(lt.totalHealthChecks) || 0) +
+      (Number(lt.totalChangelogs) || 0) +
+      (Number(lt.totalChats) || 0);
+
+    const totalTokens = Number(lt.totalTokens) || 0;
+
+    res.json({ success: true, stats: { totalGenerations, totalTokens } });
+  } catch (error) {
+    console.error('getPublicStats error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch public stats' });
+  }
+};
+
 export const getDashboardData = async (req: Request, res: Response) => {
   try {
     const periodStr = req.query.period === 'month' ? 'month' : 'week';
@@ -468,7 +518,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
       anomalyAlerts,
     };
 
-    // Cache for 60 seconds
+    // Cache For 60 Seconds
     await cacheSet(cacheKey, JSON.stringify(responsePayload), 60);
     res.json(responsePayload);
   } catch (error) {

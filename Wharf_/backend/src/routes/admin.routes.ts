@@ -1,5 +1,5 @@
 import express from 'express';
-import { getDashboardData } from '../controllers/admin.controller';
+import { getDashboardData, getPublicStats } from '../controllers/admin.controller';
 import { AdminAnnouncementController } from '../controllers/announcement.controller';
 import { auth } from '../middleware/auth.middleware';
 
@@ -16,6 +16,7 @@ const adminAuth = (req: any, res: any, next: any) => {
   next();
 };
 
+router.get('/public-stats', getPublicStats);
 router.get('/dashboard', auth, adminAuth, getDashboardData);
 
 // Announcements
