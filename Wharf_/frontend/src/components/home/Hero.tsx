@@ -2,18 +2,53 @@ import { useState, useEffect } from 'react';
 import { Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../../lib/api';
-import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
+import { Badge, Button } from '../ui';
+
+const CountUp = ({ end, duration = 2000 }: { end: number, duration?: number }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTime: number | null = null;
+    let animationFrame: number;
+
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = timestamp - startTime;
+      const percentage = Math.min(progress / duration, 1);
+      
+      const easeOut = 1 - Math.pow(1 - percentage, 3);
+      setCount(Math.floor(end * easeOut));
+
+      if (progress < duration) {
+        animationFrame = requestAnimationFrame(animate);
+      } else {
+        setCount(end);
+      }
+    };
+
+    if (end > 0) {
+      animationFrame = requestAnimationFrame(animate);
+    } else {
+      setCount(0);
+    }
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [end, duration]);
+
+  const formatNumber = (num: number) => {
+    // Determine The Suffix Based On The *final* Target Value So It Doesn't Jump Aggressively
+    // Wait, If We Always Format The Current Tick, It Naturally Transitions!
+    return num > 999 ? (num / 1000).toFixed(1).replace('.0', '') + 'k+' : num.toString();
+  };
+
+  return <>{formatNumber(count)}</>;
+};
 
 export const Hero = () => {
   const [, setTypedText] = useState('');
   const [isTyping, setIsTyping] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [stats, setStats] = useState({ totalGenerations: 10000, totalTokens: 0 });
-
-  const formatNumber = (num: number) => {
-    return num > 999 ? (num / 1000).toFixed(1).replace('.0', '') + 'k+' : num.toString();
-  };
+  const [stats, setStats] = useState({ totalGenerations: 0, totalTokens: 0 });
 
   useEffect(() => {
     api.get('/admin/public-stats')
@@ -134,16 +169,16 @@ export const Hero = () => {
                 <div className="hidden md:flex flex-wrap justify-center gap-6 md:gap-20 pt-8 border-t-2 border-wharf-border-secondary max-w-2xl mx-auto">
                   <div className="text-center group cursor-pointer">
                     <div className="flex items-center gap-1 justify-center">
-                      <span className="font-display font-black text-2xl group-hover:text-wharf-pink-darker transition-colors">
-                        {formatNumber(stats.totalGenerations)}
+                      <span className="font-display font-black text-2xl group-hover:text-wharf-pink-darker transition-colors w-[120px]">
+                        <CountUp end={stats.totalGenerations} />
                       </span>
                     </div>
                     <p className="font-mono text-xs text-wharf-text-secondary">Repos Documented</p>
                   </div>
                   <div className="text-center group cursor-pointer">
                     <div className="flex items-center gap-1 justify-center">
-                      <span className="font-display font-black text-2xl group-hover:text-wharf-pink-darker transition-colors">
-                        {formatNumber(stats.totalTokens)}
+                      <span className="font-display font-black text-2xl group-hover:text-wharf-pink-darker transition-colors w-[120px]">
+                        <CountUp end={stats.totalTokens} />
                       </span>
                     </div>
                     <p className="font-mono text-xs text-wharf-text-secondary">Tokens Burned</p>
