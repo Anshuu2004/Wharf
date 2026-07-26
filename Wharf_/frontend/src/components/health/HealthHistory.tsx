@@ -41,7 +41,6 @@ export const HealthHistory = ({ onSelect, onBack, onCountChange }: HealthHistory
   const [history, setHistory] = useState<HistoryRecord[]>([]);
   const [filteredHistory, setFilteredHistory] = useState<HistoryRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'highest' | 'lowest'>('newest');
   const [showFilters, setShowFilters] = useState(false);
@@ -432,7 +431,6 @@ export const HealthHistory = ({ onSelect, onBack, onCountChange }: HealthHistory
                         </Button>
                         <button
                           onClick={(e) => handleDelete(record.id, record.repoName, e)}
-                          disabled={deletingId === record.id}
                           className="p-1.75 text-wharf-text-primary hover:text-wharf-error bg-wharf-surface-tertiary hover:bg-wharf-error/10 transition-all border-2 border-wharf-border-primary hover:border-wharf-error rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Delete"
                         >
@@ -497,24 +495,29 @@ export const HealthHistory = ({ onSelect, onBack, onCountChange }: HealthHistory
                 Cancel
               </button>
               <button
-                disabled={deletingId === confirmDeleteId}
                 onClick={async () => {
-                  setDeletingId(confirmDeleteId);
+                  const targetId = confirmDeleteId;
+                  if (!targetId) return;
+                  
+                  // Optimistic Snap
+                  const prev = [...history];
+                  
+                  // Instantly Update UI
+                  setHistory((h) => h.filter((item) => item.id !== targetId));
+                  setConfirmDeleteId(null); // Close Modal Instantly
+                  
                   try {
-                    await api.delete(`/health/history/${confirmDeleteId}`);
-                    setHistory((prev) => prev.filter((item) => item.id !== confirmDeleteId));
+                    await api.delete(`/health/history/${targetId}`);
                     showToast('Deleted record from history', 'info');
                   } catch (error) {
-                    console.error('Failed to delete:', error);
-                    showToast('Failed to delete record', 'error');
-                  } finally {
-                    setDeletingId(null);
-                    setConfirmDeleteId(null);
+                    // Rollback On Failure
+                    setHistory(prev);
+                    showToast('Failed to delete record, restoring...', 'error');
                   }
                 }}
-                className="px-4 py-2 border-2 border-wharf-border-primary bg-wharf-error text-wharf-white font-mono text-xs font-bold hover:bg-wharf-error/80 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 border-2 border-wharf-border-primary bg-wharf-error text-wharf-white font-mono text-xs font-bold hover:bg-wharf-error/80 transition-colors cursor-pointer"
               >
-                {deletingId === confirmDeleteId ? 'Deleting...' : 'Delete'}
+                Delete
               </button>
             </div>
           </div>
