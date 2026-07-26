@@ -109,7 +109,7 @@ export const Hero = () => {
 
                 {/* Description */}
                 <p className="font-mono text-sm md:text-base text-wharf-text-secondary max-w-2xl mx-auto mb-8 capitalize">
-                  Your code is great, Your docs should be too ; <br /> 
+                  Your code is great, Your docs should be too ; <br />
                   WHARF generates professional, recruiter-ready documentation in seconds ; <br />
                   So you can focus on what matters: building amazing software ;
                 </p>
