@@ -327,14 +327,14 @@ export const Header = () => {
                     width="64"
                     height="64"
                     alt="Wharf logo"
-                    className="w-14 h-14 md:w-16 md:h-16 object-contain transition-transform duration-300 group-hover:scale-105"
+                    className="w-14 h-14 md:w-18 md:h-18 object-contain transition-transform duration-300 group-hover:scale-105"
                   />
                 </div>
                 <div className="hidden sm:block">
                   <h1 className="font-display font-black text-2xl tracking-tighter leading-tight">
                     WHARF
                   </h1>
-                  <p className="text-[10px] text-wharf-text-tertiary uppercase tracking-wide">
+                  <p className="text-[10px] text-wharf-text-secondary uppercase tracking-wide">
                     Ship Code That Speaks
                   </p>
                 </div>
