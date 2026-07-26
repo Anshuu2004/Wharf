@@ -1,6 +1,5 @@
 import { FileText, GitBranch, Activity, BarChart3, Settings, Zap, Shield } from 'lucide-react';
-import { Card } from '../ui/Card';
-import { Badge } from '../ui/Badge';
+import { Badge, Card } from '../ui';
 
 const features = [
   {
@@ -61,7 +60,7 @@ export const Features = () => {
           </Badge>
           <h2 className="font-display font-black text-4xl md:text-5xl tracking-tighter mb-4">
             Everything You{' '}
-            <span className="bg-gradient-to-r from-wharf-green-dark to-wharf-green-darker bg-clip-text text-transparent">
+            <span className="bg-wharf-green-darker bg-clip-text text-transparent">
               Need
             </span>
           </h2>

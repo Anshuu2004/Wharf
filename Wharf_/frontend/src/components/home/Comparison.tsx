@@ -1,6 +1,5 @@
 import { Check, X, Zap } from 'lucide-react';
-import { Card } from '../ui/Card';
-import { Badge } from '../ui/Badge';
+import { Badge, Card } from '../ui';
 
 const comparisons = [
   { feature: 'GitHub URL → README', wharf: true, others: true },
@@ -26,7 +25,7 @@ export const Comparison = () => {
           </Badge>
           <h2 className="font-display font-black text-4xl md:text-5xl tracking-tighter mb-4">
             Better Than{' '}
-            <span className="bg-gradient-to-r from-wharf-purple-dark to-wharf-purple-darker bg-clip-text text-transparent">
+            <span className="bg-wharf-purple-darker bg-clip-text text-transparent">
               Alternatives
             </span>
           </h2>
