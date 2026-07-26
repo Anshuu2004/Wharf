@@ -121,7 +121,12 @@ export const Header = () => {
     window.location.href = 'http://localhost:3000/api/auth/github';
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
     logout();
     setShowUserMenu(false);
     navigate('/');

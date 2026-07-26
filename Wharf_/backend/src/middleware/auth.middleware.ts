@@ -5,12 +5,16 @@ import prisma from '../db';
 export const auth = async (req: Request, res: Response, next: NextFunction) => {
   const JWT_SECRET = process.env.JWT_SECRET || 'secret';
   const authHeader = req.headers.authorization;
+  
+  let token = req.cookies?.token;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return next();
+  if (!token && authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
   }
 
-  const token = authHeader.split(' ')[1];
+  if (!token) {
+    return next();
+  }
 
   try {
     const decoded: any = jwt.verify(token, JWT_SECRET);

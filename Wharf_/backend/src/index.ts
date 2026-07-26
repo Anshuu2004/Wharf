@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import pinoHttp from 'pino-http';
 import dotenv from 'dotenv';
 
@@ -29,6 +30,7 @@ initCronJobs();
 
 // Middleware
 app.use(helmet());
+app.use(cookieParser());
 app.use(requestIdMiddleware);
 app.use(contextMiddleware);
 app.use(
