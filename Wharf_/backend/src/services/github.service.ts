@@ -1,5 +1,6 @@
 import { Octokit } from '@octokit/rest';
 import { createAppAuth } from '@octokit/auth-app';
+import { githubCircuitBreaker } from '../utils/circuitBreaker';
 
 export interface RepoMeta {
   owner: string;
@@ -42,11 +43,15 @@ export class GithubService {
         },
       });
     } else {
-      // Fallback To System Token
       this.octokit = new Octokit({
         auth: process.env.GITHUB_TOKEN,
       });
     }
+
+    // Attach Circuit Breaker To All Octokit HTTP Requests
+    this.octokit.hook.wrap('request', async (request, reqOptions) => {
+      return await githubCircuitBreaker.fire(async () => request(reqOptions as any));
+    });
   }
 
   // Fetches Basic Repository Metadata

@@ -1,4 +1,11 @@
-import { LayoutDashboard, BarChart3, Activity, Terminal, type LucideIcon } from 'lucide-react';
+import {
+  LayoutDashboard,
+  BarChart3,
+  Activity,
+  Terminal,
+  Megaphone,
+  type LucideIcon,
+} from 'lucide-react';
 
 interface AdminNavProps {
   activeTab: string;
@@ -47,14 +54,22 @@ const tabConfig: Record<string, TabConfigItem> = {
     hoverBg: 'hover:bg-wharf-yellow/20',
     activeText: 'text-wharf-yellow-darker',
   },
+  announcements: {
+    id: 'announcements',
+    label: 'Announcements',
+    icon: Megaphone,
+    activeBg: 'bg-wharf-orange/20',
+    hoverBg: 'hover:bg-wharf-orange/20',
+    activeText: 'text-wharf-orange-darker',
+  },
 };
 
 export const AdminNav = ({ activeTab, onTabChange }: AdminNavProps) => {
   const tabs = Object.values(tabConfig);
 
   return (
-    <div className="w-full bg-wharf-surface-primary border-2 border-wharf-border-primary py-3 px-4 shadow-brutal-sm rounded-xl">
-      <div className="grid grid-cols-4 gap-4 w-full">
+    <div className="w-full bg-wharf-surface-primary border-2 border-wharf-border-primary py-3 px-4 shadow-brutal-sm rounded-xl overflow-x-auto">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 w-full min-w-[500px]">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const Icon = tab.icon;

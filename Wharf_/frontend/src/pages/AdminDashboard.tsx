@@ -16,6 +16,7 @@ import {
   AdminAnomalyAlert,
   AdminNav,
   AdminTokenUsage,
+  AdminAnnouncements,
 } from '../components/admin';
 import api from '../lib/api';
 
@@ -32,7 +33,7 @@ interface DashboardData {
   usageData: { date: string; generations: number; users: number }[];
   providerData: { name: string; value: number }[];
   featureData: { name: string; value: number }[];
-  heatmapData: { date: string; count: number }[]; // GitHub-style
+  heatmapData: { date: string; count: number }[];
   tokenData: { provider: string; tokens: number; color: string }[];
   topUsers: { username: string; generations: number; change: number }[];
   popularRepos: { name: string; generations: number; stars: number; change: number }[];
@@ -198,31 +199,45 @@ export const AdminDashboard = () => {
 
           {activeTab === 'analytics' && (
             <div className="space-y-12 mb-12 animate-pulse">
-              <div className="h-[200px] bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6">
-                <div className="h-6 bg-wharf-border-secondary rounded w-1/4 mb-8"></div>
-                <div className="grid grid-cols-3 gap-6">
-                  <div className="h-24 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-xl"></div>
-                  <div className="h-24 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-xl"></div>
-                  <div className="h-24 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-xl"></div>
+              <div className="bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6 md:p-8">
+                <div className="h-8 bg-wharf-border-secondary rounded w-1/3 mb-8"></div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="h-32 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-xl flex flex-col justify-between p-4"
+                    >
+                      <div className="h-4 bg-wharf-border-secondary rounded w-1/2"></div>
+                      <div className="h-8 bg-wharf-border-secondary rounded w-2/3"></div>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div className="h-[150px] bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6 flex flex-col justify-center">
-                <div className="h-6 bg-wharf-border-secondary rounded w-1/4 mb-4"></div>
-                <div className="h-10 bg-wharf-border-secondary rounded w-32"></div>
+              <div className="bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6 md:p-8">
+                <div className="h-8 bg-wharf-border-secondary rounded w-1/4 mb-6"></div>
+                <div className="h-16 bg-wharf-border-secondary rounded w-full mb-4"></div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="h-10 bg-wharf-surface-secondary rounded w-full"></div>
+                  <div className="h-10 bg-wharf-surface-secondary rounded w-full"></div>
+                  <div className="h-10 bg-wharf-surface-secondary rounded w-full"></div>
+                </div>
               </div>
             </div>
           )}
 
           {activeTab === 'metrics' && (
             <div className="mb-12 animate-pulse">
-              <div className="bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6 min-h-[600px]">
-                <div className="h-6 bg-wharf-border-secondary rounded w-1/4 mb-6"></div>
-                <div className="space-y-4">
+              <div className="bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6 md:p-8 min-h-[600px]">
+                <div className="h-8 bg-wharf-border-secondary rounded w-1/4 mb-8"></div>
+                <div className="space-y-6">
                   {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-                    <div
-                      key={i}
-                      className="h-16 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-xl"
-                    ></div>
+                    <div key={i} className="flex gap-4">
+                      <div className="w-12 h-12 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded flex-shrink-0"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-5 bg-wharf-border-secondary rounded w-3/4"></div>
+                        <div className="h-3 bg-wharf-border-secondary rounded w-1/2"></div>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -231,13 +246,46 @@ export const AdminDashboard = () => {
 
           {activeTab === 'logs' && (
             <div className="mb-12 animate-pulse">
-              <div className="bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6 min-h-[500px]">
-                <div className="h-6 bg-wharf-border-secondary rounded w-1/4 mb-6"></div>
+              <div className="bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6 md:p-8 min-h-[500px]">
+                <div className="flex justify-between items-center mb-8">
+                  <div className="h-8 bg-wharf-border-secondary rounded w-1/3"></div>
+                  <div className="h-10 bg-wharf-border-secondary rounded w-24"></div>
+                </div>
                 <div className="space-y-4">
                   {[1, 2, 3, 4, 5].map((i) => (
                     <div
                       key={i}
-                      className="h-20 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-xl"
+                      className="flex flex-col md:flex-row gap-4 p-4 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-xl"
+                    >
+                      <div className="w-10 h-10 bg-wharf-border-secondary rounded"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-wharf-border-secondary rounded w-1/3"></div>
+                        <div className="h-3 bg-wharf-border-secondary rounded w-full"></div>
+                      </div>
+                      <div className="h-6 bg-wharf-border-secondary rounded w-16"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'announcements' && (
+            <div className="mb-12 animate-pulse">
+              <div className="bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal rounded-3xl p-6 md:p-8">
+                <div className="flex justify-between items-center mb-8">
+                  <div className="w-1/2">
+                    <div className="h-8 bg-wharf-border-secondary rounded w-3/4 mb-4"></div>
+                    <div className="h-4 bg-wharf-border-secondary rounded w-1/2"></div>
+                  </div>
+                  <div className="h-10 bg-wharf-border-secondary rounded w-32"></div>
+                </div>
+                <div className="space-y-4">
+                  <div className="h-12 bg-wharf-border-secondary rounded-xl w-full"></div>
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="h-20 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-xl w-full"
                     ></div>
                   ))}
                 </div>
@@ -329,6 +377,13 @@ export const AdminDashboard = () => {
         {activeTab === 'logs' && (
           <div className="mb-12">
             <AdminAnomalyAlert alerts={data.anomalyAlerts} />
+          </div>
+        )}
+
+        {/* Announcements */}
+        {activeTab === 'announcements' && (
+          <div className="mb-12">
+            <AdminAnnouncements />
           </div>
         )}
       </div>

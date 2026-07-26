@@ -1,6 +1,5 @@
 import { FileText, GitBranch, Download, Zap } from 'lucide-react';
-import { Card } from '../ui/Card';
-import { Badge } from '../ui/Badge';
+import { Badge, Card } from '../ui';
 
 const steps = [
   {
@@ -31,7 +30,7 @@ const steps = [
 
 export const HowItWorks = () => {
   return (
-    <section className="py-20 bg-wharf-background-primary border-y-4 border-wharf-border-primary rounded-3xl">
+    <section className="py-20 bg-wharf-background-primary border-b-4 border-wharf-border-primary rounded-3xl">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
@@ -41,7 +40,7 @@ export const HowItWorks = () => {
           </Badge>
           <h2 className="font-display font-black text-4xl md:text-5xl tracking-tighter mb-4">
             How It{' '}
-            <span className="bg-gradient-to-r from-wharf-cyan-dark to-wharf-cyan-darker bg-clip-text text-transparent">
+            <span className="bg-wharf-cyan-darker bg-clip-text text-transparent">
               Works
             </span>
           </h2>
