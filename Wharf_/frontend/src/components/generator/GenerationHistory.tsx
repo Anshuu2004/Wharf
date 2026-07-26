@@ -432,18 +432,18 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
                   const targetId = confirmDeleteId;
                   if (!targetId) return;
                   
-                  // Optimistic snap
+                  // Optimistic Snap
                   const prev = [...history];
                   
-                  // Instantly update UI
+                  // Instantly Update UI
                   setHistory((h) => h.filter((item) => item.id !== targetId));
-                  setConfirmDeleteId(null); // Close modal instantly
+                  setConfirmDeleteId(null); // Close Modal Instantly
                   
                   try {
                     await api.delete(`/generate/history/${targetId}`);
                     showToast('Deleted record from history', 'info');
                   } catch (error) {
-                    // Rollback on failure
+                    // Rollback On Failure
                     setHistory(prev);
                     showToast('Failed to delete record, restoring...', 'error');
                   }

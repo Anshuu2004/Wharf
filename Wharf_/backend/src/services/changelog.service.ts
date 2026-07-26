@@ -98,9 +98,13 @@ export class ChangelogService {
     return this.aiService.generateChangelogStream(prompt);
   }
 
-  async getHistory(userId: string) {
+  async getHistory(userId: string, page: number = 1, limit: number = 50) {
+    limit = Math.min(limit, 200);
+    const skip = (page - 1) * limit;
     return prisma.changelog.findMany({
       where: { userId },
+      skip,
+      take: limit,
       orderBy: { generatedAt: 'desc' },
       select: {
         id: true,

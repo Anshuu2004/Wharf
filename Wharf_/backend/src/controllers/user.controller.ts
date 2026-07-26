@@ -88,6 +88,17 @@ export const getApiKeys = async (req: Request, res: Response) => {
     const rawKeys = await prisma.userApiKey.findMany({
       where: { userId },
       orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        provider: true,
+        label: true,
+        lastFour: true,
+        isVerified: true,
+        isActive: true,
+        isExhausted: true,
+        usageCount: true,
+        lastUsed: true,
+      },
     });
 
     // Shape For Frontend: One Entry Per Provider Found
@@ -241,30 +252,30 @@ export const getUsageStats = async (req: Request, res: Response) => {
     const userId = (req as any).user?.userId;
     if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
-    const chats = await prisma.chatSession.count({ where: { userId } });
-    const healthChecks = await prisma.healthScore.count({ where: { userId } });
-
-    const analytics = await prisma.chatAnalytics.aggregate({
-      where: { session: { userId } },
-      _sum: { totalTokens: true },
-    });
-
-    // Aggregate Exact WordCounts Stored Per Record For All Generation Types
-    const readmesData = await prisma.generation.aggregate({
-      where: { repository: { userId }, type: 'README' },
-      _count: true,
-      _sum: { wordCount: true },
-    });
-    const profilesData = await prisma.profileReadme.aggregate({
-      where: { userId },
-      _count: true,
-      _sum: { wordCount: true },
-    });
-    const changelogsData = await prisma.changelog.aggregate({
-      where: { userId },
-      _count: true,
-      _sum: { wordCount: true },
-    });
+    const [chats, healthChecks, analytics, readmesData, profilesData, changelogsData] =
+      await Promise.all([
+        prisma.chatSession.count({ where: { userId } }),
+        prisma.healthScore.count({ where: { userId } }),
+        prisma.chatAnalytics.aggregate({
+          where: { session: { userId } },
+          _sum: { totalTokens: true },
+        }),
+        prisma.generation.aggregate({
+          where: { repository: { userId }, type: 'README' },
+          _count: true,
+          _sum: { wordCount: true },
+        }),
+        prisma.profileReadme.aggregate({
+          where: { userId },
+          _count: true,
+          _sum: { wordCount: true },
+        }),
+        prisma.changelog.aggregate({
+          where: { userId },
+          _count: true,
+          _sum: { wordCount: true },
+        }),
+      ]);
     const readmesGenerated = readmesData._count;
     const profilesGenerated = profilesData._count;
     const changelogsGenerated = changelogsData._count;
@@ -454,6 +465,7 @@ export const clearUserData = async (req: Request, res: Response) => {
     if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
     await prisma.$transaction([
+      // Reset User Profile Stats
       prisma.userProfile.update({
         where: { userId },
         data: {
@@ -464,9 +476,20 @@ export const clearUserData = async (req: Request, res: Response) => {
           gistsCount: 0,
         },
       }),
-      prisma.profileReadme.updateMany({ where: { userId }, data: { userId: null } }),
-      prisma.healthScore.updateMany({ where: { userId }, data: { userId: null } }),
-      prisma.changelog.updateMany({ where: { userId }, data: { userId: null } }),
+      // Clear Associated Data While Preserving The Records
+      prisma.profileReadme.updateMany({ 
+        where: { userId }, 
+        data: { userId: null } 
+      }),
+      prisma.healthScore.updateMany({ 
+        where: { userId }, 
+        data: { userId: null } 
+      }),
+      prisma.changelog.updateMany({ 
+        where: { userId }, 
+        data: { userId: null } 
+      }),
+      // Delete User-Specific Data
       prisma.chatSession.deleteMany({ where: { userId } }),
       prisma.repository.deleteMany({ where: { userId } })
     ]);
@@ -483,18 +506,20 @@ export const exportUserData = async (req: Request, res: Response) => {
     if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
     const format = req.query.format === 'zip' ? 'zip' : 'json';
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: { profile: true },
-    });
-    const apiKeys = await prisma.userApiKey.findMany({ where: { userId } });
-    const profileReadmes = await prisma.profileReadme.findMany({ where: { userId } });
-    const healthScores = await prisma.healthScore.findMany({ where: { userId } });
-    const changelogs = await prisma.changelog.findMany({ where: { userId } });
-    const chatSessions = await prisma.chatSession.findMany({
-      where: { userId },
-      include: { messages: true },
-    });
+    const [user, apiKeys, profileReadmes, healthScores, changelogs, chatSessions] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId },
+        include: { profile: true },
+      }),
+      prisma.userApiKey.findMany({ where: { userId } }),
+      prisma.profileReadme.findMany({ where: { userId } }),
+      prisma.healthScore.findMany({ where: { userId } }),
+      prisma.changelog.findMany({ where: { userId } }),
+      prisma.chatSession.findMany({
+        where: { userId },
+        include: { messages: true },
+      })
+    ]);
 
     const exportData = {
       user: { ...user, githubAccessToken: 'REDACTED', installationId: 'REDACTED' },

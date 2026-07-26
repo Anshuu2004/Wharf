@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   MessageSquare,
   Plus,
@@ -61,12 +61,16 @@ export const ChatSidebar = ({
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
   ];
 
-  // Sort Sessions: Pinned First, Then By Timestamp
-  const sortedSessions = [...sessions].sort((a, b) => {
-    if (a.pinned && !b.pinned) return -1;
-    if (!a.pinned && b.pinned) return 1;
-    return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-  });
+  // Sort Sessions: Pinned First, Then By Timestamp — Memoized To Avoid Re-Sort On Every Render
+  const sortedSessions = useMemo(
+    () =>
+      [...sessions].sort((a, b) => {
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
+        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      }),
+    [sessions]
+  );
 
   // Auto-Focus Input When Editing Starts
   useEffect(() => {

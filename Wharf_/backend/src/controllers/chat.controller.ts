@@ -103,10 +103,16 @@ export const sendMessage = async (req: Request, res: Response) => {
 export const getHistory = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId || (req as any).user?.id;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
+    const skip = (page - 1) * limit;
+
     if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
     const sessions = await prisma.chatSession.findMany({
       where: { userId, isArchived: false },
+      skip,
+      take: limit,
       orderBy: { updatedAt: 'desc' },
       include: {
         messages: {

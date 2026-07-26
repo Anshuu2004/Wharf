@@ -82,12 +82,16 @@ export const ApiKeysTab = () => {
     if (!key) return;
 
     const providerName = getProviderName(providerId);
+    
+    // Optimistic Update
+    const previousKeys = [...apiKeys];
+    setApiKeys((prev) => prev.filter((k) => k.id !== key.id));
 
     try {
       await api.delete(`/user/apikey/${key.id}`);
       showToast(`${providerName} API Key Deleted Successfully`, 'success');
-      fetchApiKeys();
     } catch {
+      setApiKeys(previousKeys);
       showToast(`Failed To Delete ${providerName} API Key`, 'error');
     }
   };

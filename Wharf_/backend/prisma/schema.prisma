@@ -59,6 +59,8 @@ model Repository {
   updatedAt   DateTime @updatedAt
 
   @@unique([owner, name, userId])
+  @@index([userId])
+  @@index([createdAt])
 }
 
 
@@ -74,6 +76,8 @@ model Generation {
   repository    Repository @relation(fields: [repoId], references: [id], onDelete: Cascade)
 
   createdAt     DateTime @default(now())
+
+  @@index([repoId, createdAt])
 }
 
 
@@ -139,9 +143,8 @@ model ProfileReadme {
   
   user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   
-  @@index([userId])
+  @@index([userId, generatedAt])
   @@index([username])
-  @@index([generatedAt])
 }
 
 model ProfileStats {
@@ -170,7 +173,7 @@ model ChatSession {
   messages      ChatMessage[]
   analytics     ChatAnalytics[]
 
-  @@index([userId])
+  @@index([userId, updatedAt])
   @@index([createdAt])
 }
 
@@ -217,8 +220,7 @@ model HealthScore {
   contributionBreakdown Json? // { hasContributing: true, hasIssueTemplates: false, hasPRTemplates: false, hasCodeOfConduct: false, hasGoodFirstIssues: false, hasCommunityLink: false }
   contributionSuggestions String[]
 
-  @@index([userId])
-  @@index([checkedAt])
+  @@index([userId, checkedAt])
   @@index([repoUrl])
 }
 
@@ -238,8 +240,7 @@ model Changelog {
   userId          String?
   user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   
-  @@index([userId])
-  @@index([generatedAt])
+  @@index([userId, generatedAt])
   @@index([repoUrl])
 }
 

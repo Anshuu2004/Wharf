@@ -476,22 +476,28 @@ export const getDashboardData = async (req: Request, res: Response) => {
         .filter((p) => p.value > 0)
         .sort((a, b) => b.value - a.value);
 
-      const chatAnalytics = await prisma.chatAnalytics.findMany({ select: { totalTokens: true } });
-      const generationStats = await prisma.generation.aggregate({
-        _count: true,
-        _sum: { wordCount: true },
-      });
-      const profileStats = await prisma.profileReadme.aggregate({
-        _count: true,
-        _sum: { wordCount: true },
-      });
-      const changelogStats = await prisma.changelog.aggregate({
-        _count: true,
-        _sum: { wordCount: true },
-      });
-      const healthStats = await prisma.healthScore.aggregate({ _count: true });
+      const [chatAnalyticsList, generationStats, profileStats, changelogStats, healthStats, lifetimeTokenResult] =
+        await Promise.all([
+          prisma.chatAnalytics.findMany({ select: { totalTokens: true } }),
+          prisma.generation.aggregate({
+            _count: true,
+            _sum: { wordCount: true },
+          }),
+          prisma.profileReadme.aggregate({
+            _count: true,
+            _sum: { wordCount: true },
+          }),
+          prisma.changelog.aggregate({
+            _count: true,
+            _sum: { wordCount: true },
+          }),
+          prisma.healthScore.aggregate({ _count: true }),
+          prisma.$queryRaw<Array<{ totalTokens: bigint }>>`
+            SELECT SUM("lifetimeTokens") as "totalTokens" FROM "User"
+          `,
+        ]);
 
-      let chatTokens = chatAnalytics.reduce((sum, a) => sum + a.totalTokens, 0);
+      let chatTokens = chatAnalyticsList.reduce((sum, a) => sum + a.totalTokens, 0);
 
       const readmeTokens = Math.round(
         (generationStats._sum.wordCount || generationStats._count * 1150) * 1.37
@@ -507,9 +513,6 @@ export const getDashboardData = async (req: Request, res: Response) => {
       const dynamicTotal =
         chatTokens + readmeTokens + profileTokens + changelogTokens + healthTokens;
 
-      const lifetimeTokenResult = await prisma.$queryRaw<Array<{ totalTokens: bigint }>>`
-        SELECT SUM("lifetimeTokens") as "totalTokens" FROM "User"
-      `;
       const totalLifetime = Number(lifetimeTokenResult[0]?.totalTokens) || 0;
 
       chatTokens = Math.max(dynamicTotal, totalLifetime);

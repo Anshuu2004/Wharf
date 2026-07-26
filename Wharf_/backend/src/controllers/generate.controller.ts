@@ -163,9 +163,11 @@ export const generateReadme = async (req: Request, res: Response) => {
         });
 
         // Permanently Bank These Tokens — Raw SQL Bypasses Stale Prisma Client Types
-        await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeReadmes" = "lifetimeReadmes" + 1 WHERE id = ${userId}`;
-        // Record today's count in DailyStats so heatmap/trend survive deletions
-        await recordDailyGeneration(userId);
+        await Promise.all([
+          prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeReadmes" = "lifetimeReadmes" + 1 WHERE id = ${userId}`,
+          // Record today's count in DailyStats so heatmap/trend survive deletions
+          recordDailyGeneration(userId)
+        ]);
       } catch (dbError) {
         loggerService.error('database.save.error', 'Failed to save generation to DB', dbError);
       }
@@ -222,6 +224,9 @@ export const generateReadme = async (req: Request, res: Response) => {
 
 export const getHistory = async (req: Request, res: Response) => {
   const userId = (req as any).user?.userId;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
+  const skip = (page - 1) * limit;
 
   if (!userId) {
     return res.status(401).json({ success: false, error: 'Authentication required' });
@@ -234,6 +239,8 @@ export const getHistory = async (req: Request, res: Response) => {
           userId,
         },
       },
+      skip,
+      take: limit,
       select: {
         id: true,
         type: true,

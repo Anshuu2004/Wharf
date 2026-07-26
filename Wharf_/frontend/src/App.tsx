@@ -56,10 +56,15 @@ function App() {
         {!isChatPage && <Header />}
 
         <main className="flex-1">
-          <Suspense
+        <Suspense
             fallback={
-              <div className="flex min-h-[50vh] items-center justify-center font-mono font-bold text-wharf-text-secondary">
-                Loading...
+              <div className="flex min-h-[50vh] items-center justify-center animate-pulse">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-12 h-12 border-4 border-wharf-border-primary border-t-wharf-pink rounded-full animate-spin" />
+                  <div className="font-mono font-bold text-sm text-wharf-text-secondary tracking-widest uppercase">
+                    Loading…
+                  </div>
+                </div>
               </div>
             }
           >
