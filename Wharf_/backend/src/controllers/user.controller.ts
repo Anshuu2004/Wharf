@@ -308,29 +308,36 @@ export const getUsageStats = async (req: Request, res: Response) => {
     let finalChats = Number(lt.lifetimeChats) || 0;
 
     // High-Water Mark Sync: If Dynamic Is Higher, Persist It Via Raw SQL
+    const updates: string[] = [];
     if (dynamicTotalTokens > totalTokens) {
       totalTokens = dynamicTotalTokens;
-      await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = ${totalTokens} WHERE id = ${userId}`;
+      updates.push(`"lifetimeTokens" = ${totalTokens}`);
     }
     if (readmesGenerated > finalReadmes) {
       finalReadmes = readmesGenerated;
-      await prisma.$executeRaw`UPDATE "User" SET "lifetimeReadmes" = ${finalReadmes} WHERE id = ${userId}`;
+      updates.push(`"lifetimeReadmes" = ${finalReadmes}`);
     }
     if (profilesGenerated > finalProfiles) {
       finalProfiles = profilesGenerated;
-      await prisma.$executeRaw`UPDATE "User" SET "lifetimeProfiles" = ${finalProfiles} WHERE id = ${userId}`;
+      updates.push(`"lifetimeProfiles" = ${finalProfiles}`);
     }
     if (healthChecks > finalHealthChecks) {
       finalHealthChecks = healthChecks;
-      await prisma.$executeRaw`UPDATE "User" SET "lifetimeHealthChecks" = ${finalHealthChecks} WHERE id = ${userId}`;
+      updates.push(`"lifetimeHealthChecks" = ${finalHealthChecks}`);
     }
     if (changelogsGenerated > finalChangelogs) {
       finalChangelogs = changelogsGenerated;
-      await prisma.$executeRaw`UPDATE "User" SET "lifetimeChangelogs" = ${finalChangelogs} WHERE id = ${userId}`;
+      updates.push(`"lifetimeChangelogs" = ${finalChangelogs}`);
     }
     if (chats > finalChats) {
       finalChats = chats;
-      await prisma.$executeRaw`UPDATE "User" SET "lifetimeChats" = ${finalChats} WHERE id = ${userId}`;
+      updates.push(`"lifetimeChats" = ${finalChats}`);
+    }
+
+    if (updates.length > 0) {
+      await prisma.$executeRawUnsafe(
+        `UPDATE "User" SET ${updates.join(', ')} WHERE id = '${userId.replace(/'/g, "''")}'`
+      );
     }
 
     const sinceDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
@@ -446,23 +453,23 @@ export const clearUserData = async (req: Request, res: Response) => {
     const userId = (req as any).user?.userId;
     if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
-    await prisma.userProfile.update({
-      where: { userId },
-      data: {
-        reposCount: 0,
-        starsCount: 0,
-        followersCount: 0,
-        followingCount: 0,
-        gistsCount: 0,
-      },
-    });
-
-    await prisma.profileReadme.updateMany({ where: { userId }, data: { userId: null } });
-    await prisma.healthScore.updateMany({ where: { userId }, data: { userId: null } });
-    await prisma.changelog.updateMany({ where: { userId }, data: { userId: null } });
-
-    await prisma.chatSession.deleteMany({ where: { userId } });
-    await prisma.repository.deleteMany({ where: { userId } });
+    await prisma.$transaction([
+      prisma.userProfile.update({
+        where: { userId },
+        data: {
+          reposCount: 0,
+          starsCount: 0,
+          followersCount: 0,
+          followingCount: 0,
+          gistsCount: 0,
+        },
+      }),
+      prisma.profileReadme.updateMany({ where: { userId }, data: { userId: null } }),
+      prisma.healthScore.updateMany({ where: { userId }, data: { userId: null } }),
+      prisma.changelog.updateMany({ where: { userId }, data: { userId: null } }),
+      prisma.chatSession.deleteMany({ where: { userId } }),
+      prisma.repository.deleteMany({ where: { userId } })
+    ]);
 
     return res.json({ success: true, message: 'Data Cleared Successfully' });
   } catch (error: any) {
