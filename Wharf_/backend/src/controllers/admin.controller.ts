@@ -9,7 +9,6 @@ export const getPublicStats = async (req: Request, res: Response) => {
     if (cached) {
       const data = JSON.parse(cached);
       if (data?.stats) {
-        // We Calculate totalTokens By Summing The tokenData Array
         const totalTokens = (data.tokenData || []).reduce(
           (sum: number, t: any) => sum + (t.tokens || 0),
           0
@@ -24,7 +23,22 @@ export const getPublicStats = async (req: Request, res: Response) => {
       }
     }
 
-    // 2. Fallback To Fast Lifetime Sum Directly From Users
+    // 2. Check Explicitly Dedicated Public Cache
+    const publicCached = await cacheGet('public:hero:stats');
+    if (publicCached) {
+      return res.json(JSON.parse(publicCached));
+    }
+
+    // 3. Fallback To High-Accuracy Live Query
+    const [dynamicReadmeGens, dynamicProfiles, dynamicHealth, dynamicChangelogs, dynamicChats] =
+      await Promise.all([
+        prisma.generation.count(),
+        prisma.profileReadme.count(),
+        prisma.healthScore.count(),
+        prisma.changelog.count(),
+        prisma.chatSession.count(),
+      ]);
+
     const lifetimeRows = await prisma.$queryRaw<any[]>`
       SELECT
         SUM("lifetimeTokens") as "totalTokens",
@@ -34,18 +48,54 @@ export const getPublicStats = async (req: Request, res: Response) => {
         SUM("lifetimeChangelogs") as "totalChangelogs",
         SUM("lifetimeChats") as "totalChats"
       FROM "User"
-    `;
+    `.catch(() => [{ totalTokens: 0, totalReadmes: 0 }]); // Protect If Migration Is Pending
+
     const lt = lifetimeRows[0] || {};
     const totalGenerations =
-      (Number(lt.totalReadmes) || 0) +
-      (Number(lt.totalProfiles) || 0) +
-      (Number(lt.totalHealthChecks) || 0) +
-      (Number(lt.totalChangelogs) || 0) +
-      (Number(lt.totalChats) || 0);
+      Math.max(dynamicReadmeGens, Number(lt.totalReadmes) || 0) +
+      Math.max(dynamicProfiles, Number(lt.totalProfiles) || 0) +
+      Math.max(dynamicHealth, Number(lt.totalHealthChecks) || 0) +
+      Math.max(dynamicChangelogs, Number(lt.totalChangelogs) || 0) +
+      Math.max(dynamicChats, Number(lt.totalChats) || 0);
 
-    const totalTokens = Number(lt.totalTokens) || 0;
+    // Reconstruct Tokens
+    const chatAnalytics = await prisma.chatAnalytics.findMany({ select: { totalTokens: true } });
+    const generationStats = await prisma.generation.aggregate({
+      _count: true,
+      _sum: { wordCount: true },
+    });
+    const profileStats = await prisma.profileReadme.aggregate({
+      _count: true,
+      _sum: { wordCount: true },
+    });
+    const changelogStats = await prisma.changelog.aggregate({
+      _count: true,
+      _sum: { wordCount: true },
+    });
+    const healthStats = await prisma.healthScore.aggregate({ _count: true });
 
-    res.json({ success: true, stats: { totalGenerations, totalTokens } });
+    let chatTokens = chatAnalytics.reduce((sum, a) => sum + a.totalTokens, 0);
+    const readmeTokens = Math.round(
+      (generationStats._sum.wordCount || generationStats._count * 1150) * 1.37
+    );
+    const profileTokens = Math.round(
+      ((profileStats._sum as any)?.wordCount || profileStats._count * 420) * 1.37
+    );
+    const changelogTokens = Math.round(
+      ((changelogStats._sum as any)?.wordCount || changelogStats._count * 620) * 1.37
+    );
+    const healthTokens = healthStats._count * 213;
+
+    const dynamicTotalTokens =
+      chatTokens + readmeTokens + profileTokens + changelogTokens + healthTokens;
+    const totalTokens = Math.max(dynamicTotalTokens, Number(lt.totalTokens) || 0);
+
+    const finalPayload = { success: true, stats: { totalGenerations, totalTokens } };
+
+    // Cache The Public Result For 3 Minutes To Keep The Landing Page Lightning Fast
+    await cacheSet('public:hero:stats', JSON.stringify(finalPayload), 180);
+
+    res.json(finalPayload);
   } catch (error) {
     console.error('getPublicStats error:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch public stats' });
