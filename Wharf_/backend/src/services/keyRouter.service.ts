@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../db';
 import { decrypt } from '../utils/encryption';
-
-const prisma = new PrismaClient();
 
 export interface KeyInfo {
   id: string;
@@ -11,7 +9,7 @@ export interface KeyInfo {
 }
 
 export class KeyRouterService {
-  /** Check Only User BYOK Keys */
+  /* Check Only User BYOK Keys */
   async getUserKey(provider: string, userId: string): Promise<KeyInfo | null> {
     const normalizedProvider = provider.toUpperCase();
     try {
