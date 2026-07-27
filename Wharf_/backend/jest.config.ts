@@ -4,6 +4,8 @@ export default {
   testEnvironment: 'node',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^@octokit/rest$': '<rootDir>/tests/mocks/octokitStub.ts',
+    '^@octokit/auth-app$': '<rootDir>/tests/mocks/octokitStub.ts'
   },
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   globalTeardown: '<rootDir>/tests/teardown.ts',
