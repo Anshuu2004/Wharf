@@ -5,7 +5,9 @@ export default {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@octokit/rest$': '<rootDir>/tests/mocks/octokitStub.ts',
-    '^@octokit/auth-app$': '<rootDir>/tests/mocks/octokitStub.ts'
+    '^@octokit/auth-app$': '<rootDir>/tests/mocks/octokitStub.ts',
+    '^ai$': '<rootDir>/tests/mocks/aiStub.ts',
+    '^@ai-sdk/(.*)$': '<rootDir>/tests/mocks/aiStub.ts'
   },
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   globalTeardown: '<rootDir>/tests/teardown.ts',
