@@ -9,6 +9,16 @@ export default {
     '^ai$': '<rootDir>/tests/mocks/aiStub.ts',
     '^@ai-sdk/(.*)$': '<rootDir>/tests/mocks/aiStub.ts'
   },
+  transform: {
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        diagnostics: {
+          ignoreCodes: [151002],
+        },
+      },
+    ],
+  },
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   globalTeardown: '<rootDir>/tests/teardown.ts',
   testMatch: ['**/tests/**/*.test.ts'],
