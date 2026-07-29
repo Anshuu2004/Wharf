@@ -53,9 +53,17 @@ export const getRedisClient = () => {
 };
 
 // Auto-Init Connection
-if (process.env.REDIS_URL || process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV !== 'test' && (process.env.REDIS_URL || process.env.NODE_ENV === 'production')) {
   getRedisClient();
 }
+
+export const closeRedisClient = async () => {
+  if (redisClient) {
+    await redisClient.quit();
+    redisClient = null;
+    isRedisConnected = false;
+  }
+};
 
 export let globalCacheHits = 0;
 export let globalCacheMisses = 0;
