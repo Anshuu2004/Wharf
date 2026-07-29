@@ -188,9 +188,6 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
     return repoName.charAt(0).toUpperCase();
   };
 
-  const getFileExtension = (format: string) => {
-    return format === 'json' ? 'json' : 'md';
-  };
 
   const handleRetry = () => {
     fetchHistory();

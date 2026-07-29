@@ -442,7 +442,7 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
                   try {
                     await api.delete(`/generate/history/${targetId}`);
                     showToast('Deleted record from history', 'info');
-                  } catch (error) {
+                  } catch (_error) {
                     // Rollback On Failure
                     setHistory(prev);
                     showToast('Failed to delete record, restoring...', 'error');
