@@ -46,7 +46,7 @@ describe('Header', () => {
   });
 
   it('shows User profile button and hides Sign In when authenticated', () => {
-    (useAuthStore as any).mockReturnValue({ 
+    (useAuthStore as UseAuthStoreMock).mockReturnValue({ 
       user: { ...mockUser, username: 'TestHero' }, 
       logout: vi.fn() 
     });
