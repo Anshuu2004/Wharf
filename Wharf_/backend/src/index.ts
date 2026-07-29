@@ -27,7 +27,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Initialize Background Jobs
-initCronJobs();
+if (process.env.NODE_ENV !== 'test') {
+  initCronJobs();
+}
 
 // Middleware
 app.use(helmet());
@@ -84,6 +86,10 @@ app.get('/', (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-  console.log(`Server ready at: http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server ready at: http://localhost:${PORT}`);
+  });
+}
+
+export default app;
