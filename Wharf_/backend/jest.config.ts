@@ -7,7 +7,8 @@ export default {
     '^@octokit/rest$': '<rootDir>/tests/mocks/octokitStub.ts',
     '^@octokit/auth-app$': '<rootDir>/tests/mocks/octokitStub.ts',
     '^ai$': '<rootDir>/tests/mocks/aiStub.ts',
-    '^@ai-sdk/(.*)$': '<rootDir>/tests/mocks/aiStub.ts'
+    '^@ai-sdk/(.*)$': '<rootDir>/tests/mocks/aiStub.ts',
+    '^uuid$': '<rootDir>/tests/mocks/uuidStub.ts'
   },
   transform: {
     '^.+\\.tsx?$': [
@@ -19,6 +20,7 @@ export default {
       },
     ],
   },
+  transformIgnorePatterns: ['node_modules/(?!(uuid)/)'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   globalTeardown: '<rootDir>/tests/teardown.ts',
   testMatch: ['**/tests/**/*.test.ts'],

@@ -9,8 +9,15 @@ process.env.ENCRYPTION_SECRET = 'thirtytwo_byte_long_secret_key12';
 beforeAll(() => {
 });
 
-afterAll(() => {
+import { closeRedisClient } from '../src/utils/redis';
+import prisma from '../src/db';
+
+afterAll(async () => {
   // Global Cleanup Logic
+  await closeRedisClient();
+  if (prisma) {
+    await prisma.$disconnect();
+  }
 });
 
 afterEach(() => {
