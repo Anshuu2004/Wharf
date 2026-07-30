@@ -37,7 +37,7 @@ describe('profilePromptBuilder Utility', () => {
     expect(prompt).toContain('Test User G');
     expect(prompt).toContain('testuser');
     expect(prompt).toContain('Software engineer');
-    expect(prompt).toContain('github-readme-stats'); // For Stats
+    expect(prompt).toContain('github-stats-extended'); // For Stats
     expect(prompt).toContain('skillicons.dev/icons?i=react,aws'); // Resolves The Correct Stack Over Default
     expect(prompt).toContain('https://github-trophies'); // Since showTrophies is true
     expect(prompt).toContain('Total Stars Received: 420'); // Core Stat Logic
