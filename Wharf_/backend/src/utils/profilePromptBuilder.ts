@@ -356,8 +356,8 @@ ${
   showStats
     ? `### 📊 GitHub Stats
 <p align="center"> 
-  <img height="180em" width="430" src="https://github-readme-stats-sigma-five.vercel.app/api?username=${profileData.username}&show_icons=true&theme=${theme}&include_all_commits=true&count_private=true"/> &nbsp;
-  ${showTopLanguages ? `<img height="180em" width="386" src="https://github-readme-stats-sigma-five.vercel.app/api/top-langs/?username=${profileData.username}&layout=compact&theme=${theme}"/> <br>` : '<br>'}
+  <img height="180em" width="430" src="https://github-stats-extended.vercel.app/api?username=${profileData.username}&show_icons=true&theme=${theme}&include_all_commits=true&count_private=true"/> &nbsp;
+  ${showTopLanguages ? `<img height="180em" width="386" src="https://github-stats-extended.vercel.app/api/top-langs/?username=${profileData.username}&layout=compact&theme=${theme}"/> <br>` : '<br>'}
   ${showStreak ? `<img src="https://streak-stats.demolab.com?user=${profileData.username}&theme=${theme}" />` : ''}
 </p>
 

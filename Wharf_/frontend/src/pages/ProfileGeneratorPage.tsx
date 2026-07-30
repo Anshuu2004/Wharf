@@ -47,6 +47,7 @@ const MarkdownFallback = () => (
 import { generatePreviewMarkdown } from '../utils/previewGenerator';
 import { Badge, Button, Card } from '../components/ui';
 import api from '../lib/api';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 // Define Proper Types
 interface ProfileData {
@@ -339,6 +340,7 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
 // Profile Generator Page
 export const ProfileGeneratorPage = () => {
   const { user } = useAuthStore();
+  const analytics = useAnalytics();
 
   // Helper For LocalStorage State Initialization
   const initializeState = <T,>(key: string, defaultValue: T): T => {
@@ -494,6 +496,12 @@ export const ProfileGeneratorPage = () => {
     setGenerationProgress(0);
     setCurrentStep(3);
 
+    analytics.track('Profile Generation Started', {
+      template: options.template,
+      theme: options.theme,
+      username: profileData.username,
+    });
+
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/profile/generate`,
@@ -535,6 +543,10 @@ export const ProfileGeneratorPage = () => {
           if (dataStr === '[DONE]') {
             setGenerationProgress(100);
             setRefreshTrigger((prev) => prev + 1);
+            analytics.track('Profile Generated', {
+              template: options.template,
+              username: profileData?.username,
+            });
             break;
           }
 

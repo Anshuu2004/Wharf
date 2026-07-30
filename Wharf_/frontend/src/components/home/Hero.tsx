@@ -38,7 +38,7 @@ const CountUp = ({ end, duration = 2000 }: { end: number, duration?: number }) =
   const formatNumber = (num: number) => {
     // Determine The Suffix Based On The *final* Target Value So It Doesn't Jump Aggressively
     // Wait, If We Always Format The Current Tick, It Naturally Transitions!
-    return num > 999 ? (num / 1000).toFixed(1).replace('.0', '') + 'k+' : num.toString();
+    return num > 999 ? (num / 1000).toFixed(1).replace('.0', '') + ' K+' : num.toString();
   };
 
   return <>{formatNumber(count)}</>;
@@ -49,6 +49,7 @@ export const Hero = () => {
   const [isTyping, setIsTyping] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [stats, setStats] = useState({ totalGenerations: 0, totalTokens: 0 });
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     api.get('/admin/public-stats')
@@ -57,7 +58,8 @@ export const Hero = () => {
           setStats(res.data.stats);
         }
       })
-      .catch(err => console.error("Failed to load hero stats:", err));
+      .catch(err => console.error("Failed to load hero stats:", err))
+      .finally(() => setStatsLoading(false));
   }, []);
 
   const fullText = 'Paste any GitHub URL...';
@@ -165,12 +167,12 @@ export const Hero = () => {
                   </div>
                 </div>
 
-                {/* Stats */}
+                {/* Stats - visible to ALL users, auth or not */}
                 <div className="hidden md:flex flex-wrap justify-center gap-6 md:gap-20 pt-8 border-t-2 border-wharf-border-secondary max-w-2xl mx-auto">
                   <div className="text-center group cursor-pointer">
                     <div className="flex items-center gap-1 justify-center">
                       <span className="font-display font-black text-2xl group-hover:text-wharf-pink-darker transition-colors w-[120px]">
-                        <CountUp end={stats.totalGenerations} />
+                        {statsLoading ? '0' : <CountUp end={stats.totalGenerations} />}
                       </span>
                     </div>
                     <p className="font-mono text-xs text-wharf-text-secondary">Repos Documented</p>
@@ -178,7 +180,7 @@ export const Hero = () => {
                   <div className="text-center group cursor-pointer">
                     <div className="flex items-center gap-1 justify-center">
                       <span className="font-display font-black text-2xl group-hover:text-wharf-pink-darker transition-colors w-[120px]">
-                        <CountUp end={stats.totalTokens} />
+                        {statsLoading ? '0' : <CountUp end={stats.totalTokens} />}
                       </span>
                     </div>
                     <p className="font-mono text-xs text-wharf-text-secondary">Tokens Burned</p>

@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import api from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 interface HealthData {
   score: number;
@@ -54,6 +55,7 @@ interface HealthData {
 
 export const HealthPage = () => {
   const { isAuthenticated } = useAuthStore();
+  const analytics = useAnalytics();
 
   // Helper For LocalStorage State Initialization
   const initializeState = <T,>(key: string, defaultValue: T): T => {
@@ -102,6 +104,8 @@ export const HealthPage = () => {
     setError(null);
     setIsLoading(true);
 
+    analytics.track('Health Score Started', { repoUrl: target });
+
     // Ensure We Switch To Wizard If We Aren't Already
     setAppState('wizard');
     setCurrentStep(1); // Keep Step 1 While Loading To Show The Loader, Then Move To Step 2
@@ -121,7 +125,12 @@ export const HealthPage = () => {
         contributionSuggestions: contribRes.data.data.suggestions,
       });
       setAnalyzedRepoUrl(target);
-      setCurrentStep(2); // Move To Results Step
+      setCurrentStep(2);
+      analytics.track('Health Score Generated', {
+        repoUrl: target,
+        score: scoreRes.data.data.score,
+        contributionScore: contribRes.data.data.score,
+      });
     } catch (err: unknown) {
       let errorMessage =
         err && typeof err === 'object' && 'response' in err

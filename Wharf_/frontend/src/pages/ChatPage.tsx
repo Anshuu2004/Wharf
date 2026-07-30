@@ -10,6 +10,7 @@ import {
   SuggestedFollowups,
 } from '../components/chat';
 import { Menu, X, Code, Users, Briefcase, Shield, Star, GitFork } from 'lucide-react';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 interface Message {
   id: string;
@@ -70,6 +71,7 @@ const personas = [
 ];
 
 export const ChatPage = () => {
+  const analytics = useAnalytics();
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
     try {
       const saved = localStorage.getItem('wharf_chat_sessions');
@@ -151,6 +153,7 @@ export const ChatPage = () => {
     setSessions([newSession, ...sessions]);
     setCurrentSessionId(newSession.id);
     setIsRepoAnalyzed(false);
+    analytics.track('Chat Started');
   };
 
   const handleAnalyzeRepo = async () => {
@@ -200,6 +203,7 @@ export const ChatPage = () => {
         );
       });
       setIsRepoAnalyzed(true);
+      analytics.track('Repository Analyzed', { repoUrl });
     } catch (error) {
       console.error('Failed to analyze repository:', error);
     } finally {
@@ -252,6 +256,7 @@ export const ChatPage = () => {
     );
 
     setIsSendingMessage(true);
+    analytics.track('Message Sent', { persona: selectedPersona, hasRepo: !!repoUrl });
 
     try {
       const activeSession = sessions.find((s) => s.id === activeSessionId) || {
@@ -418,6 +423,7 @@ export const ChatPage = () => {
     a.download = `wharf-chat-${safeTitle}.md`;
     a.click();
     URL.revokeObjectURL(url);
+    analytics.track('Chat Exported', { messageCount: currentSession.messages.length });
   };
 
   const suggestedFollowups = [

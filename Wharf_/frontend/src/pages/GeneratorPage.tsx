@@ -27,6 +27,7 @@ import {
   GenerationHistory,
 } from '../components/generator';
 import api from '../lib/api';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 // Lazy-load The Heavy Markdown Preview
 const ReadmePreview = lazy(() =>
@@ -300,6 +301,7 @@ const UserStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) => {
 
 // Main Generator Page
 export const GeneratorPage = () => {
+  const analytics = useAnalytics();
   const { user } = useAuthStore();
   // Helper For LocalStorage State Initialization
   const initializeState = <T,>(key: string, defaultValue: T): T => {
@@ -375,6 +377,13 @@ export const GeneratorPage = () => {
 
   const handleGenerate = async () => {
     if (!selectedRepo) return;
+
+    analytics.track('README Generation Started', {
+      repository: selectedRepo.repo,
+      owner: selectedRepo.owner,
+      language: selectedRepo.language,
+      tone: options.tone
+    });
 
     setIsGenerating(true);
     setGeneratedReadme('');
