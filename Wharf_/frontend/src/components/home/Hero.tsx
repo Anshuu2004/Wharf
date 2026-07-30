@@ -38,7 +38,7 @@ const CountUp = ({ end, duration = 2000 }: { end: number, duration?: number }) =
   const formatNumber = (num: number) => {
     // Determine The Suffix Based On The *final* Target Value So It Doesn't Jump Aggressively
     // Wait, If We Always Format The Current Tick, It Naturally Transitions!
-    return num > 999 ? (num / 1000).toFixed(1).replace('.0', '') + 'k+' : num.toString();
+    return num > 999 ? (num / 1000).toFixed(1).replace('.0', '') + ' K+' : num.toString();
   };
 
   return <>{formatNumber(count)}</>;
@@ -172,9 +172,7 @@ export const Hero = () => {
                   <div className="text-center group cursor-pointer">
                     <div className="flex items-center gap-1 justify-center">
                       <span className="font-display font-black text-2xl group-hover:text-wharf-pink-darker transition-colors w-[120px]">
-                        {statsLoading
-                          ? <span className="inline-block w-16 h-6 bg-wharf-border-secondary animate-pulse rounded" />
-                          : <CountUp end={stats.totalGenerations} />}
+                        {statsLoading ? '0' : <CountUp end={stats.totalGenerations} />}
                       </span>
                     </div>
                     <p className="font-mono text-xs text-wharf-text-secondary">Repos Documented</p>
@@ -182,9 +180,7 @@ export const Hero = () => {
                   <div className="text-center group cursor-pointer">
                     <div className="flex items-center gap-1 justify-center">
                       <span className="font-display font-black text-2xl group-hover:text-wharf-pink-darker transition-colors w-[120px]">
-                        {statsLoading
-                          ? <span className="inline-block w-16 h-6 bg-wharf-border-secondary animate-pulse rounded" />
-                          : <CountUp end={stats.totalTokens} />}
+                        {statsLoading ? '0' : <CountUp end={stats.totalTokens} />}
                       </span>
                     </div>
                     <p className="font-mono text-xs text-wharf-text-secondary">Tokens Burned</p>
