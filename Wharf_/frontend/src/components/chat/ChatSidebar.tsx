@@ -5,7 +5,7 @@ import {
   Trash2,
   Home,
   FolderCode,
-  LayoutDashboard,
+  Settings,
   User,
   Pencil,
   GitBranch,
@@ -58,7 +58,7 @@ export const ChatSidebar = ({
     { icon: Home, label: 'Home', path: '/' },
     { icon: FolderCode, label: 'Generator', path: '/generator' },
     { icon: User, label: 'Profile', path: '/profile' },
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+    { icon: Settings, label: 'Settings', path: '/dashboard' },
   ];
 
   // Sort Sessions: Pinned First, Then By Timestamp — Memoized To Avoid Re-Sort On Every Render
