@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { Header, Footer, BottomNav } from './components/layout';
 import { ToastProvider } from './components/ui';
+import { usePageViewTracking } from './hooks/useAnalytics';
 
 const HomePage = React.lazy(() =>
   import('./pages/HomePage').then((m) => ({ default: m.HomePage }))
@@ -44,6 +45,7 @@ const DocsPage = React.lazy(() =>
 );
 
 function App() {
+  usePageViewTracking();
   const location = useLocation();
   const navigate = useNavigate();
   const pathname = location.pathname.replace(/^\/+/, '') || 'home';
