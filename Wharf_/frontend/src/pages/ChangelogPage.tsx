@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { Badge, Button, Card } from '../components/ui';
 import api from '../lib/api';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 interface ChangelogData {
   content: string;
@@ -80,6 +81,7 @@ const getInitialState = <T,>(key: string, defaultValue: T): T => {
 
 export const ChangelogPage = () => {
   const { user } = useAuthStore();
+  const analytics = useAnalytics();
   const [appState, setAppState] = useState<'landing' | 'wizard' | 'history'>(() =>
     getInitialState('wharf_changelog_appState', 'landing')
   );
@@ -148,6 +150,7 @@ export const ChangelogPage = () => {
 
       setChangelogData((prev) => ({ content: prev?.content || '', stats }));
       setCurrentStep(2);
+      analytics.track('Changelog Repo Analyzed', { repoUrl, totalCommits: stats.totalCommits });
 
       // Adjust Options If Max Commits Is Lower Than Current Selection
       const max = Math.min(stats.totalCommits, 500);
@@ -244,6 +247,7 @@ export const ChangelogPage = () => {
       }
 
       setCurrentStep(3);
+      analytics.track('Changelog Generated', { repoUrl, format: options.format, commitCount: options.commitCount });
     } catch (error) {
       console.error('Failed to generate changelog:', error);
     } finally {

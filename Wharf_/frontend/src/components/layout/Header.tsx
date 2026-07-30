@@ -26,6 +26,7 @@ import {
 import { Button, useToast } from '../ui';
 import { useAuthStore } from '../../stores/authStore';
 import api from '../../lib/api';
+import { useAnalytics } from '../../hooks/useAnalytics';
 
 interface Notification {
   id: string;
@@ -38,6 +39,7 @@ interface Notification {
 
 export const Header = () => {
   const navigate = useNavigate();
+  const analytics = useAnalytics();
   const { user, logout } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -127,6 +129,8 @@ export const Header = () => {
     } catch (err) {
       console.error('Logout error:', err);
     }
+    analytics.track('User Logged Out');
+    analytics.reset();
     logout();
     setShowUserMenu(false);
     navigate('/');

@@ -2,9 +2,11 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import api from '../lib/api';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 export const AuthCallback = () => {
   const navigate = useNavigate();
+  const analytics = useAnalytics();
   const setAuth = useAuthStore((state) => state.setAuth);
 
   useEffect(() => {
@@ -13,6 +15,13 @@ export const AuthCallback = () => {
         const { data } = await api.get('/auth/me');
         if (data.success && data.data) {
           const user = data.data;
+          analytics.identify({
+            userId: String(user.userId || user.id),
+            username: user.username,
+            email: user.email,
+          });
+          analytics.track('User Logged In', { method: 'GitHub' });
+
           setAuth(
             {
               id: user.userId || user.id,

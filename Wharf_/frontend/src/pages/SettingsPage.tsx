@@ -10,6 +10,7 @@ import {
 } from '../components/settings';
 import { Card } from '../components/ui/Card';
 import api from '../lib/api';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 interface ProfileData {
   name: string;
@@ -59,12 +60,14 @@ export const SettingsPage = () => {
       : 'profile';
   };
 
+  const analytics = useAnalytics();
   const [activeTab, setActiveTab] = useState(getInitialTab());
   const [isLoading, setIsLoading] = useState(true);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
 
   useEffect(() => {
     window.location.hash = activeTab;
+    analytics.track('Feature Used', { feature: 'Settings', tab: activeTab });
   }, [activeTab]);
 
   useEffect(() => {
