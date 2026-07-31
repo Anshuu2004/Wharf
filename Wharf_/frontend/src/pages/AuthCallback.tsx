@@ -12,7 +12,16 @@ export const AuthCallback = () => {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const { data } = await api.get('/auth/me');
+        // Read JWT from URL query param (cross-domain safe)
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+
+        if (!token) throw new Error('No token in URL');
+
+        const { data } = await api.get('/auth/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
         if (data.success && data.data) {
           const user = data.data;
           analytics.identify({
@@ -31,7 +40,7 @@ export const AuthCallback = () => {
               githubCreatedAt: user.githubCreatedAt,
               isAdmin: user.isAdmin,
             },
-            ''
+            token
           );
           navigate('/');
         } else {
