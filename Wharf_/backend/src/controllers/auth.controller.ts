@@ -6,7 +6,6 @@ import { encrypt } from '../utils/encryption';
 
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 export const githubLogin = (req: Request, res: Response) => {
   const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=user:email,repo`;
@@ -15,6 +14,7 @@ export const githubLogin = (req: Request, res: Response) => {
 
 export const githubCallback = async (req: Request, res: Response) => {
   const { code, installation_id } = req.query;
+  const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
   if (!code) {
     return res.status(400).json({ error: 'No code provided' });
