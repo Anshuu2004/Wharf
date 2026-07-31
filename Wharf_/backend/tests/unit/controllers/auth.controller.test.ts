@@ -89,8 +89,9 @@ describe('AuthController', () => {
         where: { githubId: '123' }
       }));
 
-      expect(mockCookie).toHaveBeenCalledWith('token', 'jwt-token-signed', expect.any(Object));
-      expect(mockRedirect).toHaveBeenCalledWith('http://localhost:5173/auth/callback');
+      // No Cookie Should Be Set — Token Is Passed Via URL Param Now
+      expect(mockCookie).not.toHaveBeenCalled();
+      expect(mockRedirect).toHaveBeenCalledWith('http://test-front/auth/callback?token=jwt-token-signed');
     });
 
     it('should handle errors gracefully returning 500', async () => {
