@@ -91,14 +91,8 @@ export const githubCallback = async (req: Request, res: Response) => {
       { expiresIn: '7d' }
     );
 
-    // 5. Set Cookie And Redirect Back To Frontend Callback
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-    res.redirect(`${FRONTEND_URL}/auth/callback`);
+    // 5. Redirect Back To Frontend With Token As Query Param (Cross-Domain Safe)
+    res.redirect(`${FRONTEND_URL}/auth/callback?token=${token}`);
   } catch (error) {
     console.error('Auth error:', error);
     res.status(500).json({ error: 'Authentication failed' });
