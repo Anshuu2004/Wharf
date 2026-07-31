@@ -120,7 +120,7 @@ export const Header = () => {
   }, [showUserMenu, showNotifications]);
 
   const handleLogin = () => {
-    window.location.href = 'http://localhost:3000/api/auth/github';
+    window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/auth/github`;
   };
 
   const handleLogout = async () => {
