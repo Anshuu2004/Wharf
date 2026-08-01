@@ -24,9 +24,9 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
     ref
   ) => {
     const variantStyles = {
-      default: 'card',
-      hard: 'card card-hard',
-      'hard-sm': 'card card-hard-sm',
+      default: 'card p-4 sm:p-6',
+      hard: 'card card-hard p-4 sm:p-6',
+      'hard-sm': 'card card-hard-sm p-4 sm:p-6',
     };
 
     const roundedStyles = {
