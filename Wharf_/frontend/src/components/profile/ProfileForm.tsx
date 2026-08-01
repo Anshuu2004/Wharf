@@ -125,7 +125,7 @@ export const ProfileForm = ({ user, onFetch, isLoading }: ProfileFormProps) => {
     isLoading || (touched && !isValid) || isValidating || networkValid === false;
 
   return (
-    <Card variant="hard" rounded="3xl" className="overflow-visible">
+    <Card variant="hard" rounded="3xl" className="overflow-visible !border-0 !shadow-none !bg-transparent !p-0 my-6 md:!border-2 md:!shadow-[var(--shadow-brutal)] md:!bg-wharf-surface-primary md:!p-6 md:!mb-6">
       <div className="flex items-center gap-2 border-b-2 border-wharf-border-primary pb-3 mb-4">
         <FaGithub className="w-5 h-5 text-wharf-yellow-dark" />
         <span className="font-mono font-bold text-sm uppercase tracking-wider">GitHub Profile</span>
@@ -229,7 +229,7 @@ export const ProfileForm = ({ user, onFetch, isLoading }: ProfileFormProps) => {
         )}
 
         {/* Quick Examples */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 mt-8 sm:mt-4">
           <span className="font-mono text-xs text-wharf-text-secondary">Examples:</span>
           {['octocat', 'torvalds'].map((example) => (
             <button
@@ -254,7 +254,7 @@ export const ProfileForm = ({ user, onFetch, isLoading }: ProfileFormProps) => {
                   setUsername(user.login || user.username || '');
                   onFetch(user.login || user.username || '');
                 }}
-                className="text-wharf-yellow-dark cursor-pointer hover:font-bold"
+                className="text-yellow-600 cursor-pointer hover:font-bold"
               >
                 {user.login || user.username}
               </button>
