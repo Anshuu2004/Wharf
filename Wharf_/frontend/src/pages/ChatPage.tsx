@@ -9,7 +9,7 @@ import {
   RepoContextBar,
   SuggestedFollowups,
 } from '../components/chat';
-import { Menu, X, Code, Users, Briefcase, Shield, Star, GitFork } from 'lucide-react';
+import { Code, Users, Briefcase, Shield, Star, GitFork } from 'lucide-react';
 import { useAnalytics } from '../hooks/useAnalytics';
 
 interface Message {
@@ -111,7 +111,11 @@ export const ChatPage = () => {
     }
   }, [currentSessionId]);
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    // Default Closed On Mobile , Open On Desktop
+    if (typeof window !== 'undefined') return window.innerWidth >= 1024;
+    return true;
+  });
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [isAnalyzingRepo, setIsAnalyzingRepo] = useState(false);
   const [selectedPersona, setSelectedPersona] = useState('developer');
@@ -435,16 +439,30 @@ export const ChatPage = () => {
 
   return (
     <div className="fixed inset-0 bg-wharf-surface-primary z-40">
-      <div className="flex h-full max-w-8xl mx-auto">
-        {/* Sidebar */}
+      <div className="flex h-full max-w-8xl mx-auto relative">
+
+        {/* Mobile Backdrop (Closes Sidebar On Tap) */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 z-20 bg-black/40 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar: Overlay On Mobile, Push On Desktop */}
         <div
-          className={`${isSidebarOpen ? 'w-72' : 'w-0'} flex-shrink-0 transition-all duration-300 overflow-hidden border-r-2 border-wharf-border-primary bg-wharf-surface-secondary`}
+          className={`
+            absolute md:relative inset-y-0 left-0 z-30
+            flex-shrink-0 transition-all duration-300 overflow-hidden
+            border-r-2 border-wharf-border-primary bg-wharf-surface-secondary
+            ${isSidebarOpen ? 'w-72' : 'w-0 md:w-72'}
+          `}
         >
           <ChatSidebar
             sessions={sessions}
             currentSessionId={currentSessionId}
             onNewChat={createNewChat}
-            onSelectSession={setCurrentSessionId}
+            onSelectSession={(id) => { setCurrentSessionId(id); setIsSidebarOpen(false); }}
             onDeleteSession={handleDeleteSession}
             onRenameSession={handleRenameSession}
             onPinSession={handlePinSession}
@@ -454,27 +472,21 @@ export const ChatPage = () => {
 
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col min-w-0 bg-wharf-surface-primary relative">
-          {/* Toggle Sidebar Button */}
-          <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="lg:hidden absolute top-4 left-4 z-10 p-2 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-pink transition-colors"
-          >
-            {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-
           {/* Header */}
           <ChatHeader
             onExport={handleExportChat}
             selectedPersona={selectedPersona}
             personas={personas}
             onPersonaChange={setSelectedPersona}
+            isSidebarOpen={isSidebarOpen}
+            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           />
 
           {/* RepoContextBar */}
           <div className="border-y-2 border-wharf-border-primary bg-wharf-surface-secondary">
-            <div className="grid grid-cols-2 divide-x-2 divide-wharf-border-primary">
+            <div className="grid grid-cols-1 sm:grid-cols-2 divide-y-2 sm:divide-y-0 sm:divide-x-2 divide-wharf-border-primary">
               {/* Col 1: URL Input */}
-              <div className="py-3.5 px-6">
+              <div className="py-3.5 px-3 sm:px-6">
                 <RepoContextBar
                   repoUrl={repoUrl}
                   setRepoUrl={setRepoUrl}
@@ -487,7 +499,7 @@ export const ChatPage = () => {
               </div>
 
               {/* Col 2: Repo Description */}
-              <div className="py-1 px-6 flex items-center min-w-0">
+              <div className="py-2 px-3 sm:px-6 flex items-center min-w-0">
                 {currentSession?.repoData ? (
                   <div className="w-full min-w-0">
                     {/* Repo Name */}
@@ -539,7 +551,7 @@ export const ChatPage = () => {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-6 py-4 min-h-0">
+          <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 min-h-0 scrollbar-hidden-mobile">
             <ChatMessages
               messages={messages}
               isLoading={isSendingMessage}

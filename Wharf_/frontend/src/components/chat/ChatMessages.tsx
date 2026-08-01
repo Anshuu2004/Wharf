@@ -1,6 +1,8 @@
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { ChatMessage, QuickPrompts } from '../chat';
+import { Bot } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -31,15 +33,11 @@ export const ChatMessages = ({
         {/* Welcome Section */}
         <div className="flex-1 flex items-center justify-center">
           <div className="max-w-2xl mx-auto w-full text-center">
-            <div className="w-16 h-16 border-2 border-wharf-border-primary flex items-center justify-center mx-auto mb-4 bg-wharf-pink/10 rounded-xl overflow-hidden">
-              <img
-                src="https://res.cloudinary.com/dhn92qb61/image/upload/v1751381563/Gojo__o3vpim.webp"
-                alt="Wharf AI"
-                className="w-full h-full object-cover"
-              />
+            <div className="w-16 h-16 border-2 border-wharf-border-primary flex items-center justify-center mx-auto mb-4 bg-wharf-pink/10 rounded-2xl">
+              <Bot className="w-10 h-10 text-wharf-pink-dark" />
             </div>
             <h2 className="font-display font-black text-2xl tracking-tighter mb-2">
-              Welcome to WHARF Chat
+              Welcome to WHARF CHAT
             </h2>
             <p className="font-mono text-sm text-wharf-text-secondary capitalize">
               Paste a GitHub repository URL & ask anything about the codebase...
@@ -57,16 +55,36 @@ export const ChatMessages = ({
     );
   }
 
+  const isNewDay = (prevDate: Date, currDate: Date) => {
+    return prevDate.toDateString() !== currDate.toDateString();
+  };
+
+  let lastDate: Date | null = null;
+
   return (
     <div className="space-y-0">
       <AnimatePresence>
-        {messages.map((message, idx) => (
-          <motion.div
-            key={message.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: idx * 0.05 }}
-          >
+        {messages.map((message, idx) => {
+          const messageDate = new Date(message.timestamp);
+          const showDivider = !lastDate || isNewDay(lastDate, messageDate);
+          lastDate = messageDate;
+
+          return (
+            <React.Fragment key={message.id}>
+              {showDivider && (
+                <div className="flex items-center justify-center my-6">
+                  <div className="h-px bg-wharf-border-primary flex-1" />
+                  <span className="px-4 font-mono text-[10px] font-bold text-wharf-text-secondary uppercase">
+                    {messageDate.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+                  </span>
+                  <div className="h-px bg-wharf-border-primary flex-1" />
+                </div>
+              )}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: idx * 0.05 }}
+              >
             <ChatMessage
               id={message.id}
               role={message.role}
@@ -75,8 +93,10 @@ export const ChatMessages = ({
               timestamp={message.timestamp}
               onEdit={onEditMessage}
             />
-          </motion.div>
-        ))}
+              </motion.div>
+            </React.Fragment>
+          );
+        })}
         {isLoading && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -85,11 +105,7 @@ export const ChatMessages = ({
           >
             <div className="flex gap-4">
               <div className="w-8 h-8 border-2 border-wharf-border-primary bg-wharf-surface-secondary flex items-center justify-center overflow-hidden">
-                <img
-                  src="https://res.cloudinary.com/dhn92qb61/image/upload/v1751381563/Gojo__o3vpim.webp"
-                  alt="Wharf AI"
-                  className="w-full h-full object-cover"
-                />
+                  <Bot className="w-5 h-5 text-wharf-pink-dark" />
               </div>
               <div className="border-2 border-wharf-border-primary bg-wharf-surface-secondary p-4">
                 <div className="flex gap-1">
