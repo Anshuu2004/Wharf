@@ -77,8 +77,7 @@ export const RepoContextBar = ({
         setNetworkValid(true);
         showToast('Repository Found! Ready To Analyze.', 'success');
       } else if (response.status === 404) {
-        setNetworkValid(false);
-        showToast('Repository Not Found. Please Check The URL & Try Again.', 'error');
+        setNetworkValid(null);
       } else {
         // Rate Limited Or Other Error - Fallback To Allow
         setNetworkValid(null);

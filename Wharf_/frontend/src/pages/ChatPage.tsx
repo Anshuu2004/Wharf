@@ -151,11 +151,12 @@ export const ChatPage = () => {
       timestamp: new Date(),
       preview: 'Start a new conversation',
       messages: [],
-      repoUrl: repoUrl || undefined,
+      repoUrl: undefined,
       pinned: false,
     };
     setSessions([newSession, ...sessions]);
     setCurrentSessionId(newSession.id);
+    setRepoUrl('');
     setIsRepoAnalyzed(false);
     analytics.track('Chat Started');
   };

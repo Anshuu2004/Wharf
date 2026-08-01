@@ -20,9 +20,9 @@ export class ChatService {
   async analyzeRepository(repoUrl: string, userId?: string) {
     if (userId) {
       const user = await prisma.user.findUnique({ where: { id: userId } });
-      if (user?.githubAccessToken) {
+      if (user?.githubAccessToken || user?.installationId) {
         const repoService = new RepoService({
-          token: decrypt(user.githubAccessToken),
+          token: user.githubAccessToken ? decrypt(user.githubAccessToken) : undefined,
           installationId: user.installationId || undefined,
         });
         // Always Bypass Cache When Authenticated — Private Repo
@@ -46,9 +46,9 @@ export class ChatService {
     let bypassCache = false;
     if (userId) {
       const user = await prisma.user.findUnique({ where: { id: userId } });
-      if (user?.githubAccessToken) {
+      if (user?.githubAccessToken || user?.installationId) {
         contextRepoService = new RepoService({
-          token: decrypt(user.githubAccessToken),
+          token: user.githubAccessToken ? decrypt(user.githubAccessToken) : undefined,
           installationId: user.installationId || undefined,
         });
         bypassCache = true;
