@@ -56,7 +56,7 @@ export const QuickPrompts = ({ onSelect }: QuickPromptsProps) => {
           <button
             key={item.label}
             onClick={() => onSelect(item.prompt)}
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-wharf-border-secondary font-mono text-xs hover:border-wharf-pink-dark hover:bg-wharf-pink/5 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-wharf-border-secondary font-mono text-xs hover:border-wharf-pink-dark hover:bg-wharf-pink/5 transition-colors cursor-pointer"
           >
             <item.icon className="w-3 h-3 text-wharf-text-tertiary" />
             {item.label}

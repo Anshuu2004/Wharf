@@ -141,6 +141,16 @@ html, body {
   display: none;
 }
 
+@media (max-width: 768px) {
+  .scrollbar-hidden-mobile {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hidden-mobile::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 
 /* Button System */
 .btn {
