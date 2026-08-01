@@ -205,12 +205,12 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
 
   return (
     <div className="relative overflow-visible">
-      <Card variant="hard" rounded="3xl" className="overflow-visible">
+      <Card variant="hard" rounded="3xl" className="overflow-visible !border-0 !shadow-none !bg-transparent !p-0 my-6 md:!border-2 md:!shadow-[var(--shadow-brutal)] md:!bg-wharf-surface-primary md:!p-6 md:!mb-6">
         {/* Method Toggle */}
         <div className="flex border-b-2 border-wharf-border-primary">
           <button
             onClick={() => setImportMethod('url')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3.5 font-mono font-bold text-sm transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-1 font-mono font-bold text-sm transition-colors rounded-2xl ${
               importMethod === 'url'
                 ? 'bg-wharf-pink text-wharf-black'
                 : 'bg-wharf-surface-secondary hover:bg-wharf-surface-tertiary'
@@ -221,7 +221,7 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
           </button>
           <button
             onClick={() => setImportMethod('github')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3.5 font-mono font-bold text-sm transition-colors cursor-pointer ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-1 font-mono font-bold text-sm transition-colors cursor-pointer rounded-2xl ${
               importMethod === 'github'
                 ? 'bg-wharf-pink text-wharf-black'
                 : 'bg-wharf-surface-secondary hover:bg-wharf-surface-tertiary'
@@ -229,7 +229,13 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
             disabled={!user}
           >
             <FaGithub className="w-4 h-4" />
-            Import from GitHub
+          
+            {/* Mobile */}
+            <span className="sm:hidden">Import</span>
+          
+            {/* Tablet & Desktop */}
+            <span className="hidden sm:inline">GitHub Import</span>
+          
             {!user && (
               <Badge variant="ghost" size="sm" className="ml-1">
                 Sign in
@@ -238,7 +244,7 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="py-6">
           {importMethod === 'url' ? (
             <div className="space-y-4">
               {/* URL Input Section */}
@@ -358,7 +364,7 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
                   </span>
                 </div>
                 {user && (
-                  <Badge variant="cyan" className="gap-1">
+                  <Badge variant="cyan" className="hidden sm:inline-flex gap-1">
                     <Zap className="w-3 h-3" />
                     Personal Access
                   </Badge>

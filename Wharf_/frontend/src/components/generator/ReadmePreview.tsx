@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { Card } from '../ui/Card';
 import {
   FileText,
   Edit2,
@@ -60,7 +59,7 @@ export const ReadmePreview = ({
   onContentChange,
 }: ReadmePreviewProps) => {
   const [content, setContent] = useState(initialContent);
-  const [viewMode, setViewMode] = useState<ViewMode>('split');
+  const [viewMode, setViewMode] = useState<ViewMode>('preview');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [mermaidRendered, setMermaidRendered] = useState(false);
@@ -498,16 +497,16 @@ export const ReadmePreview = ({
 
   return (
     <div className={`${isFullscreen ? 'fixed inset-0 z-[999]' : ''}`} ref={containerRef}>
-      <Card
-        variant="hard"
-        rounded="xl"
+      <div
         className={`
-        overflow-x-hidden flex flex-col 
-        ${isFullscreen ? 'h-screen rounded-none border-0' : ''}
+        overflow-x-hidden flex flex-col rounded-xl transition-all
+        border-2 shadow-none bg-transparent 
+        md:border-2 md:border-wharf-border-primary md:shadow-[4px_4px_0_0_#0a0a0a] md:bg-wharf-surface-primary
+        ${isFullscreen ? 'h-screen !rounded-none !border-0 md:!border-0' : ''}
       `}
       >
         {/* Toolbar */}
-        <div className="border-2 border-wharf-border-primary p-3 bg-wharf-surface-secondary flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <div className="border-b-2 md:border-b-2 border-wharf-border-primary p-3 bg-wharf-surface-secondary flex flex-wrap items-center justify-between gap-2 shrink-0 z-10">
           <div className="flex items-center gap-3">
             {/* Window Controls */}
             <div className="flex items-center gap-1.5">
@@ -556,7 +555,7 @@ export const ReadmePreview = ({
               })}
             </div>
 
-            <div className="w-px h-6 bg-wharf-border-primary" />
+            <div className="w-px h-6 mx-2 bg-wharf-border-primary" />
 
             {/* Action Buttons */}
             <button
@@ -593,7 +592,7 @@ export const ReadmePreview = ({
         {/* Content Area */}
         <div
           ref={contentAreaRef}
-          className="flex overflow-hidden relative border-x-2 border-wharf-border-primary"
+          className="flex overflow-hidden relative border-x-0 md:border-x-0 border-wharf-border-primary bg-wharf-surface-primary"
           style={getHeightStyle()}
         >
           {/* Editor */}
@@ -617,9 +616,7 @@ export const ReadmePreview = ({
           {viewMode === 'split' && (
             <>
               <div
-                className={`
-                flex flex-col relative w-1/2 h-full border-r-2 border-wharf-border-primary
-              `}
+                className="flex flex-col relative w-1/2 h-full border-r-2 border-wharf-border-primary z-10"
               >
                 <textarea
                   className="w-full flex-1 p-4 bg-wharf-surface-primary outline-none resize-none font-mono text-sm text-wharf-text-primary scrollbar-hidden"
@@ -715,8 +712,8 @@ export const ReadmePreview = ({
         )} */}
 
         {/* Status Bar */}
-        <div className="border-2 border-wharf-border-primary p-2 bg-wharf-surface-secondary flex justify-between items-center shrink-0">
-          <div className="flex items-center gap-4">
+        <div className="border-t-2 md:border-t-2 border-wharf-border-primary p-2 bg-wharf-surface-secondary flex justify-between items-center shrink-0 z-10">
+          <div className="flex items-center gap-2.5 sm:gap-4">
             <span className="font-mono text-[10px] text-wharf-text-secondary whitespace-nowrap flex items-center gap-1.5">
               <FileText className="w-3 h-3" />
               Lines: {content.split('\n').length}
@@ -732,7 +729,7 @@ export const ReadmePreview = ({
               Words: {content.split(/\s+/).filter(Boolean).length}
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2">
             <span className="font-mono text-[10px] text-wharf-text-secondary whitespace-nowrap flex items-center gap-1.5">
               {viewMode === 'edit' ? (
                 <>
@@ -760,7 +757,7 @@ export const ReadmePreview = ({
             )}
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

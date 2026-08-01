@@ -1,27 +1,19 @@
-import { Copy, Download, Save, Check, ExternalLink, Sparkles } from 'lucide-react';
-import { FaGithub } from 'react-icons/fa';
+import { Copy, Download, Check, Sparkles } from 'lucide-react';
 import { Button, Card } from '../ui';
 import { useState } from 'react';
 
 interface ExportActionsProps {
   content: string;
   repoName?: string;
-  onSave?: () => void;
-  onGist?: () => void;
-  isSaved?: boolean;
   isGenerating?: boolean;
 }
 
 export const ExportActions = ({
   content,
   repoName,
-  onSave,
-  onGist,
-  isSaved = false,
   isGenerating = false,
 }: ExportActionsProps) => {
   const [copied, setCopied] = useState(false);
-  const [isHovering, setIsHovering] = useState(false);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(content);
@@ -39,16 +31,8 @@ export const ExportActions = ({
     URL.revokeObjectURL(url);
   };
 
-  const handleSave = () => {
-    onSave?.();
-  };
-
-  const handleGist = () => {
-    onGist?.();
-  };
-
   return (
-    <Card variant="hard-sm" className="p-0 overflow-hidden border-2 border-wharf-border-primary">
+    <Card variant="hard-sm" rounded="2xl" className="p-0 overflow-hidden border-2 border-wharf-border-primary">
       {/* Header */}
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-wharf-primary/5 to-transparent" />
@@ -69,7 +53,7 @@ export const ExportActions = ({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2">
             <span className="font-mono text-[10px] text-wharf-text-tertiary capitalize">
               {content.split('\n').length} lines
             </span>
@@ -83,7 +67,7 @@ export const ExportActions = ({
 
       {/* Action Buttons Grid */}
       <div className="p-4 bg-wharf-surface-primary">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2 mb-6">
+        <div className="grid grid-cols-2 gap-4 mt-2 mb-6">
           {/* Copy Button */}
           <Button
             size="sm"
@@ -120,7 +104,7 @@ export const ExportActions = ({
           </Button>
 
           {/* Save Button */}
-          <Button
+          {/* <Button
             size="sm"
             variant={isSaved ? 'success' : 'secondary'}
             onClick={handleSave}
@@ -142,10 +126,10 @@ export const ExportActions = ({
                 </>
               )}
             </div>
-          </Button>
+          </Button> */}
 
           {/* Create Gist Button */}
-          <Button
+          {/* <Button
             size="sm"
             variant="secondary"
             onClick={handleGist}
@@ -161,7 +145,7 @@ export const ExportActions = ({
               )}
               <span className="font-mono text-xs font-bold">Create Gist</span>
             </div>
-          </Button>
+          </Button> */}
         </div>
 
         {/* Stats */}

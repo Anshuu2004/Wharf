@@ -267,7 +267,7 @@ const UserStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) => {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
           {statItems.map((stat) => (
             <Card
               key={stat.label}
@@ -408,6 +408,16 @@ export const GeneratorPage = () => {
       );
 
       if (!response.ok) {
+        if (response.status === 429) {
+          try {
+            const errData = await response.json();
+            let message = errData?.error || errData?.message || 'Too Many Requests';
+            message = message.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+            window.dispatchEvent(new CustomEvent('api:rate-limit', { detail: { message } }));
+          } catch {
+            window.dispatchEvent(new CustomEvent('api:rate-limit', { detail: { message: 'Too Many Requests' } }));
+          }
+        }
         throw new Error('Failed to start README generation');
       }
 
@@ -481,20 +491,20 @@ export const GeneratorPage = () => {
     <div className="space-y-12 animate-fadeInUp pb-12">
       {/* Hero Section */}
       <div className="container mx-auto px-4 pt-8">
-        <div className="relative text-center max-w-4xl mx-auto py-8">
+        <div className="relative text-center max-w-5xl mx-auto py-8">
           <div className="space-y-6 relative">
             <Badge variant="pink" className="gap-2 mx-auto w-fit">
               <FileText className="w-3 h-3" />
               AI-Powered Documentation
             </Badge>
 
-            <h2 className="font-display font-black text-5xl md:text-7xl tracking-tighter leading-[1.1]">
+            <h2 className="font-display font-black text-4xl sm:text-5xl md:text-7xl tracking-tighter leading-[1.1] uppercase">
               Generate Professional
               <br />
               <span className="bg-wharf-pink bg-clip-text text-transparent">README Files</span>
             </h2>
 
-            <p className="font-mono text-base md:text-lg text-wharf-text-secondary max-w-2xl mx-auto capitalize">
+            <p className="font-mono text-sm md:text-lg text-wharf-text-secondary max-w-2xl mx-auto capitalize">
               Create polished, well-structured README documents for your projects in minutes using
               AI assistance...
             </p>
@@ -638,9 +648,9 @@ export const GeneratorPage = () => {
         )}
 
         {appState === 'wizard' && (
-          <div className="space-y-6">
+          <div className="space-y-6 mb-8">
             {/* Header With Back Button */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <button
                 onClick={() => setAppState('landing')}
                 className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-pink-dark transition-colors group cursor-pointer"
@@ -718,11 +728,11 @@ export const GeneratorPage = () => {
 
             {/* Main Content Card */}
             <Card variant="hard" className="overflow-hidden">
-              <div className="p-6 md:p-8">
+              <div className="sm:p-6 md:p-8">
                 {/* Step 1: Select Repository */}
                 {currentStep === 1 && (
                   <div className="space-y-6 animate-fadeInUp">
-                    <div className="text-center mb-4">
+                    <div className="text-center my-4 sm:mt-0">
                       <h3 className="font-display font-black text-2xl tracking-tighter">
                         Choose a Repository
                       </h3>
@@ -742,8 +752,8 @@ export const GeneratorPage = () => {
 
                 {/* Step 2: Configure Options */}
                 {currentStep === 2 && (
-                  <div className="space-y-6 animate-fadeInUp">
-                    <div className="text-center mb-8">
+                  <div className="space-y-6 mb-4 animate-fadeInUp">
+                    <div className="text-center my-4 sm:mt-0">
                       <h3 className="font-display font-black text-2xl tracking-tighter">
                         Configure Your README
                       </h3>
@@ -795,7 +805,7 @@ export const GeneratorPage = () => {
                 {/* Step 3: Generation */}
                 {currentStep === 3 && (
                   <div className="space-y-6 animate-fadeInUp">
-                    <div className="text-center mb-4">
+                    <div className="text-center my-4 sm:mt-0">
                       <h3 className="font-display font-black text-2xl tracking-tighter">
                         {isGenerating ? 'Generating Your README' : 'Preview Your README'}
                       </h3>
@@ -824,7 +834,11 @@ export const GeneratorPage = () => {
                             onClick={prevStep}
                             icon={<ArrowLeft className="w-4 h-4" />}
                           >
-                            Back to Options
+                            {/* Mobile */}
+                            <span className='sm:hidden'>Back</span>
+                            
+                            {/* Desktop */}
+                            <span className='hidden sm:block'>Back to Options</span>
                           </Button>
                           <Button
                             variant="primary"
@@ -833,7 +847,11 @@ export const GeneratorPage = () => {
                             iconPosition="right"
                             icon={<ArrowRight className="w-4 h-4" />}
                           >
-                            Continue to Export
+                            {/* Mobile */}
+                            <span className='sm:hidden'>Next</span>
+                            
+                            {/* Desktop */}
+                            <span className='hidden sm:block'>Continue to Export</span>
                           </Button>
                         </div>
                       </>
@@ -850,7 +868,7 @@ export const GeneratorPage = () => {
                 {/* Step 4: Export */}
                 {currentStep === 4 && (
                   <div className="space-y-6 animate-fadeInUp">
-                    <div className="text-center mb-4">
+                    <div className="text-center my-4 sm:mt-0">
                       <h3 className="font-display font-black text-2xl tracking-tighter">
                         Export Your README
                       </h3>
@@ -861,7 +879,7 @@ export const GeneratorPage = () => {
 
                     {generatedReadme ? (
                       <>
-                        <div className="bg-wharf-surface-secondary border-2 border-wharf-border-primary p-4 mb-4">
+                        <div className="bg-wharf-surface-secondary border-2 border-wharf-border-primary p-4 mb-4 rounded-2xl">
                           <div className="flex items-center gap-2 mb-2">
                             <FileText className="w-4 h-4 text-wharf-pink" />
                             <span className="font-mono font-bold text-sm">

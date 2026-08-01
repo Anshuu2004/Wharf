@@ -109,6 +109,35 @@ export const RepoSelector = ({ user, onSelect }: RepoSelectorProps) => {
     return colors[language] || 'bg-wharf-border-secondary';
   };
 
+  // Skeleton Loading Items
+  const SkeletonItem = () => (
+    <div className="w-full p-3.5 border-b border-wharf-border-secondary last:border-b-0 animate-pulse">
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="h-4 bg-wharf-border-secondary rounded w-48" />
+          <div className="h-4 bg-wharf-border-secondary rounded w-12" />
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-wharf-border-secondary rounded" />
+            <div className="h-3 bg-wharf-border-secondary rounded w-8" />
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-wharf-border-secondary rounded" />
+            <div className="h-3 bg-wharf-border-secondary rounded w-8" />
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 bg-wharf-border-secondary rounded" />
+          <div className="h-3 bg-wharf-border-secondary rounded w-16" />
+        </div>
+        <div className="h-3 bg-wharf-border-secondary rounded w-24" />
+      </div>
+    </div>
+  );
+
   return (
     <div className="relative w-full" ref={dropdownRef}>
       {/* Toggle Button */}
@@ -167,13 +196,13 @@ export const RepoSelector = ({ user, onSelect }: RepoSelectorProps) => {
             </div>
 
             {/* Repo List */}
-            <div className="overflow-y-auto max-h-[320px]">
+            <div className="overflow-y-auto max-h-[320px] scrollbar-hidden">
               {isLoading ? (
-                <div className="flex flex-col items-center justify-center p-8 space-y-3">
-                  <div className="w-10 h-10 border-4 border-wharf-pink border-t-transparent animate-spin mx-auto" />
-                  <p className="font-mono text-xs text-wharf-text-tertiary capitalize">
-                    Loading repositories...
-                  </p>
+                // Skeleton Loading
+                <div className="divide-y divide-wharf-border-secondary">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <SkeletonItem key={i} />
+                  ))}
                 </div>
               ) : !user ? (
                 <div className="p-8 text-center space-y-4">
@@ -242,7 +271,7 @@ export const RepoSelector = ({ user, onSelect }: RepoSelectorProps) => {
                       {repo.language && (
                         <div className="flex items-center gap-1.5">
                           <span
-                            className={`w-2 h-2 ${getLanguageColor(repo.language)} border border-wharf-border-primary`}
+                            className={`w-2 h-2 ${getLanguageColor(repo.language)} border border-wharf-border-primary rounded-full`}
                           />
                           <span className="font-mono text-xs text-wharf-text-tertiary">
                             {repo.language}
