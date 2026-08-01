@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { Header, Footer, BottomNav } from './components/layout';
-import { ToastProvider } from './components/ui';
+import { ToastProvider, useToast } from './components/ui';
 import { usePageViewTracking } from './hooks/useAnalytics';
 
 const HomePage = React.lazy(() =>
@@ -44,6 +44,22 @@ const DocsPage = React.lazy(() =>
   import('./pages/DocsPage').then((m) => ({ default: m.DocsPage }))
 );
 
+function GlobalToastListener() {
+  const { showToast } = useToast();
+
+  React.useEffect(() => {
+    const handleRateLimit = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      showToast(customEvent.detail?.message || 'Too Many Requests', 'error');
+    };
+
+    window.addEventListener('api:rate-limit', handleRateLimit);
+    return () => window.removeEventListener('api:rate-limit', handleRateLimit);
+  }, [showToast]);
+
+  return null;
+}
+
 function App() {
   usePageViewTracking();
   const location = useLocation();
@@ -54,6 +70,7 @@ function App() {
 
   return (
     <ToastProvider>
+      <GlobalToastListener />
       <div className="min-h-screen flex flex-col bg-wharf-surface-primary">
         {!isChatPage && <Header />}
 
