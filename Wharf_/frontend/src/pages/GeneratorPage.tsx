@@ -501,7 +501,7 @@ export const GeneratorPage = () => {
             <h2 className="font-display font-black text-4xl sm:text-5xl md:text-7xl tracking-tighter leading-[1.1] uppercase">
               Generate Professional
               <br />
-              <span className="bg-wharf-pink bg-clip-text text-transparent">README Files</span>
+              <span className="bg-wharf-pink-dark bg-clip-text text-transparent">README Files</span>
             </h2>
 
             <p className="font-mono text-sm md:text-lg text-wharf-text-secondary max-w-2xl mx-auto capitalize">
