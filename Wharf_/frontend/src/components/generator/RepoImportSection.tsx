@@ -207,10 +207,10 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
     <div className="relative overflow-visible">
       <Card variant="hard" rounded="3xl" className="overflow-visible !border-0 !shadow-none !bg-transparent !p-0 my-6 md:!border-2 md:!shadow-[var(--shadow-brutal)] md:!bg-wharf-surface-primary md:!p-6 md:!mb-6">
         {/* Method Toggle */}
-        <div className="flex border-b-2 border-wharf-border-primary">
+        <div className="flex border-b-2 pb-4 gap-2 border-wharf-border-primary">
           <button
             onClick={() => setImportMethod('url')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-1 font-mono font-bold text-sm transition-colors rounded-2xl ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-1 font-mono font-bold text-sm border-2 border-wharf-border-primary transition-colors rounded-2xl ${
               importMethod === 'url'
                 ? 'bg-wharf-pink text-wharf-black'
                 : 'bg-wharf-surface-secondary hover:bg-wharf-surface-tertiary'
@@ -221,7 +221,7 @@ export const RepoImportSection = ({ user, onRepoSelect }: RepoImportSectionProps
           </button>
           <button
             onClick={() => setImportMethod('github')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-1 font-mono font-bold text-sm transition-colors cursor-pointer rounded-2xl ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-1 font-mono font-bold text-sm border-2 border-wharf-border-primary transition-colors cursor-pointer rounded-2xl ${
               importMethod === 'github'
                 ? 'bg-wharf-pink text-wharf-black'
                 : 'bg-wharf-surface-secondary hover:bg-wharf-surface-tertiary'

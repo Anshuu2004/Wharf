@@ -505,7 +505,7 @@ export const GeneratorPage = () => {
             </h2>
 
             <p className="font-mono text-sm md:text-lg text-wharf-text-secondary max-w-2xl mx-auto capitalize">
-              Create polished, well-structured README documents for your projects in minutes using
+              Create polished README documents for your projects in minutes using
               AI assistance...
             </p>
           </div>
@@ -728,7 +728,7 @@ export const GeneratorPage = () => {
 
             {/* Main Content Card */}
             <Card variant="hard" className="overflow-hidden">
-              <div className="sm:p-6 md:p-8">
+              <div className="px-2 sm:p-6 md:p-8">
                 {/* Step 1: Select Repository */}
                 {currentStep === 1 && (
                   <div className="space-y-6 animate-fadeInUp">
@@ -873,7 +873,7 @@ export const GeneratorPage = () => {
                         Export Your README
                       </h3>
                       <p className="font-mono text-sm text-wharf-text-tertiary mt-1 mb-8 capitalize">
-                        Save, download, or share your documentation
+                        Save or download your documentation
                       </p>
                     </div>
 
@@ -881,7 +881,7 @@ export const GeneratorPage = () => {
                       <>
                         <div className="bg-wharf-surface-secondary border-2 border-wharf-border-primary p-4 mb-4 rounded-2xl">
                           <div className="flex items-center gap-2 mb-2">
-                            <FileText className="w-4 h-4 text-wharf-pink" />
+                            <FileText className="w-4 h-4 text-wharf-pink-darker" />
                             <span className="font-mono font-bold text-sm">
                               {selectedRepo?.repo || 'README'}.md
                             </span>

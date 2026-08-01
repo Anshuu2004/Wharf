@@ -153,7 +153,6 @@ export const ExportActions = ({
           <div className="mt-3 pt-3 border-t-2 border-wharf-border-secondary">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-wharf-primary animate-pulse" />
                 <span className="font-mono text-[10px] text-wharf-text-tertiary">
                   Repository:{' '}
                   <span className="text-wharf-text-secondary font-bold">{repoName}</span>
