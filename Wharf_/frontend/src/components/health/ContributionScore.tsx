@@ -62,7 +62,7 @@ export const ContributionScore = ({ score, breakdown }: ContributionScoreProps) 
               Community engagement score
             </p>
           </div>
-          <Badge variant="default" size="sm" className="gap-1">
+          <Badge variant="default" size="sm" className="hidden sm:flex items-center gap-1">
             <Users className="w-3 h-3" />
             {completedCount}/{totalItems}
           </Badge>

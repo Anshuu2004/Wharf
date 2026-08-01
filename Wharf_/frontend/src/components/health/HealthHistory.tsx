@@ -472,7 +472,7 @@ export const HealthHistory = ({ onSelect, onBack, onCountChange }: HealthHistory
                               className="h-8 text-xs cursor-pointer"
                               aria-label={`Re-analyze ${record.repoName}`}
                             >
-                              <span className="hidden sm:inline text-xs">Re-analyze</span>
+                              <span className="inline text-xs">Re-analyze</span>
                             </Button>
                             <button
                               onClick={(e) => handleDelete(record.id, record.repoName, e)}
@@ -498,7 +498,7 @@ export const HealthHistory = ({ onSelect, onBack, onCountChange }: HealthHistory
               </div>
 
               {/* Footer Stats */}
-              <div className="flex flex-wrap items-center justify-between gap-2 my-8 pt-4 border-t-2 border-wharf-border-secondary font-mono text-xs text-wharf-text-secondary">
+              <div className="flex flex-wrap items-center justify-between gap-2 my-8 pt-4 border-t-2 border-wharf-border-secondary font-mono text-xs text-wharf-text-secondary capitalize">
                 <span>
                   Showing {filteredHistory.length} of {history.length} records
                 </span>

@@ -117,7 +117,7 @@ export const ScoreSuggestions = ({
             </div>
           </div>
         </div>
-        <Badge variant={colorClass as 'cyan' | 'purple'} size="sm" className="font-mono">
+        <Badge variant={colorClass as 'cyan' | 'purple'} size="sm" className="hidden sm:block font-mono">
           {config.badgeLabel}
         </Badge>
       </div>
