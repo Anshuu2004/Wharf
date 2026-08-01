@@ -136,16 +136,6 @@ export const Header = () => {
     navigate('/');
   };
 
-  const handleDashboard = () => {
-    navigate('/dashboard');
-    setShowUserMenu(false);
-  };
-
-  const handleSettings = () => {
-    navigate('/settings');
-    setShowUserMenu(false);
-  };
-
   const handleLogoClick = () => {
     window.scrollTo({
       top: 0,
@@ -211,7 +201,7 @@ export const Header = () => {
     { href: '/treemap', label: 'TREE MAP', icon: GitBranch },
     { href: '/health', label: 'HEALTH', icon: Activity },
     { href: '/analytics', label: 'ANALYTICS', icon: BarChart3 },
-    { href: '/settings', label: 'SETTINGS', icon: Settings },
+    ...(user ? [{ href: '/settings', label: 'SETTINGS', icon: Settings }] : []),
   ];
 
   const getNotificationIcon = (type: string) => {
@@ -378,8 +368,12 @@ export const Header = () => {
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center gap-2 px-2 py-1.5 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-surface-secondary transition-all group rounded-lg cursor-pointer"
                   >
-                    <div className="w-8 h-8 bg-wharf-purple border border-wharf-border-primary flex items-center justify-center">
-                      <span className="text-sm font-bold text-wharf-black">{getUserInitial()}</span>
+                    <div className="w-8 h-8 bg-wharf-purple border border-wharf-border-primary flex items-center justify-center overflow-hidden">
+                      {user.avatar ? (
+                        <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-sm font-bold text-wharf-black">{getUserInitial()}</span>
+                      )}
                     </div>
                     <span className="hidden lg:block font-mono text-sm font-bold">
                       {getUserDisplay()}
@@ -393,10 +387,14 @@ export const Header = () => {
                     <div className="absolute right-0 mt-2 w-80 border-2 border-wharf-border-primary bg-wharf-surface-primary shadow-brutal z-50">
                       <div className="p-4 border-b-2 border-wharf-border-primary bg-wharf-surface-secondary">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-wharf-pink border-2 border-wharf-border-primary flex items-center justify-center">
-                            <span className="text-lg font-black text-wharf-black">
-                              {getUserInitial()}
-                            </span>
+                          <div className="w-12 h-12 bg-wharf-pink border-2 border-wharf-border-primary flex items-center justify-center overflow-hidden">
+                            {user.avatar ? (
+                              <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-lg font-black text-wharf-black">
+                                {getUserInitial()}
+                              </span>
+                            )}
                           </div>
                           <div className="flex-1">
                             <p className="font-display font-black text-lg tracking-tighter">
@@ -433,23 +431,8 @@ export const Header = () => {
 
                       <div className="p-2">
                         <button
-                          onClick={handleDashboard}
-                          className="w-full px-3 py-2 text-left font-mono text-sm font-bold hover:bg-wharf-pink transition-colors flex items-center gap-2"
-                        >
-                          Dashboard
-                        </button>
-                        <button
-                          onClick={handleSettings}
-                          className="w-full px-3 py-2 text-left font-mono text-sm font-bold hover:bg-wharf-pink transition-colors flex items-center gap-2 mt-1"
-                        >
-                          Settings
-                        </button>
-                      </div>
-
-                      <div className="p-2 border-t-2 border-wharf-border-primary">
-                        <button
                           onClick={handleLogout}
-                          className="w-full px-3 py-2 text-left font-mono text-sm font-bold text-wharf-orange hover:bg-wharf-orange/10 transition-colors flex items-center gap-2"
+                          className="w-full px-3 py-2 text-left font-mono text-sm font-bold text-yellow-500 hover:text-wharf-error transition-colors flex items-center gap-2 cursor-pointer"
                         >
                           <LogOut className="w-4 h-4" />
                           Sign Out
@@ -511,34 +494,20 @@ export const Header = () => {
                 ) : (
                   <div className="mx-6 mt-2 space-y-2">
                     <div className="flex items-center gap-3 py-3 px-3 border-2 border-wharf-border-primary bg-wharf-surface-secondary">
-                      <div className="w-10 h-10 bg-wharf-purple border border-wharf-border-primary flex items-center justify-center">
-                        <span className="text-sm font-bold text-wharf-black">
-                          {getUserInitial()}
-                        </span>
+                      <div className="w-10 h-10 bg-wharf-purple border border-wharf-border-primary flex items-center justify-center overflow-hidden">
+                        {user.avatar ? (
+                          <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-sm font-bold text-wharf-black">
+                            {getUserInitial()}
+                          </span>
+                        )}
                       </div>
                       <div className="flex-1">
                         <p className="font-mono text-sm font-bold">{getUserDisplay()}</p>
                         <p className="font-mono text-xs text-wharf-text-tertiary">{user.email}</p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => {
-                        setIsMobileMenuOpen(false);
-                        handleDashboard();
-                      }}
-                      className="w-full py-2 font-mono text-sm font-bold text-center hover:bg-wharf-pink transition-colors border-2 border-wharf-border-primary"
-                    >
-                      Dashboard
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsMobileMenuOpen(false);
-                        handleSettings();
-                      }}
-                      className="w-full py-2 font-mono text-sm font-bold text-center hover:bg-wharf-pink transition-colors border-2 border-wharf-border-primary"
-                    >
-                      Settings
-                    </button>
                     <button
                       onClick={() => {
                         setIsMobileMenuOpen(false);
