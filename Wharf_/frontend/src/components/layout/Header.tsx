@@ -307,7 +307,7 @@ export const Header = () => {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 rounded-3xl ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 rounded-b-3xl ${
           scrolled
             ? 'bg-wharf-surface-primary/95 backdrop-blur-sm border-b-2 border-wharf-border-primary'
             : 'bg-wharf-surface-primary border-b-2 border-wharf-border-primary'
