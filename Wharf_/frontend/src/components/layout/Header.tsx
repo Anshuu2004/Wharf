@@ -199,7 +199,7 @@ export const Header = () => {
   const mobileNavLinks = [
     { href: '/', label: 'HOME', icon: Home, color: 'text-wharf-cyan-darker' },
     { href: '/generator', label: 'REPO README', icon: FileText, color: 'text-wharf-pink-darker' },
-    { href: '/profile', label: 'PROFILE README', icon: UsersIcon, color: 'text-yellow-600' },
+    { href: '/profile', label: 'PROFILE', icon: UsersIcon, color: 'text-yellow-600' },
     { href: '/chat', label: 'CHAT', icon: MessageSquare, color: 'text-wharf-purple-darker' },
     { href: '/health', label: 'HEALTH', icon: Activity, color: 'text-wharf-green-darker' },
     { href: '/changelog', label: 'CHANGELOG', icon: Logs, color: 'text-wharf-cyan-darker' },

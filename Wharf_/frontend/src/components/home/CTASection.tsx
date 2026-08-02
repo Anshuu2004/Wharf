@@ -1,4 +1,5 @@
 import { ArrowRight, Zap, Rocket, CheckCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Badge, Button, Card } from '../ui';
 
 export const CTASection = () => {
@@ -39,15 +40,19 @@ export const CTASection = () => {
 
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-8 justify-center mb-8">
-            <Button variant="primary" size="lg" rounded="2xl" className="gap-2 group">
-              <Rocket className="w-4 h-4 group-hover:translate-y-[-2px] transition-transform" />
-              Start Generating Now
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <Button variant="outline" size="lg" rounded="2xl" className="group">
-              View Documentation
-              <ArrowRight className="w-4 h-4 ml-2 opacity-100 group-hover:translate-x-1 transition-all" />
-            </Button>
+            <Link to="/generator" className="w-full sm:w-auto">
+              <Button variant="primary" size="lg" rounded="2xl" className="w-full gap-2 group">
+                <Rocket className="w-4 h-4 group-hover:translate-y-[-2px] transition-transform" />
+                Start Generating Now
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+            <Link to="/docs" className="w-full sm:w-auto">
+              <Button variant="outline" size="lg" rounded="2xl" className="w-full group">
+                View Documentation
+                <ArrowRight className="w-4 h-4 ml-2 opacity-100 group-hover:translate-x-1 transition-all" />
+              </Button>
+            </Link>
           </div>
 
           {/* Trust Badges */}

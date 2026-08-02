@@ -114,7 +114,7 @@ export const Hero = () => {
             {/* Descriptions */}
             <div className="mb-8 lg:mb-10 border-l-4 border-wharf-pink-dark pl-4">
               <p className="font-mono font-bold text-sm md:text-lg text-wharf-text-primary mb-3 tracking-tight capitalize">
-                Your code is great, your docs should be too ;
+                Your code is great, your docs should be too;
               </p>
               <p className="font-mono text-sm md:text-base text-wharf-text-secondary max-w-xl pr-4 leading-relaxed text-justify capitalize">
                 WHARF generates professional, recruiter-ready profile & repository documentation in seconds so you can focus on what matters most: building amazing software...
@@ -183,7 +183,10 @@ export const Hero = () => {
             <div className="relative w-full max-w-[500px] lg:max-w-none lg:w-[120%] aspect-square lg:aspect-[4/3] flex items-center justify-center lg:justify-end xl:translate-x-12 2xl:translate-x-20">
               
               {/* Overlapping README Mockup Graphic */}
-              <div className="absolute inset-x-0 mx-auto lg:inset-auto lg:mx-0 lg:-left-[32%] top-[65%] lg:top-[80%] z-30 w-[95%] sm:w-[100%] lg:w-[125%] lg:h-[65%] bg-[#fafafa] border-2 border-wharf-border-primary rounded-xl shadow-brutal p-3 lg:p-5 transform hover:-translate-y-2 transition-all duration-500 cursor-pointer">
+              <div className="absolute inset-x-0 mx-auto lg:inset-auto lg:mx-0 lg:-left-[32%] top-[65%] lg:top-[80%] z-30 w-[95%] sm:w-[100%] lg:w-[125%] lg:h-[65%] bg-[#fafafa] border-2 border-wharf-border-primary rounded-xl shadow-brutal p-3 lg:p-5 transform hover:-translate-y-2 transition-all duration-500 cursor-pointer overflow-hidden">
+                {/* Shimmer Effect Overlay */}
+                <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                      
                 <div className="flex gap-1.5 lg:gap-2 mb-3 lg:mb-5">
                   <div className="w-2.5 lg:w-3.5 h-2.5 lg:h-3.5 rounded-full bg-wharf-pink"></div>
                   <div className="w-2.5 lg:w-3.5 h-2.5 lg:h-3.5 rounded-full bg-wharf-cyan"></div>
@@ -194,7 +197,7 @@ export const Hero = () => {
                   <div className="h-2 lg:h-3 w-full bg-wharf-border-primary/10 rounded"></div>
                   <div className="h-2 lg:h-3 w-5/6 bg-wharf-border-primary/10 rounded"></div>
                   <div className="h-2 lg:h-3 w-full bg-wharf-border-primary/10 rounded"></div>
-                  
+                      
                   <div className="mt-3 lg:mt-5 pt-3 lg:pt-5 border-t-2 border-wharf-border-primary/5">
                     <div className="h-8 lg:h-12 w-full rounded-md bg-gradient-to-r from-wharf-pink-darker/20 to-wharf-purple/20 border border-wharf-border-primary/10 flex items-center px-3 lg:px-5">
                       <div className="h-2 lg:h-3 w-1/2 bg-black/20 rounded"></div>
