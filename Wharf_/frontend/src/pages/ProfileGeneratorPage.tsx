@@ -219,46 +219,40 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
 
   const statItems = [
     {
-      label: 'Profiles Generated',
+      label: 'Profiles Analyzed',
       value: isLoading ? '--' : stats.totalProfiles.toLocaleString(),
       icon: User,
       color: 'bg-wharf-pink',
-      description: 'Profile READMEs created',
     },
     {
       label: 'Profile READMEs',
       value: isLoading ? '--' : stats.readmesGenerated.toLocaleString(),
       icon: FileText,
       color: 'bg-wharf-cyan',
-      description: 'Docs generated',
     },
     {
       label: 'Total Stars',
       value: isLoading ? '--' : stats.totalStars.toLocaleString(),
       icon: Star,
       color: 'bg-wharf-yellow',
-      description: 'Across all profiles',
     },
     {
       label: 'Templates Used',
       value: isLoading ? '--' : stats.templatesUsed.toLocaleString(),
       icon: LayoutTemplate,
       color: 'bg-wharf-purple',
-      description: 'Unique templates',
     },
     {
       label: 'Top Template',
       value: isLoading ? '--' : stats.topTemplate,
       icon: Palette,
       color: 'bg-wharf-green',
-      description: 'Most popular',
     },
     {
       label: 'Last Generated',
       value: isLoading ? '--' : stats.lastGenerated,
       icon: Clock,
       color: 'bg-wharf-yellow',
-      description: 'Most recent activity',
     },
   ];
 
@@ -299,7 +293,7 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
           <h2 className="font-display font-black text-4xl md:text-5xl tracking-tighter mb-4">
             Your{' '}
             <span className="bg-wharf-green-darker bg-clip-text text-transparent">
-              Profile Activity
+              Activity
             </span>
           </h2>
           <p className="font-mono text-base text-wharf-text-secondary max-w-2xl mx-auto capitalize">
@@ -307,7 +301,7 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto">
           {statItems.map((stat) => (
             <Card
               key={stat.label}
@@ -326,9 +320,6 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
                 </div>
                 <div className="font-mono text-xs text-wharf-text-secondary mt-1 capitalize">
                   {stat.label}
-                </div>
-                <div className="font-mono text-[10px] text-wharf-text-tertiary mt-0.5 capitalize">
-                  {stat.description}
                 </div>
               </div>
             </Card>
@@ -1874,7 +1865,6 @@ export const ProfileGeneratorPage = () => {
                           
                           <Button
                             variant="yellow"
-                            size="lg"
                             rounded="2xl"
                             onClick={handleGenerate}
                             icon={<Zap className="w-4 h-4" />}
@@ -1921,6 +1911,7 @@ export const ProfileGeneratorPage = () => {
                         <div className="flex justify-between mt-6 pt-4 border-t-2 border-wharf-border-secondary">
                           <Button
                             variant="outline"
+                            rounded="2xl"
                             onClick={prevStep}
                             icon={<ArrowLeft className="w-4 h-4" />}
                           >
@@ -1931,6 +1922,7 @@ export const ProfileGeneratorPage = () => {
                           </Button>
                           <Button
                             variant="yellow"
+                            rounded="2xl"
                             onClick={() => setCurrentStep(4)}
                             iconPosition="right"
                             icon={<ArrowRight className="w-4 h-4" />}
@@ -1984,6 +1976,7 @@ export const ProfileGeneratorPage = () => {
                         <div className="flex justify-start mt-6 pt-4 border-t-2 border-wharf-border-secondary">
                           <Button
                             variant="outline"
+                            rounded="2xl"
                             onClick={prevStep}
                             icon={<ArrowLeft className="w-4 h-4" />}
                           >

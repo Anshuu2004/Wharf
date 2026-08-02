@@ -1,5 +1,5 @@
-import { Copy, Download, Check, Sparkles } from 'lucide-react';
-import { Button, Card } from '../ui';
+import { Copy, Download, Check, Sparkles, Share2 } from 'lucide-react';
+import { Button, Card, useToast } from '../ui';
 import { useState } from 'react';
 
 interface ExportActionsProps {
@@ -14,6 +14,7 @@ export const ExportActions = ({
   isGenerating = false,
 }: ExportActionsProps) => {
   const [copied, setCopied] = useState(false);
+  const { showToast } = useToast();
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(content);
@@ -29,6 +30,24 @@ export const ExportActions = ({
     a.download = `${repoName || 'README'}.md`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: repoName ? `${repoName} README` : 'README Export',
+          text: content,
+        });
+      } else {
+        await handleCopy();
+        showToast('Share not supported in this browser. Copied to clipboard instead!', 'success');
+      }
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        showToast('Failed to share content', 'error');
+      }
+    }
   };
 
   return (
@@ -67,11 +86,11 @@ export const ExportActions = ({
 
       {/* Action Buttons Grid */}
       <div className="p-4 bg-wharf-surface-primary">
-        <div className="grid grid-cols-2 gap-4 mt-2 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2 mb-6">
           {/* Copy Button */}
           <Button
             size="sm"
-            variant={copied ? 'success' : 'secondary'}
+            variant={copied ? 'success' : 'primary'}
             onClick={handleCopy}
             className="relative group transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
           >
@@ -93,13 +112,26 @@ export const ExportActions = ({
           {/* Download Button */}
           <Button
             size="sm"
-            variant="secondary"
+            variant="primary"
             onClick={handleDownload}
             className="relative group transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
           >
             <div className="flex items-center gap-2 w-full justify-center">
               <Download className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
               <span className="font-mono text-xs font-bold">Download</span>
+            </div>
+          </Button>
+
+          {/* Share Button */}
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={handleShare}
+            className="relative group transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] col-span-2 sm:col-span-1 justify-self-center sm:justify-self-stretch w-[calc(50%-0.5rem)] sm:w-full"
+          >
+            <div className="flex items-center gap-2 w-full justify-center">
+              <Share2 className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+              <span className="font-mono text-xs font-bold">Share</span>
             </div>
           </Button>
 

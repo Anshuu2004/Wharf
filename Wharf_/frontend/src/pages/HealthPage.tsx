@@ -171,7 +171,7 @@ export const HealthPage = () => {
             </Badge>
 
             <h2 className="font-display font-black text-4xl sm:text-5xl md:text-7xl tracking-tighter leading-[1.1] uppercase">
-              Analyze & Improve Your
+              Analyze & Improve
               <br />
               <span className="bg-wharf-green-darker bg-clip-text text-transparent">
                 Project Health
