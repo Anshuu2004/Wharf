@@ -28,7 +28,7 @@ export const AdminCostEstimate = ({ cost }: AdminCostEstimateProps) => {
             </div>
           </div>
         </div>
-        <Badge variant="cyan" size="sm" className="gap-1">
+        <Badge variant="cyan" size="sm" className="hidden md:flex gap-1">
           <Calendar className="w-3 h-3" />
           Updated Today
         </Badge>
@@ -80,7 +80,7 @@ export const AdminCostEstimate = ({ cost }: AdminCostEstimateProps) => {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
         <div className="p-3 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-xl text-center">
           <p className="font-mono text-[10px] text-wharf-text-secondary uppercase tracking-wider">
             Weekly
@@ -115,7 +115,7 @@ export const AdminCostEstimate = ({ cost }: AdminCostEstimateProps) => {
             Costs are estimated based on current usage patterns
           </span>
         </div>
-        <Badge variant="pink" size="sm" className="gap-1">
+        <Badge variant="pink" size="sm" className="hidden md:flex gap-1">
           <Zap className="w-3 h-3" />
           Live
         </Badge>

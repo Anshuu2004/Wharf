@@ -68,8 +68,8 @@ export const AdminNav = ({ activeTab, onTabChange }: AdminNavProps) => {
   const tabs = Object.values(tabConfig);
 
   return (
-    <div className="w-full bg-wharf-surface-primary border-2 border-wharf-border-primary py-3 px-4 shadow-brutal-sm rounded-xl overflow-x-auto">
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 w-full min-w-[500px]">
+    <div className="w-full bg-wharf-surface-primary border-2 border-wharf-border-primary py-3 px-2 sm:px-4 shadow-brutal-sm rounded-xl overflow-x-auto">
+      <div className="grid grid-cols-5 gap-3 sm:gap-4 w-full min-w-[280px]">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const Icon = tab.icon;
