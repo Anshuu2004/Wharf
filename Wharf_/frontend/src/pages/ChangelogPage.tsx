@@ -6,6 +6,7 @@ import {
   ChangelogOptions,
   ChangelogExport,
   ChangelogHistory,
+  ChangelogGenerationProgress,
 } from '../components/changelog';
 
 // Lazy-Load Preview
@@ -184,6 +185,7 @@ export const ChangelogPage = () => {
     setIsGenerating(true);
     setGeneratedContent('');
     setGenerationProgress(0);
+    setCurrentStep(3);
 
     try {
       const apiUrl = api.defaults.baseURL || 'http://localhost:3000/api';
@@ -198,6 +200,17 @@ export const ChangelogPage = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 429) {
+          try {
+            const errData = await response.json();
+            let message = errData?.error || errData?.message || 'Too Many Requests';
+            message = message.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+            window.dispatchEvent(new CustomEvent('api:rate-limit', { detail: { message } }));
+          } catch {
+            window.dispatchEvent(new CustomEvent('api:rate-limit', { detail: { message: 'Too Many Requests' } }));
+          }
+          throw new Error('Failed to generate changelog (Rate Limited)');
+        }
         const errorText = await response.text();
         throw new Error(`Error ${response.status}: ${errorText}`);
       }
@@ -246,7 +259,6 @@ export const ChangelogPage = () => {
         }
       }
 
-      setCurrentStep(3);
       analytics.track('Changelog Generated', { repoUrl, format: options.format, commitCount: options.commitCount });
     } catch (error) {
       console.error('Failed to generate changelog:', error);
@@ -392,7 +404,7 @@ export const ChangelogPage = () => {
         value: isLoading ? '--' : stats.totalCommits.toLocaleString(),
         icon: Zap,
         color: 'bg-wharf-yellow',
-        description: 'Commits analyzed by AI',
+        description: 'Commits analyzed',
       },
       {
         label: 'Avg Commits',
@@ -440,7 +452,7 @@ export const ChangelogPage = () => {
             </Badge>
             <h2 className="font-display font-black text-4xl md:text-5xl tracking-tighter mb-4">
               Your{' '}
-              <span className="bg-gradient-to-r from-wharf-green-dark to-wharf-green-darker bg-clip-text text-transparent">
+              <span className="bg-wharf-green-darker bg-clip-text text-transparent">
                 Activity
               </span>
             </h2>
@@ -449,7 +461,7 @@ export const ChangelogPage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto">
             {statItems.map((stat) => (
               <Card
                 key={stat.label}
@@ -484,22 +496,22 @@ export const ChangelogPage = () => {
     <div className="space-y-12 animate-fadeInUp pb-12">
       {/* Hero Section */}
       <div className="container mx-auto px-4 pt-8">
-        <div className="relative text-center max-w-6xl mx-auto py-8">
+        <div className="relative text-center max-w-5xl mx-auto py-8">
           <div className="space-y-6 relative">
             <Badge variant="cyan" className="gap-2 mx-auto w-fit">
               <GitBranch className="w-3 h-3" />
               Changelog Generator
             </Badge>
 
-            <h2 className="font-display font-black text-5xl md:text-7xl tracking-tighter leading-[1.1]">
+            <h2 className="font-display font-black text-4xl sm:text-5xl md:text-7xl tracking-tighter leading-[1.1] uppercase">
               Auto-Generate
               <br />
               <span className="bg-wharf-cyan-darker bg-clip-text text-transparent">
-                Professional CHANGELOG's
+                CHANGELOG's
               </span>
             </h2>
 
-            <p className="font-mono text-base md:text-lg text-wharf-text-secondary max-w-2xl mx-auto capitalize">
+            <p className="font-mono text-sm md:text-lg text-wharf-text-secondary max-w-2xl mx-auto capitalize">
               Generate beautiful, well-structured CHANGELOG.md from your commit history in
               seconds...
             </p>
@@ -647,7 +659,7 @@ export const ChangelogPage = () => {
         {appState === 'wizard' && (
           <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <button
                 onClick={() => setAppState('landing')}
                 className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-cyan-darker transition-colors group cursor-pointer"
@@ -712,7 +724,7 @@ export const ChangelogPage = () => {
                       </div>
                       <span
                         className={`font-mono text-xs font-bold hidden sm:block ${
-                          isActive ? 'text-wharf-cyan' : 'text-wharf-text-tertiary'
+                          isActive ? 'text-wharf-cyan-darker' : 'text-wharf-text-tertiary'
                         }`}
                       >
                         {s.label}
@@ -725,12 +737,12 @@ export const ChangelogPage = () => {
 
             {/* Main Content Card */}
             <Card variant="hard" className="overflow-hidden mb-16">
-              <div className="p-6 md:p-8">
+              <div className="px-2 py-4 sm:p-6 md:p-8">
                 {/* Step 1: Enter Repository */}
                 {currentStep === 1 && (
                   <div className="space-y-6 animate-fadeInUp">
                     <div className="text-center mb-8">
-                      <h3 className="font-display font-black text-3xl tracking-tighter">
+                      <h3 className="font-display font-black text-2xl tracking-tighter">
                         Enter Your Repository
                       </h3>
                       <p className="font-mono text-sm text-wharf-text-tertiary mt-1 capitalize">
@@ -751,7 +763,7 @@ export const ChangelogPage = () => {
                 {currentStep === 2 && (
                   <div className="space-y-6 animate-fadeInUp">
                     <div className="text-center mb-8">
-                      <h3 className="font-display font-black text-3xl tracking-tighter">
+                      <h3 className="font-display font-black text-2xl tracking-tighter">
                         Configure Your Changelog
                       </h3>
                       <p className="font-mono text-sm text-wharf-text-tertiary mt-1 capitalize">
@@ -782,7 +794,15 @@ export const ChangelogPage = () => {
                         icon={<Zap className="w-4 h-4" />}
                         loading={isGenerating}
                       >
-                        {isGenerating ? 'Generating...' : 'Generate Changelog'}
+                        {/* Mobile */}
+                        <span className="block md:hidden">
+                          {isGenerating ? 'Generating...' : 'Generate'}
+                        </span>
+
+                        {/* Desktop */}
+                        <span className="hidden md:block">
+                          {isGenerating ? 'Generating...' : 'Generate Changelog'}
+                        </span>
                       </Button>
                     </div>
                   </div>
@@ -792,7 +812,7 @@ export const ChangelogPage = () => {
                 {currentStep === 3 && (
                   <div className="space-y-6 animate-fadeInUp">
                     <div className="text-center mb-8">
-                      <h3 className="font-display font-black text-3xl tracking-tighter">
+                      <h3 className="font-display font-black text-2xl tracking-tighter">
                         {isGenerating ? 'Generating Your Changelog' : 'Preview Your Changelog'}
                       </h3>
                       <p className="font-mono text-sm text-wharf-text-tertiary mt-1 capitalize">
@@ -803,24 +823,7 @@ export const ChangelogPage = () => {
                     </div>
 
                     {isGenerating && (
-                      <div className="mb-6">
-                        <div className="flex items-center gap-4">
-                          <div className="flex-1 h-2 border border-wharf-border-primary bg-wharf-surface-secondary overflow-hidden">
-                            <div
-                              className="h-full bg-wharf-cyan transition-all duration-500"
-                              style={{ width: `${generationProgress}%` }}
-                            />
-                          </div>
-                          <span className="font-mono text-sm font-bold text-wharf-cyan">
-                            {generationProgress}%
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-center gap-2 mt-4">
-                          <span className="font-mono text-xs text-wharf-text-tertiary capitalize">
-                            Analyzing commit history...
-                          </span>
-                        </div>
-                      </div>
+                      <ChangelogGenerationProgress progress={generationProgress} currentStep={generationProgress > 80 ? 2 : generationProgress > 30 ? 1 : 0} />
                     )}
 
                     {generatedContent && !isGenerating && (
@@ -839,7 +842,8 @@ export const ChangelogPage = () => {
                             onClick={prevStep}
                             icon={<ArrowLeft className="w-4 h-4" />}
                           >
-                            Back to Options
+                            <span className="block md:hidden">Back</span>
+                            <span className="hidden md:block">Back to Options</span>
                           </Button>
                           <Button
                             variant="cyan"
@@ -848,7 +852,8 @@ export const ChangelogPage = () => {
                             iconPosition="right"
                             icon={<ArrowRight className="w-4 h-4" />}
                           >
-                            Continue to Export
+                            <span className="block md:hidden">Next</span>
+                            <span className="hidden md:block">Continue to Export</span>
                           </Button>
                         </div>
                       </>
@@ -866,23 +871,20 @@ export const ChangelogPage = () => {
                 {currentStep === 4 && (
                   <div className="space-y-6 animate-fadeInUp">
                     <div className="text-center mb-8">
-                      <h3 className="font-display font-black text-3xl tracking-tighter">
+                      <h3 className="font-display font-black text-2xl tracking-tighter">
                         Export Your Changelog
                       </h3>
                       <p className="font-mono text-sm text-wharf-text-tertiary mt-1 capitalize">
-                        Save, download, or share your changelog
+                        Save or download your changelog
                       </p>
                     </div>
 
                     {generatedContent ? (
                       <>
-                        <div className="bg-wharf-surface-secondary border-2 border-wharf-border-primary p-4 mb-4">
+                        <div className="bg-wharf-surface-secondary border-2 border-wharf-border-primary p-4 mb-4 rounded-2xl">
                           <div className="flex items-center gap-2 mb-2">
-                            <FileText className="w-4 h-4 text-wharf-cyan" />
+                            <FileText className="w-4 h-4 text-wharf-cyan-darker" />
                             <span className="font-mono font-bold text-sm">CHANGELOG.md</span>
-                            <Badge variant="green" size="sm" className="ml-auto">
-                              Ready
-                            </Badge>
                           </div>
                           <p className="font-mono text-xs text-wharf-text-secondary">
                             {generatedContent.split(' ').length} Words |{' '}
@@ -903,8 +905,8 @@ export const ChangelogPage = () => {
                       </>
                     ) : (
                       <div className="text-center py-12">
-                        <p className="font-mono text-wharf-text-tertiary">
-                          Generate a changelog first.
+                        <p className="font-mono text-wharf-text-secondary capitalize">
+                          Generate a changelog first...
                         </p>
                         <Button
                           variant="outline"
