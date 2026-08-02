@@ -82,24 +82,24 @@ export const DangerTab = () => {
         </div>
 
         {/* Export Data Skeleton */}
-        <div className="flex items-center justify-between p-4 border-2 border-wharf-error/50 bg-wharf-surface-secondary rounded-2xl animate-pulse">
-          <div className="space-y-2">
+        <div className="flex flex-col md:flex-row md:items-center justify-between p-4 border-2 border-wharf-error/50 bg-wharf-surface-secondary rounded-2xl animate-pulse gap-4">
+          <div className="space-y-2 w-full md:w-auto">
             <div className="h-4 bg-wharf-border-secondary rounded w-32" />
-            <div className="h-3 bg-wharf-border-secondary rounded w-64" />
+            <div className="h-3 bg-wharf-border-secondary rounded w-48 md:w-64" />
           </div>
-          <div className="flex gap-2">
-            <div className="h-8 w-44 bg-wharf-border-secondary rounded-lg" />
-            <div className="h-8 w-32 bg-wharf-border-secondary rounded-lg" />
+          <div className="flex flex-wrap md:flex-nowrap gap-2 w-full md:w-auto">
+            <div className="h-8 w-[calc(50%-0.25rem)] md:w-44 bg-wharf-border-secondary rounded-lg" />
+            <div className="h-8 w-[calc(50%-0.25rem)] md:w-32 bg-wharf-border-secondary rounded-lg" />
           </div>
         </div>
 
         {/* Reset Account Skeleton */}
-        <div className="flex items-center justify-between p-4 border-2 border-wharf-error/50 bg-wharf-surface-secondary rounded-2xl animate-pulse">
-          <div className="space-y-2">
+        <div className="flex flex-col md:flex-row md:items-center justify-between p-4 border-2 border-wharf-error/50 bg-wharf-surface-secondary rounded-2xl animate-pulse gap-4">
+          <div className="space-y-2 w-full md:w-auto">
             <div className="h-4 bg-wharf-border-secondary rounded w-40" />
-            <div className="h-3 bg-wharf-border-secondary rounded w-56" />
+            <div className="h-3 bg-wharf-border-secondary rounded w-48 md:w-56" />
           </div>
-          <div className="h-8 w-28 bg-wharf-border-secondary rounded-lg" />
+          <div className="h-8 w-full md:w-28 bg-wharf-border-secondary rounded-lg" />
         </div>
       </div>
     );
@@ -115,14 +115,14 @@ export const DangerTab = () => {
       </div>
 
       {/* Export Data */}
-      <div className="flex items-center justify-between p-4 border-2 border-wharf-error/50 hover:border-wharf-error transition-colors rounded-2xl flex-wrap gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between p-4 border-2 border-wharf-error/50 hover:border-wharf-error transition-colors rounded-2xl gap-4">
         <div className="min-w-[200px]">
           <p className="font-mono font-bold text-sm">Export All Data</p>
           <p className="font-mono text-xs text-wharf-text-secondary capitalize">
-            Download your personal data, chat history, and generated files
+            Download your personal data, chat history & generated files
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-row md:flex-nowrap gap-2 md:gap-4 w-full md:w-auto">
           <Button
             variant="outline"
             size="sm"
@@ -130,8 +130,10 @@ export const DangerTab = () => {
             loading={isExportingJson}
             icon={<Download className="w-4 h-4" />}
             title="Fast, standard data structure format"
+            className="flex-1 md:flex-none justify-center"
           >
-            Export JSON (Recommended)
+            <span className="md:hidden">JSON</span>
+            <span className="hidden md:block">Export JSON (Recommended)</span>
           </Button>
           <Button
             variant="outline"
@@ -139,20 +141,21 @@ export const DangerTab = () => {
             onClick={() => handleExportData('zip')}
             loading={isExportingZip}
             icon={<Download className="w-4 h-4" />}
-            className="border-wharf-border-secondary"
+            className="border-wharf-border-secondary flex-1 md:flex-none justify-center"
             title="Contains categorized markdown files"
           >
-            Export ZIP
+            <span className="md:hidden">ZIP</span>
+            <span className="hidden md:block">Export ZIP</span>
           </Button>
         </div>
       </div>
 
       {/* Reset Account */}
-      <div className="flex items-center justify-between p-4 border-2 border-wharf-error/50 hover:border-wharf-error transition-colors rounded-2xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between p-4 border-2 border-wharf-error/50 hover:border-wharf-error transition-colors rounded-2xl gap-4">
         <div>
           <p className="font-mono font-bold text-sm">Reset Account / Clear Data</p>
           <p className="font-mono text-xs text-wharf-text-secondary capitalize">
-            Delete your generated data and reset all stats to 0
+            Delete your generated data & reset all stats
           </p>
         </div>
         <Button
@@ -160,6 +163,7 @@ export const DangerTab = () => {
           size="sm"
           onClick={() => setShowDeleteModal(true)}
           icon={<Trash2 className="w-4 h-4" />}
+          className="w-full md:w-auto justify-center"
         >
           Clear Data
         </Button>

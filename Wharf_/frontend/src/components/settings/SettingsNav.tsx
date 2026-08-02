@@ -67,8 +67,8 @@ export const SettingsNav = ({ activeTab, onTabChange }: SettingsNavProps) => {
   const tabs = Object.values(tabConfig);
 
   return (
-    <div className="w-full bg-wharf-surface-primary border-2 border-wharf-border-primary py-3 px-4 shadow-brutal-sm rounded-xl">
-      <div className="grid grid-cols-5 gap-4 w-full">
+    <div className="w-full bg-wharf-surface-primary border-2 border-wharf-border-primary py-3 px-2 sm:px-4 shadow-brutal-sm rounded-xl overflow-x-auto">
+      <div className="grid grid-cols-5 gap-3 sm:gap-4 w-full min-w-[280px]">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const Icon = tab.icon;

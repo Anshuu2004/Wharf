@@ -68,7 +68,6 @@ export const PreferencesTab = () => {
             </div>
             <div className="h-4 bg-wharf-border-secondary rounded w-48" />
           </div>
-          <div className="h-10 w-40 bg-wharf-border-secondary rounded-2xl" />
         </div>
 
         {/* Preferences Grid Skeleton */}
@@ -91,6 +90,11 @@ export const PreferencesTab = () => {
             </div>
           ))}
         </div>
+        
+        {/* Save Button Skeleton */}
+        <div className="flex justify-end pt-2">
+          <div className="h-10 w-48 bg-wharf-border-secondary rounded-2xl animate-pulse" />
+        </div>
       </div>
     );
   }
@@ -107,23 +111,6 @@ export const PreferencesTab = () => {
             Customize Your WHARF Experience
           </p>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="flex items-center gap-2 px-4 py-2 border-2 border-wharf-border-primary bg-wharf-yellow/80 font-mono font-bold text-sm hover:bg-wharf-yellow transition-colors disabled:opacity-50 rounded-2xl cursor-pointer"
-        >
-          {isSaving ? (
-            <span className="flex items-center gap-2">
-              <span className="w-4 h-4 border-2 border-wharf-black border-t-transparent rounded-full animate-spin" />
-              Saving...
-            </span>
-          ) : (
-            <>
-              <Save className="w-4 h-4" />
-              Save Preferences
-            </>
-          )}
-        </button>
       </div>
 
       {/* Preferences Grid */}
@@ -208,6 +195,28 @@ export const PreferencesTab = () => {
             />
           </button>
         </div>
+
+
+      </div>
+      
+      <div className="flex justify-end pt-2">
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="flex items-center gap-2 px-4 py-2 border-2 border-wharf-border-primary bg-wharf-yellow/80 font-mono font-bold text-sm hover:bg-wharf-yellow transition-colors disabled:opacity-50 rounded-2xl cursor-pointer"
+        >
+          {isSaving ? (
+            <span className="flex items-center gap-2">
+              <span className="w-4 h-4 border-2 border-wharf-black border-t-transparent rounded-full animate-spin" />
+              Saving...
+            </span>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              Save Preferences
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

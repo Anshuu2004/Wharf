@@ -193,7 +193,7 @@ export const ProfileTab = ({ profileData, isLoading, onProfileUpdated }: Profile
   return (
     <div className="space-y-8">
       {/* Header Section */}
-      <div className="flex items-start gap-6 pb-6 border-b-2 border-wharf-border-secondary">
+      <div className="flex items-start gap-3 sm:gap-6 pb-6 border-b-2 border-wharf-border-secondary">
         <div className="relative flex-shrink-0">
           <img
             src={profileData.avatar}
@@ -218,21 +218,22 @@ export const ProfileTab = ({ profileData, isLoading, onProfileUpdated }: Profile
           <p className="font-mono text-sm text-wharf-text-secondary mt-1">
             @ {profileData.username}
           </p>
-          <div className="flex flex-wrap items-center gap-6 mt-3">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 mt-3">
             <span className="font-mono text-xs text-wharf-text-tertiary flex items-center gap-1">
               <FaGithub className="w-3 h-3" />
               ID: {profileData.githubId.slice(0, 8)}
             </span>
             <span className="font-mono text-xs text-wharf-text-tertiary flex items-center gap-1">
               <Calendar className="w-3 h-3" />
-              Joined {profileData.joined}
+              <span className="sm:hidden">Join: {profileData.joined}</span>
+              <span className="hidden md:inline">Joined: {profileData.joined}</span>
             </span>
           </div>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 md:gap-8 mb-8 md:mb-12">
         {stats.map((stat) => (
           <Card
             key={stat.label}
@@ -246,7 +247,7 @@ export const ProfileTab = ({ profileData, isLoading, onProfileUpdated }: Profile
               >
                 <stat.icon className="w-5 h-5 text-wharf-black" />
               </div>
-              <div className="font-display font-black text-2xl tracking-tighter">
+              <div className="font-display font-black text-xl md:text-2xl tracking-tighter">
                 {stat.value.toLocaleString()}
               </div>
               <div className="font-mono text-xs text-wharf-text-secondary mt-1 capitalize">
