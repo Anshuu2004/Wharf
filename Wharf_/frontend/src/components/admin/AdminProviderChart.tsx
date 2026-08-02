@@ -113,9 +113,9 @@ export const AdminProviderChart = ({ data }: AdminProviderChartProps) => {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row items-center gap-6">
+      <div className="flex flex-col lg:flex-row items-center w-full gap-6">
         {/* Chart */}
-        <div className="flex-1 min-w-[200px]">
+        <div className="flex-1 w-full min-w-[200px]">
           <ResponsiveContainer width="100%" height={380}>
             <PieChart>
               <Pie
@@ -146,7 +146,7 @@ export const AdminProviderChart = ({ data }: AdminProviderChartProps) => {
         </div>
 
         {/* Stats Summary */}
-        <div className="lg:w-48 space-y-3">
+        <div className="w-full lg:w-48 space-y-3">
           <div className="p-3 bg-wharf-surface-secondary border-2 border-wharf-border-secondary rounded-xl">
             <p className="font-mono text-[10px] text-wharf-text-secondary uppercase tracking-wider">
               Total Usage

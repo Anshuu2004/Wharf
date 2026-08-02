@@ -47,7 +47,7 @@ export const UsageTab = () => {
             </div>
             <div className="h-4 bg-wharf-border-secondary rounded w-64" />
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="hidden md:flex items-center gap-1.5">
             <div className="h-6 bg-wharf-border-secondary rounded w-32" />
           </div>
         </div>
@@ -75,7 +75,7 @@ export const UsageTab = () => {
               <div className="h-4 bg-wharf-border-secondary rounded w-32" />
               <div className="h-3 bg-wharf-border-secondary rounded w-64" />
             </div>
-            <div className="h-6 bg-wharf-border-secondary rounded w-20" />
+            <div className="hidden md:flex h-6 bg-wharf-border-secondary rounded w-20" />
           </div>
         </div>
       </div>
@@ -122,14 +122,14 @@ export const UsageTab = () => {
             Your activity across all WHARF features
           </p>
         </div>
-        <Badge variant="cyan" className="gap-1.5">
+        <Badge variant="cyan" className="hidden md:flex gap-1.5">
           <Clock className="w-3 h-3" />
           Last active: {new Date(stats.lastActive).toLocaleDateString()}
         </Badge>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
         {statItems.map((item) => (
           <Card key={item.label} variant="hard-sm" rounded="3xl" className="text-center">
             <div

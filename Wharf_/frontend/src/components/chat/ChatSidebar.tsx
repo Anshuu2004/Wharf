@@ -58,7 +58,7 @@ export const ChatSidebar = ({
     { icon: Home, label: 'Home', path: '/' },
     { icon: FolderCode, label: 'Generator', path: '/generator' },
     { icon: User, label: 'Profile', path: '/profile' },
-    { icon: Settings, label: 'Settings', path: '/dashboard' },
+    { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
   // Sort Sessions: Pinned First, Then By Timestamp — Memoized To Avoid Re-Sort On Every Render

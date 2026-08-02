@@ -33,7 +33,7 @@ const templates = [
 export const TemplateSelector = ({ selected, onChange }: TemplateSelectorProps) => {
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-8">
+      <div className="grid grid-cols-2 gap-4 sm:gap-6">
         {templates.map((template) => {
           const isActive = selected === template.id;
           const Icon = template.icon;

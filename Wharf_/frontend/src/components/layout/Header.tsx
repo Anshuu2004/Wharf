@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Menu,
   X,
   User,
   LogOut,
@@ -12,16 +11,18 @@ import {
   BellDot,
   FileText,
   Home,
-  GitBranch,
   Activity,
-  BarChart3,
   Settings,
+  MessageSquare,
   Rocket,
   RefreshCw,
   Wrench,
   Shield,
   Hammer,
   Newspaper,
+  Logs,
+  LayoutDashboard,
+  Users as UsersIcon,
 } from 'lucide-react';
 import { Button, useToast } from '../ui';
 import { useAuthStore } from '../../stores/authStore';
@@ -136,16 +137,6 @@ export const Header = () => {
     navigate('/');
   };
 
-  const handleDashboard = () => {
-    navigate('/dashboard');
-    setShowUserMenu(false);
-  };
-
-  const handleSettings = () => {
-    navigate('/settings');
-    setShowUserMenu(false);
-  };
-
   const handleLogoClick = () => {
     window.scrollTo({
       top: 0,
@@ -204,14 +195,16 @@ export const Header = () => {
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  // Mobile Navigation Links
+  // Mobile Navigation Links With Icons 
   const mobileNavLinks = [
-    { href: '/', label: 'HOME', icon: Home },
-    { href: '/generator', label: 'GENERATOR', icon: FileText },
-    { href: '/treemap', label: 'TREE MAP', icon: GitBranch },
-    { href: '/health', label: 'HEALTH', icon: Activity },
-    { href: '/analytics', label: 'ANALYTICS', icon: BarChart3 },
-    { href: '/settings', label: 'SETTINGS', icon: Settings },
+    { href: '/', label: 'HOME', icon: Home, color: 'text-wharf-cyan-darker' },
+    { href: '/generator', label: 'REPO README', icon: FileText, color: 'text-wharf-pink-darker' },
+    { href: '/profile', label: 'PROFILE README', icon: UsersIcon, color: 'text-yellow-600' },
+    { href: '/chat', label: 'CHAT', icon: MessageSquare, color: 'text-wharf-purple-darker' },
+    { href: '/health', label: 'HEALTH', icon: Activity, color: 'text-wharf-green-darker' },
+    { href: '/changelog', label: 'CHANGELOG', icon: Logs, color: 'text-wharf-cyan-darker' },
+    ...(user ? [{ href: '/settings', label: 'SETTINGS', icon: Settings, color: 'text-wharf-text-secondary' }] : []),
+    ...(user?.isAdmin ? [{ href: '/admin', label: 'ADMIN', icon: LayoutDashboard, color: 'text-wharf-error' }] : []),
   ];
 
   const getNotificationIcon = (type: string) => {
@@ -247,7 +240,7 @@ export const Header = () => {
 
   // Notification Dropdown Component
   const NotificationDropdown = () => (
-    <div className="absolute -right-14 mt-2 w-120 border-2 border-wharf-border-primary bg-wharf-surface-primary shadow-brutal z-50 rounded-xl">
+    <div className="fixed left-4 right-4 top-[72px] md:absolute md:inset-auto md:right-0 md:top-auto md:mt-2 w-auto md:w-96 md:max-w-sm border-2 border-wharf-border-primary bg-wharf-surface-primary shadow-brutal z-50 rounded-xl">
       <div className="flex items-center justify-between p-4 border-b-2 border-wharf-border-primary bg-wharf-surface-secondary rounded-xl">
         <h3 className="font-display font-black text-lg tracking-tighter">Notifications</h3>
         {unreadCount > 0 && (
@@ -314,7 +307,7 @@ export const Header = () => {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 rounded-3xl ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 rounded-b-3xl ${
           scrolled
             ? 'bg-wharf-surface-primary/95 backdrop-blur-sm border-b-2 border-wharf-border-primary'
             : 'bg-wharf-surface-primary border-b-2 border-wharf-border-primary'
@@ -352,7 +345,7 @@ export const Header = () => {
                 <button
                   ref={notificationButtonRef}
                   onClick={toggleNotifications}
-                  className="relative w-10 h-10 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-pink/50 transition-all flex items-center justify-center shadow-brutal-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none rounded-lg cursor-pointer"
+                  className="relative w-10 h-10 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-pink/50 transition-all flex items-center justify-center shadow-brutal-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none rounded-xl cursor-pointer"
                   aria-label="Notifications"
                 >
                   {unreadCount > 0 ? (
@@ -378,8 +371,12 @@ export const Header = () => {
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center gap-2 px-2 py-1.5 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-surface-secondary transition-all group rounded-lg cursor-pointer"
                   >
-                    <div className="w-8 h-8 bg-wharf-purple border border-wharf-border-primary flex items-center justify-center">
-                      <span className="text-sm font-bold text-wharf-black">{getUserInitial()}</span>
+                    <div className="w-8 h-8 bg-wharf-purple border border-wharf-border-primary flex items-center justify-center overflow-hidden">
+                      {user.avatar ? (
+                        <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-sm font-bold text-wharf-black">{getUserInitial()}</span>
+                      )}
                     </div>
                     <span className="hidden lg:block font-mono text-sm font-bold">
                       {getUserDisplay()}
@@ -393,10 +390,14 @@ export const Header = () => {
                     <div className="absolute right-0 mt-2 w-80 border-2 border-wharf-border-primary bg-wharf-surface-primary shadow-brutal z-50">
                       <div className="p-4 border-b-2 border-wharf-border-primary bg-wharf-surface-secondary">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-wharf-pink border-2 border-wharf-border-primary flex items-center justify-center">
-                            <span className="text-lg font-black text-wharf-black">
-                              {getUserInitial()}
-                            </span>
+                          <div className="w-12 h-12 bg-wharf-pink border-2 border-wharf-border-primary flex items-center justify-center overflow-hidden">
+                            {user.avatar ? (
+                              <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-lg font-black text-wharf-black">
+                                {getUserInitial()}
+                              </span>
+                            )}
                           </div>
                           <div className="flex-1">
                             <p className="font-display font-black text-lg tracking-tighter">
@@ -433,23 +434,8 @@ export const Header = () => {
 
                       <div className="p-2">
                         <button
-                          onClick={handleDashboard}
-                          className="w-full px-3 py-2 text-left font-mono text-sm font-bold hover:bg-wharf-pink transition-colors flex items-center gap-2"
-                        >
-                          Dashboard
-                        </button>
-                        <button
-                          onClick={handleSettings}
-                          className="w-full px-3 py-2 text-left font-mono text-sm font-bold hover:bg-wharf-pink transition-colors flex items-center gap-2 mt-1"
-                        >
-                          Settings
-                        </button>
-                      </div>
-
-                      <div className="p-2 border-t-2 border-wharf-border-primary">
-                        <button
                           onClick={handleLogout}
-                          className="w-full px-3 py-2 text-left font-mono text-sm font-bold text-wharf-orange hover:bg-wharf-orange/10 transition-colors flex items-center gap-2"
+                          className="w-full px-3 py-2 text-left font-mono text-sm font-bold text-yellow-500 hover:text-wharf-error transition-colors flex items-center gap-2 cursor-pointer"
                         >
                           <LogOut className="w-4 h-4" />
                           Sign Out
@@ -469,88 +455,131 @@ export const Header = () => {
 
               {/* Mobile Menu Button */}
               <button
-                className="md:hidden w-10 h-10 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-pink transition-all flex items-center justify-center"
+                className="md:hidden relative w-10 h-10 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-pink/20 transition-all duration-300 flex items-center justify-center shadow-brutal-sm hover:shadow-none rounded-xl group"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label="Toggle menu"
               >
-                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                <div className="relative w-5 h-5 flex items-center justify-center">
+                  <span
+                    className={`absolute h-0.5 w-5 bg-wharf-text-primary rounded-full transition-all duration-300 ease-in-out ${
+                      isMobileMenuOpen ? 'rotate-45' : '-translate-y-1.5'
+                    }`}
+                  />
+                  <span
+                    className={`absolute h-0.5 w-5 bg-wharf-text-primary rounded-full transition-all duration-300 ease-in-out ${
+                      isMobileMenuOpen ? 'opacity-0' : 'opacity-100'
+                    }`}
+                  />
+                  <span
+                    className={`absolute h-0.5 w-5 bg-wharf-text-primary rounded-full transition-all duration-300 ease-in-out ${
+                      isMobileMenuOpen ? '-rotate-45' : 'translate-y-1.5'
+                    }`}
+                  />
+                </div>
               </button>
             </div>
           </div>
 
           {/* Mobile Navigation Menu */}
           {isMobileMenuOpen && (
-            <div className="md:hidden fixed left-0 right-0 top-16 bg-wharf-surface-primary border-b-2 border-wharf-border-primary shadow-brutal animate-slideDown z-40 max-h-[calc(100vh-64px)] overflow-y-auto">
-              <div className="flex flex-col py-4">
-                {mobileNavLinks.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    className="flex items-center gap-4 px-6 py-4 font-mono font-bold text-base uppercase tracking-wider border-l-4 border-transparent hover:border-wharf-pink hover:bg-wharf-surface-secondary transition-all"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <link.icon className="w-5 h-5 text-wharf-pink" />
-                    {link.label}
-                  </a>
-                ))}
-
-                {/* Divider */}
-                <div className="h-px bg-wharf-border-secondary my-2 mx-6" />
-
-                {/* Sign In Button for Mobile */}
-                {!user ? (
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      handleLogin();
-                    }}
-                    className="flex items-center justify-center gap-3 mx-6 mt-2 py-3 font-mono font-bold text-sm uppercase tracking-wider border-2 border-wharf-border-primary bg-wharf-pink hover:bg-wharf-pink-dark transition-all shadow-brutal-sm"
-                  >
-                    <User className="w-4 h-4" />
-                    Sign In
-                  </button>
-                ) : (
-                  <div className="mx-6 mt-2 space-y-2">
-                    <div className="flex items-center gap-3 py-3 px-3 border-2 border-wharf-border-primary bg-wharf-surface-secondary">
-                      <div className="w-10 h-10 bg-wharf-purple border border-wharf-border-primary flex items-center justify-center">
-                        <span className="text-sm font-bold text-wharf-black">
+            <div className="md:hidden fixed left-4 right-4 top-[72px] bg-wharf-surface-primary border-2 border-wharf-border-primary shadow-brutal z-40 max-h-[calc(100vh-[90px])] overflow-y-auto animate-slideDown rounded-xl">
+              {/* User Profile Section */}
+              {user ? (
+                <div className="p-5 border-b-2 border-wharf-border-primary bg-gradient-to-r from-wharf-surface-secondary to-wharf-surface-tertiary rounded-t-xl">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-wharf-pink to-wharf-purple border-2 border-wharf-border-primary flex items-center justify-center overflow-hidden shadow-brutal-sm">
+                      {user.avatar ? (
+                        <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-xl font-black text-wharf-black">
                           {getUserInitial()}
                         </span>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-display font-black text-lg tracking-tighter text-wharf-text-primary">
+                        {getUserDisplay()}
+                      </p>
+                      <p className="font-mono text-xs text-wharf-text-secondary flex items-center gap-1">
+                        <Mail className="w-3 h-3" />
+                        {user.email}
+                      </p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="font-mono text-[10px] text-wharf-text-tertiary flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          Joined{' '}
+                          {user?.githubCreatedAt
+                            ? new Intl.DateTimeFormat('en-US', {
+                                month: 'short',
+                                year: 'numeric',
+                              }).format(new Date(user.githubCreatedAt))
+                            : 'Recent'}
+                        </span>
                       </div>
-                      <div className="flex-1">
-                        <p className="font-mono text-sm font-bold">{getUserDisplay()}</p>
-                        <p className="font-mono text-xs text-wharf-text-tertiary">{user.email}</p>
-                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-5 border-b-2 border-wharf-border-primary bg-gradient-to-r from-wharf-surface-secondary to-wharf-surface-tertiary">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-display font-black text-xl tracking-tighter text-wharf-text-primary">
+                        Welcome to Wharf
+                      </p>
+                      <p className="font-mono text-xs text-wharf-text-secondary mt-1 capitalize">
+                        Sign in to access all features
+                      </p>
                     </div>
                     <button
                       onClick={() => {
                         setIsMobileMenuOpen(false);
-                        handleDashboard();
+                        handleLogin();
                       }}
-                      className="w-full py-2 font-mono text-sm font-bold text-center hover:bg-wharf-pink transition-colors border-2 border-wharf-border-primary"
+                      className="px-4 py-2.5 font-mono font-bold text-sm border-2 border-wharf-border-primary bg-wharf-pink hover:bg-wharf-pink-dark transition-all shadow-brutal-sm hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 rounded-2xl"
                     >
-                      Dashboard
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsMobileMenuOpen(false);
-                        handleSettings();
-                      }}
-                      className="w-full py-2 font-mono text-sm font-bold text-center hover:bg-wharf-pink transition-colors border-2 border-wharf-border-primary"
-                    >
-                      Settings
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsMobileMenuOpen(false);
-                        handleLogout();
-                      }}
-                      className="w-full py-2 font-mono text-sm font-bold text-center text-wharf-orange hover:bg-wharf-orange/10 transition-colors border-2 border-wharf-border-primary"
-                    >
-                      Sign Out
+                      Sign In
                     </button>
                   </div>
-                )}
+                </div>
+              )}
+
+              {/* Navigation Links */}
+              <div className="py-3 px-4">
+                <p className="font-mono text-sm font-bold text-wharf-text-secondary uppercase tracking-wider px-4 py-2">
+                  Navigation
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {mobileNavLinks.map((link) => (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      className="flex items-center gap-3 px-4 py-3.5 font-mono font-bold text-sm uppercase tracking-wider border-2 border-wharf-border-secondary hover:border-wharf-border-primary bg-wharf-surface-secondary hover:bg-wharf-surface-primary transition-all duration-200 rounded-2xl group shadow-sm hover:shadow-brutal-sm"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <div className={`${link.color} transition-transform group-hover:scale-110`}>
+                        <link.icon className="w-5 h-5" />
+                      </div>
+                      <span className="text-wharf-text-primary text-xs">{link.label}</span>
+                    </a>
+                  ))}
+                </div>
               </div>
+
+              {/* Sign Out */}
+              {user && (
+                <div className="py-3 px-4 border-t-2 border-wharf-border-primary">
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3.5 font-mono font-bold text-sm border-2 border-wharf-border-primary/60 hover:border-wharf-error bg-wharf-surface-secondary hover:bg-wharf-error/10 transition-all rounded-2xl text-yellow-600 hover:text-wharf-error cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

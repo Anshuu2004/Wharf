@@ -166,23 +166,15 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
 
   const getFormatColor = (format: string) => {
     const colors: Record<string, string> = {
-      'keep-a-changelog': 'bg-wharf-yellow-darker',
-      simple: 'bg-wharf-green-darker',
+      'keep-a-changelog': 'bg-yellow-500',
+      simple: 'bg-wharf-green-dark',
       json: 'bg-wharf-purple-darker',
       default: 'bg-wharf-text-secondary',
     };
     return colors[format.toLowerCase()] || colors.default;
   };
 
-  const getFormatBadgeVariant = (format: string): 'cyan' | 'green' | 'purple' | 'default' => {
-    const variants: Record<string, 'cyan' | 'green' | 'purple' | 'default'> = {
-      'keep-a-changelog': 'cyan',
-      simple: 'green',
-      json: 'purple',
-      default: 'default',
-    };
-    return variants[format.toLowerCase()] || 'default';
-  };
+  
 
   const getInitials = (repoName: string) => {
     return repoName.charAt(0).toUpperCase();
@@ -407,15 +399,6 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
                             </div>
                           </div>
                         </div>
-
-                        {/* Format Badge */}
-                        <Badge
-                          variant={getFormatBadgeVariant(item.format)}
-                          className="flex items-center gap-1 flex-shrink-0 ml-2 text-[10px] px-2 py-0.5"
-                        >
-                          <FileText className="w-3 h-3" />
-                          {item.format === 'keep-a-changelog' ? 'Keep a Changelog' : item.format}
-                        </Badge>
                       </div>
 
                       {/* Action Buttons */}

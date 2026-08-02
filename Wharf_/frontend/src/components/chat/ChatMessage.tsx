@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { User, Copy, Check, Edit2, CheckCircle, X } from 'lucide-react';
+import { User, Bot, Copy, Check, Edit2, CheckCircle, X } from 'lucide-react';
 import { CodeBlock } from './CodeBlock';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -234,17 +234,13 @@ export const ChatMessage = ({
               <User className="w-4 h-4" />
             )
           ) : (
-            <img
-              src="https://res.cloudinary.com/dhn92qb61/image/upload/v1751381563/Gojo__o3vpim.webp"
-              alt="Wharf AI"
-              className="w-full h-full object-cover"
-            />
+            <Bot className="w-5 h-5 text-wharf-pink-dark" />
           )}
         </div>
       </div>
 
       {/* Message */}
-      <div className={`flex-1 max-w-[80%] ${role === 'user' ? 'order-1' : 'order-2'}`}>
+      <div className={`group flex-1 max-w-[85%] ${role === 'user' ? 'order-1' : 'order-2'}`}>
         <div
           className={`border-2 border-wharf-border-primary p-4 rounded-lg ${
             role === 'user' ? 'bg-wharf-pink/20' : 'bg-wharf-surface-secondary'
@@ -303,7 +299,7 @@ export const ChatMessage = ({
         </div>
 
         {/* Actions */}
-        <div className={`flex gap-2 mt-2 ${role === 'user' ? 'justify-end' : 'justify-start'}`}>
+        <div className={`flex gap-2 mt-2 md:opacity-0 group-hover:opacity-100 transition-opacity ${role === 'user' ? 'justify-end' : 'justify-start'}`}>
           {!isEditing && role === 'user' && onEdit && (
             <button
               onClick={() => {
@@ -323,7 +319,7 @@ export const ChatMessage = ({
             {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
             {copied ? 'Copied' : 'Copy'}
           </button>
-          <span className="font-mono text-[9px] text-wharf-text-tertiary/60 self-center">
+          <span className="font-mono text-[10px] text-wharf-text-tertiary self-center">
             {new Date(timestamp).toLocaleTimeString()}
           </span>
         </div>

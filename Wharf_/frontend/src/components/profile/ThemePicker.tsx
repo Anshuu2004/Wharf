@@ -120,16 +120,16 @@ export const ThemePicker = ({ selected, onChange }: ThemePickerProps) => {
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between mt-6">
+      <div className="flex flex-col sm:flex-row justify-between mt-6">
         <div className="flex items-center gap-2">
           <span className="font-mono text-[12px] font-bold text-wharf-text-primary uppercase tracking-wider">
-            Available: {themes.length} themes
+            Available Themes: {themes.length}
           </span>
         </div>
         {selectedTheme && (
-          <span className="font-mono text-[12px] text-wharf-text-primary flex items-center gap-1.5">
+          <span className="font-mono text-[12px] font-bold text-wharf-text-primary flex items-center gap-1.5">
             {' '}
-            Selected Theme: [
+            SELECTED THEME: [
             <span className="inline-flex gap-0.5">
               {selectedTheme.colors.map((color, i) => (
                 <span

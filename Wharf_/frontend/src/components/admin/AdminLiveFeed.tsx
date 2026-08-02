@@ -88,7 +88,7 @@ export const AdminLiveFeed = ({ activities }: AdminLiveFeedProps) => {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-end gap-2">
           <Badge variant="cyan" size="sm" className="gap-1">
             <Users className="w-3 h-3" />
             {activities.length} activities
@@ -190,7 +190,7 @@ export const AdminLiveFeed = ({ activities }: AdminLiveFeedProps) => {
 
       {/* Footer */}
       {activities.length > 0 && (
-        <div className="mt-4 pt-3 border-t-2 border-wharf-border-secondary flex flex-wrap items-center justify-between gap-2">
+        <div className="hidden md:block mt-4 pt-3 border-t-2 border-wharf-border-secondary flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <span className="font-mono text-[10px] text-wharf-text-secondary">

@@ -147,10 +147,7 @@ export const ApiKeysTab = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="h-6 bg-wharf-border-secondary rounded w-16" />
-                    <div className="h-8 bg-wharf-border-secondary rounded w-20" />
-                    <div className="h-8 bg-wharf-border-secondary rounded w-20" />
-                    <div className="h-8 w-8 bg-wharf-border-secondary rounded" />
+                    <div className="h-8 w-12 bg-wharf-border-secondary rounded" />
                   </div>
                 </div>
               </div>

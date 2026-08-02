@@ -170,15 +170,15 @@ export const HealthPage = () => {
               Repository Health Score
             </Badge>
 
-            <h2 className="font-display font-black text-5xl md:text-7xl tracking-tighter leading-[1.1]">
-              Analyze & Improve Your
+            <h2 className="font-display font-black text-4xl sm:text-5xl md:text-7xl tracking-tighter leading-[1.1] uppercase">
+              Analyze & Improve
               <br />
               <span className="bg-wharf-green-darker bg-clip-text text-transparent">
                 Project Health
               </span>
             </h2>
 
-            <p className="font-mono text-base md:text-lg text-wharf-text-secondary max-w-2xl mx-auto capitalize">
+            <p className="font-mono text-sm md:text-lg text-wharf-text-secondary max-w-2xl mx-auto capitalize">
               Instantly review documentation quality, contribution readiness, & maintainability of
               any public GitHub repository...
             </p>
@@ -319,7 +319,7 @@ export const HealthPage = () => {
         {appState === 'wizard' && (
           <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <button
                 onClick={() => setAppState('landing')}
                 className="flex items-center gap-2 font-mono text-sm font-bold text-wharf-text-secondary hover:text-wharf-green-darker transition-colors group cursor-pointer"
@@ -391,16 +391,16 @@ export const HealthPage = () => {
 
             {/* Main Content */}
             <Card variant="hard" className="overflow-hidden mb-8">
-              <div className="p-4">
+              <div className="px-2 py-4">
                 {/* Step 1: Input */}
                 {currentStep === 1 && (
                   <div className="space-y-6 animate-fadeInUp">
                     <div className="text-center mb-8">
-                      <h3 className="font-display font-black text-3xl tracking-tighter">
+                      <h3 className="font-display font-black text-2xl tracking-tighter">
                         Check Repository Health
                       </h3>
                       <p className="font-mono text-sm text-wharf-text-tertiary mt-1 capitalize">
-                        Enter a public GitHub repository URL to begin
+                        Enter a public GitHub repository URL
                       </p>
                     </div>
 
@@ -420,11 +420,11 @@ export const HealthPage = () => {
                     {/* Score Overview */}
                     <div className="flex items-center gap-2">
                       <Target className="w-5 h-5 text-wharf-text-secondary" />
-                      <h2 className="font-display font-black text-2xl tracking-tight">
+                      <h2 className="font-display font-black text-xl sm:text-2xl tracking-tight">
                         Score Overview
                       </h2>
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8"> 
                       <HealthScoreCard score={healthData.score} />
                       <ContributionScore
                         score={healthData.contributionScore || 0}
@@ -437,7 +437,7 @@ export const HealthPage = () => {
                     <div className="space-y-4 mt-16">
                       <div className="flex items-center gap-2">
                         <BarChart3 className="w-5 h-5 text-wharf-text-secondary" />
-                        <h2 className="font-display font-black text-2xl tracking-tight">
+                        <h2 className="font-display font-black text-xl sm:text-2xl tracking-tight">
                           README Score Breakdown
                         </h2>
                       </div>
@@ -448,7 +448,7 @@ export const HealthPage = () => {
                     <div className="space-y-4 mt-16">
                       <div className="flex items-center gap-2">
                         <Zap className="w-5 h-5 text-wharf-text-secondary" />
-                        <h2 className="font-display font-black text-2xl tracking-tight">
+                        <h2 className="font-display font-black text-xl sm:text-2xl tracking-tight">
                           Improvement Suggestions
                         </h2>
                       </div>

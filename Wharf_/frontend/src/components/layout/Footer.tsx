@@ -10,18 +10,18 @@ export const Footer = ({ year = new Date().getFullYear(), version = 'v1.0.0' }: 
   const footerLinks = {
     product: [
       { label: 'README Generator', href: '/generator', description: 'AI-powered README generation' },
-      { label: 'Profile Generator', href: '/profile', description: 'Create standout GitHub profiles' },
+      { label: 'Profile Generator', href: '/profile', description: 'Create GitHub profiles' },
       { label: 'Codebase Chat', href: '/chat', description: 'AI architecture exploration' },
       { label: 'Changelogs', href: '/changelog', description: 'Automate version releases' },
     ],
     resources: [
-      { label: 'Documentation', href: '/docs', description: 'Platform guides & tutorials' },
+      { label: 'Documentation', href: '/docs', description: 'Platform guide & Docs' },
       { label: 'Settings (BYOK)', href: '/settings', description: 'Manage custom API keys' },
       { label: 'GitHub Repository', href: 'https://github.com/FrostByte-49/Wharf', description: 'Open source codebase' },
       { label: 'Status', href: '#status', description: 'System status' },
     ],
     company: [
-      { label: 'About WHARF', href: '/about', description: 'Our story and mission' },
+      { label: 'About WHARF', href: '/about', description: 'Our story & mission' },
       { label: 'Blog', href: '#blog', description: 'Latest updates' },
       { label: 'Terms of Service', href: '/terms', description: 'Usage boundaries & rules' },
       { label: 'Privacy Policy', href: '/privacy', description: 'Data handling practices' },
@@ -58,11 +58,11 @@ export const Footer = ({ year = new Date().getFullYear(), version = 'v1.0.0' }: 
   return (
     <footer className="border-t-4 border-wharf-border-primary bg-wharf-background-primary mt-auto rounded-3xl">
       {/* Main Footer */}
-      <div className="container mx-auto px-4 py-12 md:py-16">
+      <div className="container mx-auto px-4 py-12 md:py-12">
         {/* Flex Row */}
-        <div className="flex flex-col lg:flex-row justify-between gap-12 lg:gap-8">
+        <div className="flex flex-col lg:flex-row justify-between gap-12 lg:gap-12">
           {/* Left Section  */}
-          <div className="lg:w-[40%] space-y-6">
+          <div className="lg:w-1/3 space-y-6">
             {/* Logo & Tagline */}
             <div>
               <h2 className="font-display font-black text-4xl md:text-5xl tracking-tight mb-3">
@@ -78,7 +78,7 @@ export const Footer = ({ year = new Date().getFullYear(), version = 'v1.0.0' }: 
             </div>
 
             {/* Social Links */}
-            <div className="pt-4">
+            <div className="pt-2">
               <h3 className="font-mono font-bold text-xs uppercase tracking-wider text-wharf-text-tertiary mb-3">
                 Connect with us
               </h3>
@@ -124,13 +124,13 @@ export const Footer = ({ year = new Date().getFullYear(), version = 'v1.0.0' }: 
           {/* Right Section */}
           <div className="hidden md:block">
             <div className="flex justify-end">
-              <div className="grid grid-cols-3 gap-8 md:gap-12 lg:gap-24">
+              <div className="grid grid-cols-3 gap-8 md:gap-12 lg:gap-20">
                 {/* Product Column */}
                 <div>
                   <h3 className="font-mono font-bold text-sm uppercase tracking-wider mb-4 text-wharf-text-primary border-l-3 border-wharf-error pl-2">
                     Product
                   </h3>
-                  <ul className="space-y-4">
+                  <ul className="space-y-5">
                     {footerLinks.product.map((link) => (
                       <li key={link.label}>
                         <a href={link.href} className="group flex flex-col gap-0.5">
@@ -152,7 +152,7 @@ export const Footer = ({ year = new Date().getFullYear(), version = 'v1.0.0' }: 
                   <h3 className="font-mono font-bold text-sm uppercase tracking-wider mb-4 text-wharf-text-primary border-l-3 border-wharf-green-darker pl-2">
                     Resources
                   </h3>
-                  <ul className="space-y-4">
+                  <ul className="space-y-5">
                     {footerLinks.resources.map((link) => (
                       <li key={link.label}>
                         <a href={link.href} className="group flex flex-col gap-0.5">
@@ -174,7 +174,7 @@ export const Footer = ({ year = new Date().getFullYear(), version = 'v1.0.0' }: 
                   <h3 className="font-mono font-bold text-sm uppercase tracking-wider mb-4 text-wharf-text-primary border-l-3 border-yellow-500 pl-2">
                     Company
                   </h3>
-                  <ul className="space-y-4">
+                  <ul className="space-y-5">
                     {footerLinks.company.map((link) => (
                       <li key={link.label}>
                         <a href={link.href} className="group flex flex-col gap-0.5">

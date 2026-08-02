@@ -70,8 +70,9 @@
   -webkit-font-smoothing: antialiased;
 }
 
-body {
+html, body {
   margin: 0;
+  overflow-x: hidden;
   font-family: var(--font-display);
 }
 
@@ -138,6 +139,16 @@ body {
 
 .scrollbar-hidden::-webkit-scrollbar {
   display: none;
+}
+
+@media (max-width: 768px) {
+  .scrollbar-hidden-mobile {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hidden-mobile::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 
@@ -354,7 +365,6 @@ body {
 .card {
   border: 2px solid var(--color-wharf-border-primary);
   background-color: var(--color-wharf-surface-primary);
-  padding: 1.5rem;
   transition: all 150ms ease;
 }
 
@@ -378,7 +388,6 @@ body {
 
 /* Badge System */
 .badge {
-  display: inline-flex;
   align-items: center;
   padding: 0.25rem 0.5rem;
   font-family: var(--font-mono);

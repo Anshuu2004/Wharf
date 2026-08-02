@@ -4,14 +4,12 @@ import {
   ArrowRight,
   GitBranch,
   Star,
-  GitFork,
   AlertCircle,
   Zap,
-  Info,
   CheckCircle,
 } from 'lucide-react';
 import { FaGithub } from 'react-icons/fa';
-import { Input, Button, Card, Badge } from '../ui';
+import { Input, Button, Card } from '../ui';
 
 interface HealthRepoInputProps {
   repoUrl: string;
@@ -123,7 +121,7 @@ export const HealthRepoInput = ({
   const isButtonDisabled = isLoading || (touched && !isValid);
 
   return (
-    <Card variant="hard" rounded="3xl" className="overflow-visible">
+    <Card variant="hard" rounded="3xl" className="overflow-visible !border-0 !shadow-none !bg-transparent !p-0 my-6 md:!border-2 md:!shadow-[var(--shadow-brutal)] md:!bg-wharf-surface-primary md:!p-6 md:!mb-6">
       {/* Header */}
       <div className="flex items-center gap-2 border-b-2 border-wharf-border-primary pb-3 mb-4">
         <div className="p-1.5 bg-wharf-green/10 border border-wharf-green/20 rounded-lg">
@@ -132,10 +130,6 @@ export const HealthRepoInput = ({
         <span className="font-mono font-bold text-sm uppercase tracking-wider">
           Repository Health Check
         </span>
-        <Badge variant="cyan" size="sm" className="ml-auto gap-1">
-          <Zap className="w-3 h-3" />
-          Free Analysis
-        </Badge>
       </div>
 
       {/* Main Input Section */}
@@ -224,7 +218,7 @@ export const HealthRepoInput = ({
 
         {/* Quick Examples */}
         <div className="space-y-3">
-          <div className="flex items-center gap-3 mt-6">
+          <div className="flex items-center gap-3 mt-8 sm:mt-6">
             <div className="flex items-center gap-2">
               <Zap className="w-3.5 h-3.5 text-wharf-cyan-darker" />
               <span className="font-mono text-xs text-wharf-text-tertiary font-bold uppercase tracking-wider">
@@ -267,18 +261,8 @@ export const HealthRepoInput = ({
         <div className="flex flex-wrap items-center justify-center pt-2">
           <div className="flex flex-wrap gap-4">
             <span className="font-mono text-[10px] text-wharf-text-secondary flex items-center gap-1.5 capitalize">
-              <Info className="w-3 h-3" />
-              Pro Tips
-            </span>{' '}
-            <span className="text-wharf-text-tertiary">|</span>
-            <span className="font-mono text-[10px] text-wharf-text-secondary flex items-center gap-1.5 capitalize">
               <GitBranch className="w-3 h-3" />
               Paste any GitHub URL
-            </span>{' '}
-            <span className="text-wharf-text-tertiary">|</span>
-            <span className="font-mono text-[10px] text-wharf-text-secondary flex items-center gap-1.5 capitalize">
-              <GitFork className="w-3 h-3" />
-              Supports public repos
             </span>{' '}
             <span className="text-wharf-text-tertiary">|</span>
             <span className="font-mono text-[10px] text-wharf-text-secondary flex items-center gap-1.5 capitalize">

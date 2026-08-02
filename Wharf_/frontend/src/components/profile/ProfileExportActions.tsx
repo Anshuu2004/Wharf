@@ -1,55 +1,160 @@
-import { Copy, Download, Check } from 'lucide-react'
-import { FaGithub } from 'react-icons/fa'
-import { Button, Card } from '../ui'
-import { useState } from 'react'
-import { useToast } from '../ui/useToast'
+import { Copy, Download, Check, Sparkles, Share2 } from 'lucide-react';
+import { Button, Card, useToast } from '../ui';
+import { useState } from 'react';
 
 interface ProfileExportActionsProps {
-  content: string
-  username?: string
+  content: string;
+  username?: string;
+  isGenerating?: boolean;
 }
 
-export const ProfileExportActions = ({ content, username }: ProfileExportActionsProps) => {
-  const [copied, setCopied] = useState(false)
-  const { showToast } = useToast()
+export const ProfileExportActions = ({
+  content,
+  username,
+  isGenerating = false,
+}: ProfileExportActionsProps) => {
+  const [copied, setCopied] = useState(false);
+  const { showToast } = useToast();
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(content)
-    setCopied(true)
-    showToast('Copied to clipboard!', 'success')
-    setTimeout(() => setCopied(false), 2000)
-  }
+    await navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleDownload = () => {
-    const blob = new Blob([content], { type: 'text/markdown' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${username || 'profile'}-README.md`
-    a.click()
-    URL.revokeObjectURL(url)
-    showToast('README downloaded!', 'success')
-  }
+    const blob = new Blob([content], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${username || 'profile'}-README.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
-  const handlePushToGitHub = () => {
-    // TODO: Push to GitHub profile repo
-    showToast('Pushing to GitHub...', 'info')
-  }
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: username ? `${username} Profile README` : 'Profile Export',
+          text: content,
+        });
+      } else {
+        await handleCopy();
+        showToast('Share not supported in this browser. Copied to clipboard instead!', 'success');
+      }
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        showToast('Failed to share content', 'error');
+      }
+    }
+  };
 
   return (
-    <Card variant="hard-sm" className="flex flex-wrap gap-2 justify-center p-4">
-      <Button size="sm" variant="secondary" onClick={handleCopy}>
-        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-        {copied ? 'Copied!' : 'Copy'}
-      </Button>
-      <Button size="sm" variant="secondary" onClick={handleDownload}>
-        <Download className="w-4 h-4" />
-        Download
-      </Button>
-      <Button size="sm" variant="yellow" onClick={handlePushToGitHub}>
-        <FaGithub className="w-4 h-4" />
-        Push to Profile
-      </Button>
+    <Card variant="hard-sm" rounded="2xl" className="p-0 overflow-hidden border-2 border-wharf-border-primary">
+      {/* Header */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-wharf-yellow/5 to-transparent" />
+        <div className="relative px-4 py-2 border-b-2 border-wharf-border-primary bg-wharf-surface-secondary flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-wharf-success" />
+              <div className="w-2.5 h-2.5 rounded-full bg-wharf-warning" />
+              <div className="w-2.5 h-2.5 rounded-full bg-wharf-error" />
+            </div>
+            <span className="font-mono text-xs font-bold text-wharf-text-secondary ml-2">
+              EXPORT ACTIONS
+            </span>
+            {isGenerating && (
+              <span className="flex items-center gap-1.5 font-mono text-[10px] text-wharf-text-tertiary bg-wharf-surface-primary px-2 py-0.5 border border-wharf-border-secondary">
+                <Sparkles className="w-3 h-3 animate-pulse text-wharf-yellow" />
+                Generating...
+              </span>
+            )}
+          </div>
+          <div className="hidden sm:flex items-center gap-2">
+            <span className="font-mono text-[10px] text-wharf-text-tertiary capitalize">
+              {content.split('\n').length} lines
+            </span>
+            <span className="font-mono text-[10px] text-wharf-text-secondary opacity-50">|</span>
+            <span className="font-mono text-[10px] text-wharf-text-tertiary capitalize">
+              {content.length} chars
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons Grid */}
+      <div className="p-4 bg-wharf-surface-primary">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2 mb-6">
+          {/* Copy Button */}
+          <Button
+            size="sm"
+            variant={copied ? 'success' : 'yellow'}
+            onClick={handleCopy}
+            className="relative group transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <div className="flex items-center gap-2 w-full justify-center">
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span className="font-mono text-xs font-bold">Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4 group-hover:rotate-[-5deg] transition-transform" />
+                  <span className="font-mono text-xs font-bold">Copy</span>
+                </>
+              )}
+            </div>
+          </Button>
+
+          {/* Download Button */}
+          <Button
+            size="sm"
+            variant="yellow"
+            onClick={handleDownload}
+            className="relative group transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <div className="flex items-center gap-2 w-full justify-center">
+              <Download className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
+              <span className="font-mono text-xs font-bold">Download</span>
+            </div>
+          </Button>
+
+          {/* Share Button */}
+          <Button
+            size="sm"
+            variant="yellow"
+            onClick={handleShare}
+            className="relative group transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] col-span-2 sm:col-span-1 justify-self-center sm:justify-self-stretch w-[calc(50%-0.5rem)] sm:w-full"
+          >
+            <div className="flex items-center gap-2 w-full justify-center">
+              <Share2 className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+              <span className="font-mono text-xs font-bold">Share</span>
+            </div>
+          </Button>
+        </div>
+
+        {/* Stats */}
+        {username && (
+          <div className="mt-3 pt-3 border-t-2 border-wharf-border-secondary">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[10px] text-wharf-text-tertiary">
+                  Profile:{' '}
+                  <span className="text-wharf-text-secondary font-bold">{username}</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[10px] text-wharf-text-tertiary">
+                  {new Date().toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </Card>
-  )
-}
+  );
+};

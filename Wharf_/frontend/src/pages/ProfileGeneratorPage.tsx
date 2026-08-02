@@ -34,6 +34,7 @@ import {
   TechStackSelector,
   SocialBadgesInput,
   WidgetsCustomizer,
+  ProfileGenerationProgress,
 } from '../components/profile';
 // Lazy-load The Heavy Markdown Preview
 const ReadmePreview = lazy(() =>
@@ -84,6 +85,7 @@ interface ProfileOptionsType {
   showStreak: boolean;
   birthday?: string;
   terminalConfig?: {
+    prompt?: string;
     os: string;
     host: string;
     kernel: string;
@@ -217,46 +219,40 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
 
   const statItems = [
     {
-      label: 'Profiles Generated',
+      label: 'Profiles Analyzed',
       value: isLoading ? '--' : stats.totalProfiles.toLocaleString(),
       icon: User,
       color: 'bg-wharf-pink',
-      description: 'Profile READMEs created',
     },
     {
       label: 'Profile READMEs',
       value: isLoading ? '--' : stats.readmesGenerated.toLocaleString(),
       icon: FileText,
       color: 'bg-wharf-cyan',
-      description: 'Docs generated',
     },
     {
       label: 'Total Stars',
       value: isLoading ? '--' : stats.totalStars.toLocaleString(),
       icon: Star,
       color: 'bg-wharf-yellow',
-      description: 'Across all profiles',
     },
     {
       label: 'Templates Used',
       value: isLoading ? '--' : stats.templatesUsed.toLocaleString(),
       icon: LayoutTemplate,
       color: 'bg-wharf-purple',
-      description: 'Unique templates',
     },
     {
       label: 'Top Template',
       value: isLoading ? '--' : stats.topTemplate,
       icon: Palette,
       color: 'bg-wharf-green',
-      description: 'Most popular',
     },
     {
       label: 'Last Generated',
       value: isLoading ? '--' : stats.lastGenerated,
       icon: Clock,
       color: 'bg-wharf-yellow',
-      description: 'Most recent activity',
     },
   ];
 
@@ -297,7 +293,7 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
           <h2 className="font-display font-black text-4xl md:text-5xl tracking-tighter mb-4">
             Your{' '}
             <span className="bg-wharf-green-darker bg-clip-text text-transparent">
-              Profile Activity
+              Activity
             </span>
           </h2>
           <p className="font-mono text-base text-wharf-text-secondary max-w-2xl mx-auto capitalize">
@@ -305,7 +301,7 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto">
           {statItems.map((stat) => (
             <Card
               key={stat.label}
@@ -324,9 +320,6 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
                 </div>
                 <div className="font-mono text-xs text-wharf-text-secondary mt-1 capitalize">
                   {stat.label}
-                </div>
-                <div className="font-mono text-[10px] text-wharf-text-tertiary mt-0.5 capitalize">
-                  {stat.description}
                 </div>
               </div>
             </Card>
@@ -474,7 +467,19 @@ export const ProfileGeneratorPage = () => {
         }
       );
 
-      if (!response.ok) throw new Error('Failed to fetch profile');
+      if (!response.ok) {
+        if (response.status === 429) {
+          try {
+            const errData = await response.json();
+            let message = errData?.error || errData?.message || 'Too Many Requests';
+            message = message.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+            window.dispatchEvent(new CustomEvent('api:rate-limit', { detail: { message } }));
+          } catch {
+            window.dispatchEvent(new CustomEvent('api:rate-limit', { detail: { message: 'Too Many Requests' } }));
+          }
+        }
+        throw new Error('Failed to fetch profile');
+      }
 
       const data = await response.json();
       if (data.success) {
@@ -518,7 +523,19 @@ export const ProfileGeneratorPage = () => {
         }
       );
 
-      if (!response.ok) throw new Error('Failed to generate profile README');
+      if (!response.ok) {
+        if (response.status === 429) {
+          try {
+            const errData = await response.json();
+            let message = errData?.error || errData?.message || 'Too Many Requests';
+            message = message.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+            window.dispatchEvent(new CustomEvent('api:rate-limit', { detail: { message } }));
+          } catch {
+            window.dispatchEvent(new CustomEvent('api:rate-limit', { detail: { message: 'Too Many Requests' } }));
+          }
+        }
+        throw new Error('Failed to generate profile README');
+      }
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder('utf-8');
@@ -623,8 +640,8 @@ export const ProfileGeneratorPage = () => {
               Profile README Generator
             </Badge>
 
-            <h2 className="font-display font-black text-5xl md:text-7xl tracking-tighter leading-[1.1]">
-              Create A Stunning
+            <h2 className="font-display font-black text-4xl sm:text-5xl md:text-7xl tracking-tighter leading-[1.1] uppercase">
+              Create Stunning
               <br />
               <span className="bg-yellow-500 bg-clip-text text-transparent">
                 GitHub Profile README
@@ -893,16 +910,16 @@ export const ProfileGeneratorPage = () => {
 
             {/* Main Content Card */}
             <Card variant="hard" className="overflow-hidden">
-              <div className="p-4">
+              <div className="px-2 py-4 sm:p-6 md:p-8">
                 {/* Step 1: Enter Profile */}
                 {currentStep === 1 && (
                   <div className="space-y-6 animate-fadeInUp">
                     <div className="text-center mb-8">
-                      <h3 className="font-display font-black text-3xl tracking-tighter">
+                      <h3 className="font-display font-black text-2xl tracking-tighter">
                         Enter Your GitHub Profile
                       </h3>
                       <p className="font-mono text-sm text-wharf-text-tertiary mt-1 capitalize">
-                        Enter your username to fetch profile data
+                        Enter your GitHub username to fetch profile data
                       </p>
                     </div>
                     <ProfileForm
@@ -916,25 +933,27 @@ export const ProfileGeneratorPage = () => {
                 {/* Step 2: Customize */}
                 {currentStep === 2 && (
                   <div className="space-y-6 animate-fadeInUp">
-                    <div className="flex items-center justify-between mb-8">
-                      <div>
-                        <h3 className="font-display font-black text-3xl tracking-tighter">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:mt-0 mb-4 sm:mb-8">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-display font-black text-2xl tracking-tighter">
                           Customize Your Profile
                         </h3>
-                        <p className="font-mono text-sm text-wharf-text-tertiary mt-2 capitalize">
+                        <p className="font-mono text-sm text-wharf-text-tertiary mt-1 capitalize">
                           Choose template, theme & sections for your README
                         </p>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        rounded="lg"
-                        onClick={() => setShowResetConfirm(true)}
-                        icon={<RotateCcw className="w-4 h-4" />}
-                        className="text-wharf-error hover:bg-wharf-error/10 hover:border-wharf-error transition-colors"
-                      >
-                        Start Fresh
-                      </Button>
+                      <div className="w-full sm:w-auto flex justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          rounded="lg"
+                          onClick={() => setShowResetConfirm(true)}
+                          icon={<RotateCcw className="w-4 h-4" />}
+                          className="text-wharf-error hover:bg-wharf-error/10 hover:border-wharf-error transition-colors shrink-0 whitespace-nowrap"
+                        >
+                          <span className="inline">Start Fresh</span>
+                        </Button>
+                      </div>
                     </div>
 
                     {profileData ? (
@@ -944,7 +963,7 @@ export const ProfileGeneratorPage = () => {
                           {/* Tab Navigation */}
                           <div className="w-full bg-wharf-surface-primary border-2 border-wharf-border-primary rounded-lg p-2 shadow-brutal-sm">
                             <div
-                              className={`grid gap-4 w-full ${options.template === 'terminal' ? 'grid-cols-3' : 'grid-cols-2 md:grid-cols-5'}`}
+                              className={`grid gap-4 w-full ${options.template === 'terminal' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-5'}`}
                             >
                               {[
                                 {
@@ -1024,22 +1043,9 @@ export const ProfileGeneratorPage = () => {
                                       }`}
                                     />
 
-                                    <span className="hidden sm:inline tracking-wider font-bold">
+                                    <span className="inline tracking-wider font-bold">
                                       {tab.label}
                                     </span>
-
-                                    {/* Active Indicator */}
-                                    {isActive && (
-                                      <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center">
-                                        <div className="relative">
-                                          <Star className="w-4 h-4 text-wharf-green-dark fill-wharf-green-dark stroke-wharf-border-primary stroke-[1.5] drop-shadow-[0_0_12px_rgba(255,107,157,0.5)]" />
-                                          {/* Pulsing Glow */}
-                                          <span className="absolute inset-0 animate-ping opacity-67">
-                                            <Star className="w-4 h-4 text-wharf-yellow fill-wharf-yellow" />
-                                          </span>
-                                        </div>
-                                      </span>
-                                    )}
                                   </button>
                                 );
                               })}
@@ -1047,7 +1053,7 @@ export const ProfileGeneratorPage = () => {
                           </div>
 
                           {/* Tab Content */}
-                          <div className="min-h-[400px] pt-4">
+                          <div className={`pt-4 ${options.template === 'terminal' ? 'min-h-0 sm:min-h-[200px]' : 'min-h-[400px]'}`}>
                             {/* Layout Section */}
                             {activeTab === 'layout' && (
                               <div>
@@ -1156,7 +1162,7 @@ export const ProfileGeneratorPage = () => {
                             {/* Terminal Configuration Section */}
                             {activeTab === 'terminal_config' && (
                               <div className="space-y-6">
-                                <div className="relative py-2 mt-4 mb-2">
+                                <div className="relative py-2 mb-2">
                                   <div className="absolute inset-0 flex items-center">
                                     <div className="w-full border-t-2 border-wharf-border-secondary"></div>
                                   </div>
@@ -1202,6 +1208,7 @@ export const ProfileGeneratorPage = () => {
                                           },
                                         })
                                       }
+                                      placeholder="e.g. Arch Linux, Windows 11"
                                       className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
                                     />
                                   </div>
@@ -1221,6 +1228,7 @@ export const ProfileGeneratorPage = () => {
                                           },
                                         })
                                       }
+                                      placeholder="e.g. Human or Developer"
                                       className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
                                     />
                                   </div>
@@ -1240,6 +1248,7 @@ export const ProfileGeneratorPage = () => {
                                           },
                                         })
                                       }
+                                      placeholder="e.g. Localhost or GitHub"
                                       className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
                                     />
                                   </div>
@@ -1259,6 +1268,7 @@ export const ProfileGeneratorPage = () => {
                                           },
                                         })
                                       }
+                                      placeholder="e.g. Developer or Creator"
                                       className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
                                     />
                                   </div>
@@ -1278,6 +1288,7 @@ export const ProfileGeneratorPage = () => {
                                           },
                                         })
                                       }
+                                      placeholder="e.g. VS Code, Neovim"
                                       className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
                                     />
                                   </div>
@@ -1300,6 +1311,7 @@ export const ProfileGeneratorPage = () => {
                                           },
                                         })
                                       }
+                                      placeholder="e.g. TypeScript, Python"
                                       className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
                                     />
                                   </div>
@@ -1319,6 +1331,7 @@ export const ProfileGeneratorPage = () => {
                                           },
                                         })
                                       }
+                                      placeholder="e.g. JSON, YAML, Markdown"
                                       className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
                                     />
                                   </div>
@@ -1338,6 +1351,7 @@ export const ProfileGeneratorPage = () => {
                                           },
                                         })
                                       }
+                                      placeholder="e.g. English, French"
                                       className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
                                     />
                                   </div>
@@ -1360,6 +1374,7 @@ export const ProfileGeneratorPage = () => {
                                           },
                                         })
                                       }
+                                      placeholder="e.g. Open Source, Game Dev"
                                       className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
                                     />
                                   </div>
@@ -1379,6 +1394,7 @@ export const ProfileGeneratorPage = () => {
                                           },
                                         })
                                       }
+                                      placeholder="e.g. Custom Keyboards"
                                       className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
                                     />
                                   </div>
@@ -1401,6 +1417,7 @@ export const ProfileGeneratorPage = () => {
                                           },
                                         })
                                       }
+                                      placeholder="e.g. email@example.com"
                                       className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
                                     />
                                   </div>
@@ -1420,6 +1437,7 @@ export const ProfileGeneratorPage = () => {
                                           },
                                         })
                                       }
+                                      placeholder="e.g. username"
                                       className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
                                     />
                                   </div>
@@ -1439,6 +1457,7 @@ export const ProfileGeneratorPage = () => {
                                           },
                                         })
                                       }
+                                      placeholder="e.g. username#1234"
                                       className="w-full px-3 py-1.5 border-2 border-wharf-border-primary rounded-md font-mono text-sm focus:outline-none focus:border-wharf-orange bg-wharf-surface-primary"
                                     />
                                   </div>
@@ -1586,9 +1605,9 @@ export const ProfileGeneratorPage = () => {
                         </div>
 
                         {/* Right Column */}
-                        <div className="space-y-4">
+                        <div className={`space-y-4 ${activeTab === 'stack' || activeTab === 'social' || activeTab === 'widgets' || activeTab === 'preview' ? 'hidden sm:block' : ''}`}>
                           {/* Profile Preview Card */}
-                          <Card variant="hard" className="p-5 sticky top-6">
+                          <Card variant="hard" rounded="2xl" className="p-5 mb-8 sticky top-6">
                             <div className="flex items-center gap-4 mb-4 pb-4 border-b-2 border-wharf-border-secondary">
                               <div className="relative">
                                 <img
@@ -1630,50 +1649,83 @@ export const ProfileGeneratorPage = () => {
                                   {options.template}
                                 </div>
                               </div>
-                              <div className="bg-wharf-surface-secondary border border-wharf-border-primary p-2 text-center">
-                                <div className="font-mono text-xs text-wharf-text-secondary">
-                                  Theme
+                              <div className="bg-wharf-surface-secondary border border-wharf-border-primary p-2 text-center min-w-0">
+                                <div className="font-mono text-xs text-wharf-text-secondary truncate">
+                                  {options.template === 'terminal' ? 'System OS' : 'Theme'}
                                 </div>
-                                <div className="font-display font-black text-sm tracking-tighter capitalize">
-                                  {options.theme}
+                                <div className="font-display font-black text-sm tracking-tighter capitalize truncate">
+                                  {options.template === 'terminal'
+                                    ? options.terminalConfig?.os?.split(',')[0] || 'Linux'
+                                    : options.theme}
                                 </div>
                               </div>
                             </div>
 
                             {/* Configuration Summary */}
                             <div className="space-y-2 text-sm">
-                              <div className="flex justify-between items-center py-1 border-b border-wharf-border-secondary/50">
-                                <span className="font-mono text-xs text-wharf-text-secondary">
-                                  Tech Stack
-                                </span>
-                                <Badge variant="cyan" size="sm">
-                                  {options.techStack.length} items
-                                </Badge>
-                              </div>
-                              <div className="flex justify-between items-center py-1 border-b border-wharf-border-secondary/50">
-                                <span className="font-mono text-xs text-wharf-text-secondary">
-                                  Social Links
-                                </span>
-                                <Badge variant="purple" size="sm">
-                                  {options.social.length} connected
-                                </Badge>
-                              </div>
-                              <div className="flex justify-between items-center py-1">
-                                <span className="font-mono text-xs text-wharf-text-secondary">
-                                  Active Widgets
-                                </span>
-                                <Badge variant="pink" size="sm">
-                                  {
-                                    [
-                                      options.showStats,
-                                      options.showTopLanguages,
-                                      options.showTrophies,
-                                      options.showStreak,
-                                    ].filter(Boolean).length
-                                  }{' '}
-                                  / 4
-                                </Badge>
-                              </div>
+                              {options.template === 'terminal' ? (
+                                <>
+                                  <div className="flex justify-between items-center py-1 border-b border-wharf-border-secondary/50">
+                                    <span className="font-mono text-xs text-wharf-text-secondary">
+                                      Terminal Info
+                                    </span>
+                                    <Badge variant="cyan" size="sm">
+                                      Active
+                                    </Badge>
+                                  </div>
+                                  <div className="flex justify-between items-center py-1 border-b border-wharf-border-secondary/50">
+                                    <span className="font-mono text-xs text-wharf-text-secondary">
+                                      Custom Prompt
+                                    </span>
+                                    <Badge variant="purple" size="sm" className="truncate max-w-[120px]">
+                                      {options.terminalConfig?.prompt || 'wharf@base ~'}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex justify-between items-center py-1">
+                                    <span className="font-mono text-xs text-wharf-text-secondary">
+                                      Species
+                                    </span>
+                                    <Badge variant="pink" size="sm" className="truncate max-w-[120px]">
+                                      {options.terminalConfig?.species || 'Human'}
+                                    </Badge>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="flex justify-between items-center py-1 border-b border-wharf-border-secondary/50">
+                                    <span className="font-mono text-xs text-wharf-text-secondary">
+                                      Tech Stack
+                                    </span>
+                                    <Badge variant="cyan" size="sm">
+                                      {options.techStack.length} items
+                                    </Badge>
+                                  </div>
+                                  <div className="flex justify-between items-center py-1 border-b border-wharf-border-secondary/50">
+                                    <span className="font-mono text-xs text-wharf-text-secondary">
+                                      Social Links
+                                    </span>
+                                    <Badge variant="purple" size="sm">
+                                      {options.social.length} connected
+                                    </Badge>
+                                  </div>
+                                  <div className="flex justify-between items-center py-1">
+                                    <span className="font-mono text-xs text-wharf-text-secondary">
+                                      Active Widgets
+                                    </span>
+                                    <Badge variant="pink" size="sm">
+                                      {
+                                        [
+                                          options.showStats,
+                                          options.showTopLanguages,
+                                          options.showTrophies,
+                                          options.showStreak,
+                                        ].filter(Boolean).length
+                                      }{' '}
+                                      / 4
+                                    </Badge>
+                                  </div>
+                                </>
+                              )}
                             </div>
 
                             {/* Progress Indicator */}
@@ -1682,13 +1734,13 @@ export const ProfileGeneratorPage = () => {
                                 <span className="font-mono text-[11px] text-wharf-text-secondary uppercase">
                                   Completion
                                 </span>
-                                <span className="font-mono text-sm font-bold text-wharf-yellow-dark">
+                                <span className="font-mono text-sm font-bold text-yellow-600">
                                   {completionScore}%
                                 </span>
                               </div>
                               <div className="w-full h-1.5 border border-wharf-border-primary bg-wharf-surface-secondary overflow-hidden">
                                 <div
-                                  className="h-full bg-wharf-yellow-dark transition-all duration-500"
+                                  className="h-full bg-yellow-500 transition-all duration-500"
                                   style={{ width: `${completionScore}%` }}
                                 />
                               </div>
@@ -1696,72 +1748,88 @@ export const ProfileGeneratorPage = () => {
                           </Card>
 
                           {/* Quick Action Tips */}
-                          <Card variant="hard-sm" className="p-4">
-                            <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 bg-wharf-purple/20 border border-wharf-border-primary flex items-center justify-center flex-shrink-0">
-                                <Zap className="w-4 h-4 text-wharf-purple-darker" />
-                              </div>
-                              <div>
-                                <p className="font-mono text-sm font-bold">Pro Tip</p>
-                                <p className="font-mono text-[12px] text-wharf-text-secondary mt-0.5 leading-relaxed capitalize">
-                                  {options.techStack.length === 0 && (
-                                    <span>
-                                      Add your{' '}
-                                      <span className="text-wharf-cyan-darker font-bold">
-                                        tech stack
-                                      </span>{' '}
-                                      to show off your skills & attract the right opportunities...
-                                    </span>
-                                  )}
-                                  {options.techStack.length > 0 && options.techStack.length < 5 && (
-                                    <span>
-                                      You have{' '}
-                                      <span className="text-wharf-teal-dark font-bold">
-                                        {options.techStack.length}
-                                      </span>{' '}
-                                      technologies selected. Add more to create a comprehensive
-                                      skill showcase...
-                                    </span>
-                                  )}
-                                  {options.techStack.length >= 5 && options.social.length === 0 && (
-                                    <span>
-                                      Connect your{' '}
-                                      <span className="text-wharf-yellow-dark font-bold">
-                                        social profiles
-                                      </span>{' '}
-                                      to build trust & make it easy for people to reach out...
-                                    </span>
-                                  )}
-                                  {options.techStack.length >= 5 &&
-                                    options.social.length > 0 &&
-                                    options.template === 'minimal' && (
+                          {options.template !== 'terminal' ? (
+                            <Card variant="hard" rounded="2xl" className="p-4">
+                              <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 bg-wharf-purple/20 border border-wharf-border-primary flex items-center justify-center flex-shrink-0">
+                                  <Zap className="w-4 h-4 text-wharf-purple-darker" />
+                                </div>
+                                <div>
+                                  <p className="font-mono text-sm font-bold">Pro Tip</p>
+                                  <p className="font-mono text-[12px] text-wharf-text-secondary mt-0.5 leading-relaxed capitalize">
+                                    {options.techStack.length === 0 && (
                                       <span>
-                                        Try the{' '}
-                                        <span className="text-wharf-purple-darker font-bold">
-                                          Developer
-                                        </span>{' '}
-                                        or{' '}
+                                        Add your{' '}
                                         <span className="text-wharf-cyan-darker font-bold">
-                                          Creative
+                                          tech stack
                                         </span>{' '}
-                                        template to better showcase your extensive skills...
+                                        to show off your skills & attract the right opportunities...
                                       </span>
                                     )}
-                                  {options.techStack.length >= 5 &&
-                                    options.social.length > 0 &&
-                                    options.template !== 'minimal' && (
+                                    {options.techStack.length > 0 && options.techStack.length < 5 && (
                                       <span>
-                                        Your profile is looking great! Consider enabling{' '}
-                                        <span className="text-wharf-yellow-dark font-bold">
-                                          GitHub Trophies
+                                        You have{' '}
+                                        <span className="text-wharf-teal-dark font-bold">
+                                          {options.techStack.length}
                                         </span>{' '}
-                                        to highlight your achievements...
+                                        technologies selected. Add more to create a comprehensive
+                                        skill showcase...
                                       </span>
                                     )}
-                                </p>
+                                    {options.techStack.length >= 5 && options.social.length === 0 && (
+                                      <span>
+                                        Connect your{' '}
+                                        <span className="text-wharf-yellow-dark font-bold">
+                                          social profiles
+                                        </span>{' '}
+                                        to build trust & make it easy for people to reach out...
+                                      </span>
+                                    )}
+                                    {options.techStack.length >= 5 &&
+                                      options.social.length > 0 &&
+                                      options.template === 'minimal' && (
+                                        <span>
+                                          Try the{' '}
+                                          <span className="text-wharf-purple-darker font-bold">
+                                            Developer
+                                          </span>{' '}
+                                          or{' '}
+                                          <span className="text-wharf-cyan-darker font-bold">
+                                            Creative
+                                          </span>{' '}
+                                          template to better showcase your extensive skills...
+                                        </span>
+                                      )}
+                                    {options.techStack.length >= 5 &&
+                                      options.social.length > 0 &&
+                                      options.template !== 'minimal' && (
+                                        <span>
+                                          Your profile is looking great! Consider enabling{' '}
+                                          <span className="text-wharf-yellow-dark font-bold">
+                                            GitHub Trophies
+                                          </span>{' '}
+                                          to highlight your achievements...
+                                        </span>
+                                      )}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          </Card>
+                            </Card>
+                          ) : (
+                            <Card variant="hard" rounded="2xl" className="p-4">
+                                <div className="flex items-start gap-3">
+                                  <div className="w-8 h-8 bg-wharf-orange/20 border border-wharf-border-primary flex items-center justify-center flex-shrink-0">
+                                    <Terminal className="w-4 h-4 text-wharf-orange-darker" />
+                                  </div>
+                                  <div>
+                                    <p className="font-mono text-sm font-bold">Pro Tip</p>
+                                    <p className="font-mono text-[12px] text-wharf-text-secondary mt-0.5 leading-relaxed capitalize">
+                                      Customize your <span className="text-wharf-orange-darker font-bold">terminal prompt</span> to match your personal brand or favorite shell!
+                                    </p>
+                                  </div>
+                                </div>
+                            </Card>
+                          )}
                         </div>
                       </div>
                     ) : (
@@ -1773,6 +1841,13 @@ export const ProfileGeneratorPage = () => {
                           Go Back
                         </Button>
                       </div>
+                    )}
+
+                    {completionScore < 100 && (
+                      <span className="px-4 py-1.5 bg-wharf-yellow/75 border border-wharf-border-primary font-mono text-[11px] text-wharf-text-primary flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-wharf-error" />
+                        Complete Profile To 100% To Generate Your Profile README
+                      </span>
                     )}
 
                     {/* Navigation Buttons */}
@@ -1787,22 +1862,17 @@ export const ProfileGeneratorPage = () => {
                           Back
                         </Button>
                         <div className="flex items-center gap-6">
-                          {completionScore < 100 && (
-                            <span className="px-4 py-1 bg-wharf-yellow/75 border border-wharf-border-primary font-mono text-[11px] text-wharf-text-primary flex items-center gap-2">
-                              <AlertCircle className="w-3 h-3 text-wharf-error" />
-                              Complete Profile To 100% To Generate
-                            </span>
-                          )}
+                          
                           <Button
                             variant="yellow"
-                            size="lg"
                             rounded="2xl"
                             onClick={handleGenerate}
                             icon={<Zap className="w-4 h-4" />}
                             className="font-bold"
                             disabled={completionScore < 100}
                           >
-                            Generate Profile
+                            <span className="sm:hidden">Generate</span> 
+                            <span className="hidden sm:block">Generate Profile</span>
                           </Button>
                         </div>
                       </div>
@@ -1813,7 +1883,7 @@ export const ProfileGeneratorPage = () => {
                 {/* Step 3: Generate */}
                 {currentStep === 3 && (
                   <div className="space-y-6 animate-fadeInUp">
-                    <div className="text-center mb-8">
+                    <div className="text-center sm:mt-0">
                       <h3 className="font-display font-black text-2xl tracking-tighter">
                         {isGenerating ? 'Generating Your Profile' : 'Preview Your Profile'}
                       </h3>
@@ -1826,22 +1896,7 @@ export const ProfileGeneratorPage = () => {
 
                     {isGenerating && (
                       <div className="mb-6">
-                        <div className="flex items-center gap-4">
-                          <div className="flex-1 h-2 border border-wharf-border-primary bg-wharf-surface-secondary overflow-hidden">
-                            <div
-                              className="h-full bg-wharf-yellow transition-all duration-500"
-                              style={{ width: `${generationProgress}%` }}
-                            />
-                          </div>
-                          <span className="font-mono text-sm font-bold text-wharf-yellow">
-                            {generationProgress}%
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-center gap-2 mt-4">
-                          <span className="font-mono text-xs text-wharf-text-tertiary capitalize">
-                            Analyzing profile data...
-                          </span>
-                        </div>
+                        <ProfileGenerationProgress progress={generationProgress} />
                       </div>
                     )}
 
@@ -1856,18 +1911,26 @@ export const ProfileGeneratorPage = () => {
                         <div className="flex justify-between mt-6 pt-4 border-t-2 border-wharf-border-secondary">
                           <Button
                             variant="outline"
+                            rounded="2xl"
                             onClick={prevStep}
                             icon={<ArrowLeft className="w-4 h-4" />}
                           >
-                            Back to Customize
+                            {/* Mobile */}
+                            <span className="sm:hidden">Back</span>
+                            {/* Desktop */}
+                            <span className="hidden sm:block">Back to Customize</span>
                           </Button>
                           <Button
                             variant="yellow"
+                            rounded="2xl"
                             onClick={() => setCurrentStep(4)}
                             iconPosition="right"
                             icon={<ArrowRight className="w-4 h-4" />}
                           >
-                            Continue to Export
+                            {/* Mobile */}
+                            <span className="sm:hidden">Next</span>
+                            {/* Desktop */}
+                            <span className="hidden sm:block">Continue to Export</span>
                           </Button>
                         </div>
                       </>
@@ -1884,30 +1947,26 @@ export const ProfileGeneratorPage = () => {
                 {/* Step 4: Export */}
                 {currentStep === 4 && (
                   <div className="space-y-6 animate-fadeInUp">
-                    <div className="text-center mb-8">
+                    <div className="text-center sm:mt-0">
                       <h3 className="font-display font-black text-2xl tracking-tighter">
-                        Export Your Profile README
+                        Export Your Profile
                       </h3>
                       <p className="font-mono text-sm text-wharf-text-tertiary mt-1 mb-8 capitalize">
-                        Save, download, or deploy your profile README
+                        Save or download your profile README
                       </p>
                     </div>
 
                     {generatedReadme ? (
                       <>
-                        <div className="bg-wharf-surface-secondary border-2 border-wharf-border-primary p-4 mb-4">
+                        <div className="bg-wharf-surface-secondary border-2 border-wharf-border-primary p-4 mb-4 rounded-2xl">
                           <div className="flex items-center gap-2 mb-2">
-                            <FileText className="w-4 h-4 text-wharf-yellow" />
+                            <FileText className="w-4 h-4 text-yellow-600" />
                             <span className="font-mono font-bold text-sm">
-                              {profileData?.username || 'profile'}-README.md
+                              {profileData?.username || 'profile'}.md
                             </span>
-                            <Badge variant="green" size="sm" className="ml-auto">
-                              Ready
-                            </Badge>
                           </div>
                           <p className="font-mono text-xs text-wharf-text-tertiary capitalize">
-                            {generatedReadme.split(' ').length} words | {options.template} template
-                            | {options.theme} theme
+                            {generatedReadme.split(' ').length} words | {options.template} | {options.theme}
                           </p>
                         </div>
                         <ProfileExportActions
@@ -1917,6 +1976,7 @@ export const ProfileGeneratorPage = () => {
                         <div className="flex justify-start mt-6 pt-4 border-t-2 border-wharf-border-secondary">
                           <Button
                             variant="outline"
+                            rounded="2xl"
                             onClick={prevStep}
                             icon={<ArrowLeft className="w-4 h-4" />}
                           >

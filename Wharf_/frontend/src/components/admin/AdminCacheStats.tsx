@@ -40,10 +40,12 @@ export const AdminCacheStats = ({ stats }: AdminCacheStatsProps) => {
             </div>
           </div>
         </div>
-        <Badge variant="cyan" size="sm" className="gap-1">
-          <Shield className="w-3 h-3" />
-          {stats.size.toLocaleString()} cached items
-        </Badge>
+        <div className="flex items-center justify-end gap-2">
+          <Badge variant="cyan" size="sm" className="gap-1">
+            <Shield className="w-3 h-3" />
+            {stats.size.toLocaleString()} cached items
+          </Badge>
+        </div>
       </div>
 
       {/* Progress Bars */}

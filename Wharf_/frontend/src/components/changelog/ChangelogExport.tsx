@@ -1,23 +1,24 @@
-import { Copy, Download, Save, Check, Share2 } from 'lucide-react';
-import { FaGithub } from 'react-icons/fa';
-import { useState } from 'react';
+import { Copy, Download, Check, Sparkles, Share2 } from 'lucide-react';
 import { Button, Card, useToast } from '../ui';
+import { useState } from 'react';
 
 interface ChangelogExportProps {
   content: string;
   repoName?: string;
+  isGenerating?: boolean;
 }
 
-export const ChangelogExport = ({ content, repoName }: ChangelogExportProps) => {
+export const ChangelogExport = ({
+  content,
+  repoName,
+  isGenerating = false,
+}: ChangelogExportProps) => {
   const [copied, setCopied] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isGistLoading, setIsGistLoading] = useState(false);
   const { showToast } = useToast();
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(content);
     setCopied(true);
-    showToast('Copied To Clipboard!', 'success');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -29,95 +30,132 @@ export const ChangelogExport = ({ content, repoName }: ChangelogExportProps) => 
     a.download = repoName ? `${repoName}-CHANGELOG.md` : 'CHANGELOG.md';
     a.click();
     URL.revokeObjectURL(url);
-    showToast('Changelog Downloaded!', 'success');
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
+  const handleShare = async () => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      showToast('Changelog Saved To Dashboard!', 'success');
-    } catch {
-      showToast('Failed To Save Changelog', 'error');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleGist = async () => {
-    setIsGistLoading(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      showToast('Gist Created Successfully!', 'success');
-    } catch {
-      showToast('Failed To Create Gist', 'error');
-    } finally {
-      setIsGistLoading(false);
-    }
-  };
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator
-        .share({
-          title: 'Changelog',
-          text: content.substring(0, 500) + '...',
-        })
-        .catch(() => {});
-    } else {
-      handleCopy();
+      if (navigator.share) {
+        await navigator.share({
+          title: repoName ? `${repoName} Changelog` : 'Changelog',
+          text: content,
+        });
+      } else {
+        await handleCopy();
+        showToast('Share not supported in this browser. Copied to clipboard instead!', 'success');
+      }
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        showToast('Failed to share content', 'error');
+      }
     }
   };
 
   return (
-    <Card variant="hard" rounded="2xl" className="p-6 overflow-hidden">
-      {/* Actions */}
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        <Button size="sm" variant="secondary" onClick={handleCopy} className="min-w-[100px]">
-          {copied ? (
-            <>
-              <Check className="w-4 h-4" />
-              Copied!
-            </>
-          ) : (
-            <>
-              <Copy className="w-4 h-4" />
-              Copy
-            </>
-          )}
-        </Button>
+    <Card variant="hard-sm" rounded="2xl" className="p-0 overflow-hidden border-2 border-wharf-border-primary">
+      {/* Header */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-wharf-cyan/5 to-transparent" />
+        <div className="relative px-4 py-2 border-b-2 border-wharf-border-primary bg-wharf-surface-secondary flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-wharf-success" />
+              <div className="w-2.5 h-2.5 rounded-full bg-wharf-warning" />
+              <div className="w-2.5 h-2.5 rounded-full bg-wharf-error" />
+            </div>
+            <span className="font-mono text-xs font-bold text-wharf-text-secondary ml-2">
+              EXPORT ACTIONS
+            </span>
+            {isGenerating && (
+              <span className="flex items-center gap-1.5 font-mono text-[10px] text-wharf-text-tertiary bg-wharf-surface-primary px-2 py-0.5 border border-wharf-border-secondary">
+                <Sparkles className="w-3 h-3 animate-pulse text-wharf-cyan" />
+                Generating...
+              </span>
+            )}
+          </div>
+          <div className="hidden sm:flex items-center gap-2">
+            <span className="font-mono text-[10px] text-wharf-text-tertiary capitalize">
+              {content.split('\n').length} lines
+            </span>
+            <span className="font-mono text-[10px] text-wharf-text-secondary opacity-50">|</span>
+            <span className="font-mono text-[10px] text-wharf-text-tertiary capitalize">
+              {content.length} chars
+            </span>
+          </div>
+        </div>
+      </div>
 
-        <Button size="sm" variant="secondary" onClick={handleDownload} className="min-w-[100px]">
-          <Download className="w-4 h-4" />
-          Download
-        </Button>
+      {/* Action Buttons Grid */}
+      <div className="p-4 bg-wharf-surface-primary">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2 mb-6">
+          {/* Copy Button */}
+          <Button
+            size="sm"
+            variant={copied ? 'success' : 'cyan'}
+            onClick={handleCopy}
+            className="relative group transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <div className="flex items-center gap-2 w-full justify-center">
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span className="font-mono text-xs font-bold">Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4 group-hover:rotate-[-5deg] transition-transform" />
+                  <span className="font-mono text-xs font-bold">Copy</span>
+                </>
+              )}
+            </div>
+          </Button>
 
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={handleSave}
-          loading={isSaving}
-          className="min-w-[100px]"
-        >
-          <Save className="w-4 h-4" />
-          Save
-        </Button>
+          {/* Download Button */}
+          <Button
+            size="sm"
+            variant="cyan"
+            onClick={handleDownload}
+            className="relative group transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <div className="flex items-center gap-2 w-full justify-center">
+              <Download className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
+              <span className="font-mono text-xs font-bold">Download</span>
+            </div>
+          </Button>
 
-        <Button
-          size="sm"
-          variant="cyan"
-          onClick={handleGist}
-          loading={isGistLoading}
-          className="min-w-[100px]"
-        >
-          <FaGithub className="w-4 h-4" />
-          Create Gist
-        </Button>
+          {/* Share Button */}
+          <Button
+            size="sm"
+            variant="cyan"
+            onClick={handleShare}
+            className="relative group transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] col-span-2 sm:col-span-1 justify-self-center sm:justify-self-stretch w-[calc(50%-0.5rem)] sm:w-full"
+          >
+            <div className="flex items-center gap-2 w-full justify-center">
+              <Share2 className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+              <span className="font-mono text-xs font-bold">Share</span>
+            </div>
+          </Button>
+        </div>
 
-        <Button size="sm" variant="ghost" onClick={handleShare} className="min-w-[50px]">
-          <Share2 className="w-4 h-4" />
-          Share
-        </Button>
+        {/* Stats */}
+        {repoName && (
+          <div className="mt-3 pt-3 border-t-2 border-wharf-border-secondary">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[10px] text-wharf-text-tertiary">
+                  Repository:{' '}
+                  <span className="text-wharf-text-secondary font-bold">{repoName}</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[10px] text-wharf-text-tertiary">CHANGELOG.md</span>
+                <span className="font-mono text-[10px] text-wharf-text-tertiary opacity-50">|</span>
+                <span className="font-mono text-[10px] text-wharf-text-tertiary">
+                  {new Date().toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Card>
   );

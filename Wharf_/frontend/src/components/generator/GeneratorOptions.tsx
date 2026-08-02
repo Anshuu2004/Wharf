@@ -1,4 +1,4 @@
-import { Zap, Layout, TrendingUp } from 'lucide-react';
+import { Zap, Layout } from 'lucide-react';
 import { Card } from '../ui';
 import { ToneSelector, SectionToggler } from '../generator';
 
@@ -23,7 +23,7 @@ export const GeneratorOptions = ({
   const progress = (selectedCount / totalSections) * 100;
 
   return (
-    <Card variant="hard" className="space-y-6 overflow-hidden">
+    <Card variant="hard" className="space-y-6 overflow-hidden ">
       {/* Header */}
       <div className="relative -m-6 mb-0 p-6 bg-gradient-to-r from-wharf-surface-secondary to-wharf-surface-primary border-b-2 border-wharf-border-primary">
         <div className="flex items-center justify-between">
@@ -35,7 +35,7 @@ export const GeneratorOptions = ({
               Customize your README structure
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-3">
             <div className="text-right">
               <span className="font-mono text-sm font-bold text-wharf-text-primary">
                 {selectedCount}
@@ -60,7 +60,12 @@ export const GeneratorOptions = ({
               <Zap className="w-3.5 h-3.5 text-wharf-purple-darker" />
             </div>
             <h4 className="font-mono font-bold text-sm uppercase tracking-wider text-wharf-text-secondary">
-              Tone | Choose your audience
+             
+              {/* Mobile */}
+              <span className="sm:hidden">Select Tone</span>
+              
+              {/* Desktop */}
+              <span className="hidden sm:block">Tone | Choose your audience</span>
             </h4>
           </div>
           <ToneSelector value={options.tone} onChange={(tone) => onChange({ ...options, tone })} />
@@ -85,7 +90,12 @@ export const GeneratorOptions = ({
               <Layout className="w-3.5 h-3.5 text-wharf-teal" />
             </div>
             <h4 className="font-mono font-bold text-sm uppercase tracking-wider text-wharf-text-secondary capitalize">
-              Include Sections | Select what to include
+              
+              {/* Mobile */}
+              <span className="sm:hidden">Include Sections</span>
+              
+              {/* Desktop */}
+              <span className="hidden sm:block">Include Sections | Select what to include</span>
             </h4>
           </div>
           <SectionToggler
@@ -124,7 +134,6 @@ export const GeneratorOptions = ({
           {!isGenerating && (
             <div className="flex items-center justify-center gap-4 mt-3">
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-wharf-green-dark" />
                 <span className="font-mono text-[12px] text-wharf-text-secondary capitalize">
                   {selectedCount} sections selected
                 </span>

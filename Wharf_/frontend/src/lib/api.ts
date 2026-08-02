@@ -14,14 +14,24 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle global 401 Unauthorized errors (e.g. JWT Expired)
+// Handle Global 401 Unauthorized Errors (e.g. JWT Expired)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Dispatch global event so the UI can toast and redirect cleanly
+      // Dispatch Global Event So The UI Can Toast And Redirect Cleanly
       window.dispatchEvent(new CustomEvent('auth:expired'));
     }
+    if (error.response && error.response.status === 429) {
+      const defaultMsg = 'Too Many Requests';
+      let message = error.response.data?.error || error.response.data?.message || defaultMsg;
+      
+      // Convert Message To Title Case
+      message = message.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+
+      window.dispatchEvent(new CustomEvent('api:rate-limit', { detail: { message } }));
+    }
+
     return Promise.reject(error);
   }
 );

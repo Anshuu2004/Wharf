@@ -36,8 +36,6 @@ const CountUp = ({ end, duration = 2000 }: { end: number, duration?: number }) =
   }, [end, duration]);
 
   const formatNumber = (num: number) => {
-    // Determine The Suffix Based On The *final* Target Value So It Doesn't Jump Aggressively
-    // Wait, If We Always Format The Current Tick, It Naturally Transitions!
     return num > 999 ? (num / 1000).toFixed(1).replace('.0', '') + ' K+' : num.toString();
   };
 
@@ -80,123 +78,138 @@ export const Hero = () => {
   }, [isTyping, fullText]);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center -mt-3 border-b-4 border-wharf-border-primary overflow-hidden">
-      {/* Image Background */}
-      <div className="absolute inset-0 w-full h-full z-0">
-        <img
-          src="https://res.cloudinary.com/dhn92qb61/image/upload/f_auto,q_auto/v1785065871/hero_img_gc2zeo.webp"
-          alt="Wharf Hero Background"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-          onLoad={() => setImageLoaded(true)}
+    <section className="relative min-h-[90vh] flex items-center justify-center -mt-8 pb-8 md:pb-0 border-b-4 border-wharf-border-primary overflow-hidden bg-[#fafafa]">
+      
+      {/* Abstract Background Grid */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 opacity-25 mix-blend-multiply"
+          style={{
+            backgroundImage: 'linear-gradient(to right, #000 1px, transparent 1px), linear-gradient(to bottom, #000 1px, transparent 1px)',
+            backgroundSize: '4rem 4rem',
+          }}
         />
-
-        {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black/10 z-[1]" />
+        <div className="absolute left-0 top-0 w-[40rem] h-[40rem] bg-wharf-pink opacity-20 blur-[120px] rounded-full mix-blend-multiply pointer-events-none -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute right-0 bottom-0 w-[40rem] h-[40rem] bg-wharf-cyan opacity-20 blur-[120px] rounded-full mix-blend-multiply pointer-events-none translate-x-1/3 translate-y-1/3" />
       </div>
 
-      {/* Loading Placeholder */}
-      {!imageLoaded && <div className="absolute inset-0 bg-wharf-surface-primary z-0" />}
-
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-4xl mx-auto">
-          {/* Card with Custom Clip-Path */}
-          <div className="relative">
-            {/* Border Layer */}
-            <div
-              className="absolute inset-0 bg-wharf-border-primary shadow-brutal"
-              style={{
-                clipPath: 'polygon(10% 0, 100% 0, 100% 85%, 90% 100%, 0 100%, 0 15%)',
-              }}
-            />
-
-            {/* Background Layer with Dotted Grid */}
-            <div
-              className="absolute inset-[4px] bg-wharf-surface-secondary overflow-hidden"
-              style={{
-                clipPath: 'polygon(10% 0, 100% 0, 100% 85%, 90% 100%, 0 100%, 0 15%)',
-              }}
-            >
-              {/* Dotted Grid Pattern */}
-              <div
-                className="absolute inset-0 opacity-30"
-                style={{
-                  backgroundImage: 'radial-gradient(circle, #000000 1px, transparent 1px)',
-                  backgroundSize: '24px 24px',
-                }}
-              />
+      <div className="container mx-auto px-4 relative z-10 mt-12 lg:mt-0">
+        <div className="flex flex-col lg:flex-row items-start justify-between gap-12 lg:gap-20 py-12 lg:py-20 min-h-[80vh]">
+          
+          {/* Left Column: Typography, CTAs & Stats */}
+          <div className="flex-[1.2] w-full z-10 flex flex-col items-start text-left">
+            {/* Badge */}
+            <div className="mb-6 lg:mb-8">
+              <Badge variant="cyan" className="gap-2 shadow-brutal-sm text-sm py-1.5 px-4 rounded-none border-2 border-wharf-border-primary font-bold">
+                <Zap className="w-4 h-4 text-wharf-pink-darker" />
+                AI-Powered Documentation
+              </Badge>
             </div>
 
-            {/* Content Layer */}
-            <div className="relative p-8 md:p-12 transition-all duration-300">
-              <div className="text-center">
-                {/* Badge */}
-                <div className="mb-6 mt-4">
-                  <Badge variant="pink" className="gap-2">
-                    <Zap className="w-3 h-3" />
-                    AI-Powered Documentation
-                  </Badge>
+            {/* Main Heading */}
+            <h1 className="font-display font-black text-5xl md:text-6xl leading-[1.05] tracking-tight mb-6 lg:mb-8 text-wharf-text-primary uppercase">
+              Ship Code <br />
+              That <span className="text-wharf-pink-darker pr-4">Speaks...</span>
+            </h1>
+
+            {/* Descriptions */}
+            <div className="mb-8 lg:mb-10 border-l-4 border-wharf-pink-dark pl-4">
+              <p className="font-mono font-bold text-sm md:text-lg text-wharf-text-primary mb-3 tracking-tight capitalize">
+                Your code is great, your docs should be too ;
+              </p>
+              <p className="font-mono text-sm md:text-base text-wharf-text-secondary max-w-xl pr-4 leading-relaxed text-justify capitalize">
+                WHARF generates professional, recruiter-ready profile & repository documentation in seconds so you can focus on what matters most: building amazing software...
+              </p>
+            </div>
+
+            {/* CTAs */}
+            <div className="flex flex-row gap-4 w-full mb-8 lg:mb-10">
+              <Link to="/generator" className="flex-1 sm:flex-none min-w-0">
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  rounded="xl" 
+                  className="w-full !bg-wharf-pink hover:!bg-wharf-pink-dark hover:!text-wharf-text-primary !shadow-brutal-sm gap-2 text-xs sm:text-sm lg:text-base px-3 sm:px-6 whitespace-nowrap transition-colors duration-200"
+                >
+                  <span className="sm:hidden">Repo README</span>
+                  <span className="hidden sm:inline">Generate Repository README</span>
+                </Button>
+              </Link>
+              <Link to="/profile" className="flex-1 sm:flex-none min-w-0">
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  rounded="2xl" 
+                  className="w-full gap-2 text-xs sm:text-sm lg:text-base px-3 sm:px-6 whitespace-nowrap transition-colors duration-200"
+                >
+                  <span className="sm:hidden">Profile README</span>
+                  <span className="hidden sm:inline">Generate Profile README</span>
+                </Button>
+              </Link>
+            </div>
+
+            {/* Stats */}
+            <div className="flex flex-wrap items-center gap-3 md:gap-4 w-full">
+              <div className="group cursor-pointer flex-1 min-w-[100px] max-w-[180px] px-4 py-3 flex flex-col items-center justify-center text-center border-2 border-wharf-border-primary hover:border-wharf-border-primary bg-wharf-surface-primary/80 rounded-2xl shadow-sm hover:shadow-brutal-sm transition-all">
+                <div className="flex items-center justify-center gap-1">
+                  <span className="font-display font-black text-2xl group-hover:text-wharf-cyan-darker transition-colors tracking-tighter">
+                    {statsLoading ? '0' : <CountUp end={stats.totalGenerations} />}
+                  </span>
                 </div>
-
-                {/* Main Heading */}
-                <h1 className="font-display font-black text-4xl md:text-6xl lg:text-7xl tracking-tighter mb-6">
-                  Ship Code That
-                  <br />
-                  <span className="text-wharf-pink-darker">Speaks For Itself</span>
-                </h1>
-
-                {/* Description */}
-                <p className="font-mono text-sm md:text-base text-wharf-text-secondary max-w-2xl mx-auto mb-8 capitalize">
-                  Your code is great, Your docs should be too ; <br />
-                  WHARF generates professional, recruiter-ready documentation in seconds ; <br />
-                  So you can focus on what matters: building amazing software ;
-                </p>
-
-                {/* CTA Buttons */}
-                <div className="max-w-2xl mx-auto mb-8">
-                  <div className="flex flex-col sm:flex-row gap-8 justify-center">
-                    <Link to="/generator" className="w-full sm:w-auto">
-                      <Button variant="primary" size="lg" rounded="2xl" className="gap-2 group w-full">
-                        Generate Repository README
-                      </Button>
-                    </Link>
-                    <Link to="/profile" className="w-full sm:w-auto">
-                      <Button variant="outline" size="lg" rounded="2xl" className="group w-full">
-                        Generate Profile README
-                      </Button>
-                    </Link>
-                  </div>
+                <p className="font-mono font-bold text-[10px] text-wharf-text-secondary uppercase tracking-wider mt-1 text-center">Repos Documented</p>
+              </div>
+              
+              <div className="group cursor-pointer flex-1 min-w-[100px] max-w-[180px] px-4 py-3 flex flex-col items-center justify-center text-center border-2 border-wharf-border-primary hover:border-wharf-border-primary bg-wharf-surface-primary/80 rounded-2xl shadow-sm hover:shadow-brutal-sm transition-all">
+                <div className="flex items-center justify-center gap-1">
+                  <span className="font-display font-black text-2xl group-hover:text-red-600 transition-colors tracking-tighter">
+                    {statsLoading ? '0' : <CountUp end={stats.totalTokens} />}
+                  </span>
                 </div>
+                <p className="font-mono font-bold text-[10px] text-wharf-text-secondary uppercase tracking-wider mt-1 text-center">Tokens Burned</p>
+              </div>
 
-                {/* Stats - visible to ALL users, auth or not */}
-                <div className="hidden md:flex flex-wrap justify-center gap-6 md:gap-20 pt-8 border-t-2 border-wharf-border-secondary max-w-2xl mx-auto">
-                  <div className="text-center group cursor-pointer">
-                    <div className="flex items-center gap-1 justify-center">
-                      <span className="font-display font-black text-2xl group-hover:text-wharf-pink-darker transition-colors w-[120px]">
-                        {statsLoading ? '0' : <CountUp end={stats.totalGenerations} />}
-                      </span>
+              <div className="hidden sm:block group cursor-pointer flex-1 min-w-[100px] max-w-[180px] px-4 py-3 flex flex-col items-center justify-center text-center border-2 border-wharf-border-primary hover:border-wharf-border-primary bg-wharf-surface-primary/80 rounded-2xl shadow-sm hover:shadow-brutal-sm transition-all">
+                <div className="flex items-center justify-center gap-1">
+                  <span className="font-display font-black text-2xl group-hover:text-wharf-green-darker transition-colors tracking-tighter text-black">
+                    &lt;30s
+                  </span>
+                </div>
+                <p className="font-mono font-bold text-[10px] text-wharf-text-secondary uppercase tracking-wider mt-1 text-center">Avg Gen Time</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Graphic */}
+          <div className="flex flex-[0.8] w-full min-h-[350px] relative items-center justify-center lg:justify-end -mt-24 sm:-mt-8 -lg:mt-2">
+            <div className="relative w-full max-w-[500px] lg:max-w-none lg:w-[120%] aspect-square lg:aspect-[4/3] flex items-center justify-center lg:justify-end xl:translate-x-12 2xl:translate-x-20">
+              
+              {/* Overlapping README Mockup Graphic */}
+              <div className="absolute inset-x-0 mx-auto lg:inset-auto lg:mx-0 lg:-left-[32%] top-[65%] lg:top-[80%] z-30 w-[95%] sm:w-[100%] lg:w-[125%] lg:h-[65%] bg-[#fafafa] border-2 border-wharf-border-primary rounded-xl shadow-brutal p-3 lg:p-5 transform hover:-translate-y-2 transition-all duration-500 cursor-pointer">
+                <div className="flex gap-1.5 lg:gap-2 mb-3 lg:mb-5">
+                  <div className="w-2.5 lg:w-3.5 h-2.5 lg:h-3.5 rounded-full bg-wharf-pink"></div>
+                  <div className="w-2.5 lg:w-3.5 h-2.5 lg:h-3.5 rounded-full bg-wharf-cyan"></div>
+                  <div className="w-2.5 lg:w-3.5 h-2.5 lg:h-3.5 rounded-full bg-wharf-purple"></div>
+                </div>
+                <div className="space-y-2 lg:space-y-3.5">
+                  <div className="h-2.5 lg:h-3.5 w-3/4 bg-wharf-border-primary/20 rounded"></div>
+                  <div className="h-2 lg:h-3 w-full bg-wharf-border-primary/10 rounded"></div>
+                  <div className="h-2 lg:h-3 w-5/6 bg-wharf-border-primary/10 rounded"></div>
+                  <div className="h-2 lg:h-3 w-full bg-wharf-border-primary/10 rounded"></div>
+                  
+                  <div className="mt-3 lg:mt-5 pt-3 lg:pt-5 border-t-2 border-wharf-border-primary/5">
+                    <div className="h-8 lg:h-12 w-full rounded-md bg-gradient-to-r from-wharf-pink-darker/20 to-wharf-purple/20 border border-wharf-border-primary/10 flex items-center px-3 lg:px-5">
+                      <div className="h-2 lg:h-3 w-1/2 bg-black/20 rounded"></div>
                     </div>
-                    <p className="font-mono text-xs text-wharf-text-secondary">Repos Documented</p>
-                  </div>
-                  <div className="text-center group cursor-pointer">
-                    <div className="flex items-center gap-1 justify-center">
-                      <span className="font-display font-black text-2xl group-hover:text-wharf-pink-darker transition-colors w-[120px]">
-                        {statsLoading ? '0' : <CountUp end={stats.totalTokens} />}
-                      </span>
-                    </div>
-                    <p className="font-mono text-xs text-wharf-text-secondary">Tokens Burned</p>
-                  </div>
-                  <div className="text-center group cursor-pointer">
-                    <div className="flex items-center gap-1 justify-center">
-                      <span className="font-display font-black text-2xl group-hover:text-wharf-pink-darker transition-colors">
-                        &lt;30s
-                      </span>
-                    </div>
-                    <p className="font-mono text-xs text-wharf-text-secondary">
-                      Avg Gen Time
-                    </p>
                   </div>
                 </div>
               </div>
+
+              {/* Main Illustration */}
+              <img
+                src="https://res.cloudinary.com/dhn92qb61/image/upload/f_auto,q_auto/v1785674284/hero_img__ofc8fz.webp"
+                alt="Wharf Isometric Graphic"
+                className={`w-[120%] lg:w-[165%] max-w-[165%] h-auto object-contain lg:object-right transition-opacity duration-1000 transform lg:translate-x-12 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                onLoad={() => setImageLoaded(true)}
+              />
             </div>
           </div>
         </div>

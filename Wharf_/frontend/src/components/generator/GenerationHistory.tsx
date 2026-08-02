@@ -192,9 +192,10 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
       {/* Title Section */}
       <div className="space-y-4">
         <h2 className="font-display font-black text-4xl md:text-5xl tracking-tighter">
-          Documentation <span className="text-wharf-pink">History</span>
+          <span className="sm:hidden">Docs <span className="text-wharf-pink-dark">History</span></span>
+          <span className="hidden sm:inline">Documentation <span className="text-wharf-pink-dark">History</span></span>
         </h2>
-        <p className="font-mono text-md text-wharf-text-tertiary mb-10 capitalize">
+        <p className="font-mono text-md text-wharf-text-tertiary mb-8 capitalize">
           Review & reuse your previously generated READMEs
         </p>
       </div>
@@ -356,7 +357,7 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
                   </div>
 
                   {/* Right - Actions */}
-                  <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
+                  <div className="flex items-center gap-3 flex-wrap md:flex-nowrap">
                     <Button
                       variant="secondary"
                       size="sm"

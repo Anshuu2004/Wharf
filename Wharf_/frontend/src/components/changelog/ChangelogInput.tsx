@@ -1,6 +1,6 @@
 import { Link2, ArrowRight, Zap, CheckCircle, AlertCircle, GitBranch } from 'lucide-react';
 import { FaGithub } from 'react-icons/fa';
-import { Input, Button, Card, Badge } from '../ui';
+import { Input, Button, Card } from '../ui';
 import { useState } from 'react';
 
 interface ChangelogInputProps {
@@ -106,20 +106,16 @@ export const ChangelogInput = ({
   ];
 
   return (
-    <Card variant="hard" rounded="3xl" className="overflow-hidden">
-      <div className="p-6">
+    <Card variant="hard" rounded="3xl" className="overflow-visible !border-0 !shadow-none !bg-transparent !p-0 my-6 md:!border-2 md:!shadow-[var(--shadow-brutal)] md:!bg-wharf-surface-primary md:!p-6 md:!mb-6">
+      <div className="py-4">
         {/* Header */}
         <div className="flex items-center gap-2 border-b-2 border-wharf-border-primary pb-3 mb-4">
           <div className="p-1.5 rounded-lg bg-wharf-cyan/10">
-            <FaGithub className="w-4 h-4 text-wharf-cyan" />
+            <FaGithub className="w-4 h-4 text-wharf-cyan-darker" />
           </div>
           <span className="font-mono font-bold text-sm uppercase tracking-wider">
             Generate Changelog
           </span>
-          <Badge variant="cyan" size="sm" className="ml-auto gap-1">
-            <Zap className="w-3 h-3" />
-            Auto-detect
-          </Badge>
         </div>
 
         <div className="flex flex-col gap-4">
@@ -200,11 +196,11 @@ export const ChangelogInput = ({
           )}
 
           {/* Examples Section */}
-          <div className="space-y-3 pt-2">
+          <div className="space-y-3 pt-4">
             <div className="flex items-center gap-3 mt-2">
               <div className="flex items-center gap-2">
                 <Zap className="w-3.5 h-3.5 text-wharf-cyan-darker" />
-                <span className="font-mono text-xs text-wharf-text-tertiary font-bold uppercase tracking-wider">
+                <span className="font-mono text-xs text-wharf-text-secondary font-bold uppercase tracking-wider">
                   Popular Examples
                 </span>
               </div>

@@ -33,13 +33,17 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentPage, onNavigate }) => {
     { id: 'chat', icon: MessageSquare, label: 'Chat Assistant' },
     { id: 'health', icon: Activity, label: 'Health' },
     { id: 'changelog', icon: Logs, label: 'Changelog' },
-    { id: 'settings', icon: Settings, label: 'Settings' },
   ];
 
   const { user } = useAuthStore();
-  const navItems = user?.isAdmin
-    ? [...defaultNavItems, { id: 'admin', icon: LayoutDashboard, label: 'Admin' }]
-    : defaultNavItems;
+  
+  let navItems = [...defaultNavItems];
+  if (user) {
+    navItems.push({ id: 'settings', icon: Settings, label: 'Settings' });
+  }
+  if (user?.isAdmin) {
+    navItems.push({ id: 'admin', icon: LayoutDashboard, label: 'Admin' });
+  }
 
   return (
     <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden md:block">

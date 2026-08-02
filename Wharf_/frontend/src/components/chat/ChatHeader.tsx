@@ -1,4 +1,4 @@
-import { Download, Settings } from 'lucide-react';
+import { Download, Settings, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -14,6 +14,8 @@ interface ChatHeaderProps {
   selectedPersona?: string;
   personas?: Persona[];
   onPersonaChange?: (id: string) => void;
+  isSidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 export const ChatHeader = ({
@@ -21,32 +23,45 @@ export const ChatHeader = ({
   selectedPersona = 'developer',
   personas = [],
   onPersonaChange,
+  isSidebarOpen = false,
+  onToggleSidebar,
 }: ChatHeaderProps) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const selectedPersonaData = personas.find((p) => p.id === selectedPersona);
 
   return (
-    <div className="flex items-center justify-between px-6 py-3 border-b-2 border-wharf-border-secondary bg-wharf-surface-secondary">
-      <div className="flex items-center gap-3">
-        <h1 className="font-display font-black text-xl tracking-tighter">
-          WHARF <span className="text-wharf-pink">Chat</span>
+    <div className="flex items-center justify-between px-3 sm:px-6 py-2.5 border-b-2 border-wharf-border-secondary bg-wharf-surface-secondary">
+      {/* Left: Sidebar Toggle On Mobile */}
+      <div className="flex items-center gap-2">
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="md:hidden p-1.5 border-2 border-wharf-border-primary bg-wharf-surface-primary hover:bg-wharf-pink transition-colors cursor-pointer"
+            aria-label="Toggle sidebar"
+          >
+            {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        )}
+        <h1 className="hidden sm:block font-display font-black text-xl tracking-tighter uppercase">
+          WHARF <span className="text-wharf-pink-dark">Chat</span>
         </h1>
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* Right: Export, Settings, and Mobile Nav */}
+      <div className="flex items-center gap-3">
         <button
           onClick={onExport}
-          className="flex items-center gap-1 px-3 py-1.5 border-2 border-wharf-border-secondary font-mono text-xs font-bold hover:border-wharf-border-primary hover:bg-wharf-surface-primary transition-colors cursor-pointer"
+          className="flex items-center gap-1 px-3 py-2 border-2 border-wharf-border-primary font-mono text-xs font-bold hover:bg-wharf-surface-primary transition-colors cursor-pointer"
         >
           <Download className="w-3 h-3" />
-          Export
+          <span className="hidden sm:inline">Export</span>
         </button>
 
         {/* Settings Button */}
         <div className="relative">
           <button
             onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-            className="p-1.5 border-2 border-wharf-border-secondary hover:border-wharf-border-primary hover:bg-wharf-surface-primary transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1.75 border-2 border-wharf-border-primary font-mono text-xs font-bold hover:border-wharf-border-primary hover:bg-wharf-surface-primary transition-colors cursor-pointer"
           >
             <Settings className="w-4 h-4" />
           </button>

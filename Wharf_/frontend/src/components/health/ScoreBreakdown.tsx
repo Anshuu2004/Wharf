@@ -138,13 +138,8 @@ export const ScoreBreakdown = ({ breakdown }: ScoreBreakdownProps) => {
             </div>{' '}
             <span className="text-wharf-text-tertiary/80">|</span>
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-wharf-orange-dark" />
-              <span className="font-mono text-[10px] text-wharf-text-secondary">Good</span>
-            </div>{' '}
-            <span className="text-wharf-text-tertiary/80">|</span>
-            <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-wharf-yellow" />
-              <span className="font-mono text-[10px] text-wharf-text-secondary">Fair</span>
+              <span className="font-mono text-[10px] text-wharf-text-secondary">Good</span>
             </div>{' '}
             <span className="text-wharf-text-tertiary/80">|</span>
             <div className="flex items-center gap-2">
@@ -152,7 +147,7 @@ export const ScoreBreakdown = ({ breakdown }: ScoreBreakdownProps) => {
               <span className="font-mono text-[10px] text-wharf-text-secondary">Needs Work</span>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-wharf-text-secondary">
+          <div className="hidden sm:flex items-center gap-2 text-wharf-text-secondary">
             <TrendingUp className="w-3.5 h-3.5" />
             <span className="font-mono text-[10px]">Overall Score</span>
           </div>

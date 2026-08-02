@@ -64,7 +64,7 @@ export const HealthScoreCard = ({
               Documentation quality score
             </p>
           </div>
-          <Badge variant="default" size="sm" className="gap-1">
+          <Badge variant="default" size="sm" className="hidden sm:flex items-center gap-1">
             <Target className="w-3 h-3" />
             {categoryCount} categories
           </Badge>

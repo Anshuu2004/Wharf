@@ -132,14 +132,14 @@ export const SettingsPage = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-6">
       <SettingsHeader />
 
       <div className="mb-8">
         <SettingsNav activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
       <Card variant="hard" className="overflow-hidden rounded-3xl mb-12">
-        <div className="p-6">{renderTabContent()}</div>
+        <div className="py-4 px-2 sm:p-6">{renderTabContent()}</div>
       </Card>
     </div>
   );

@@ -131,11 +131,11 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
               <div className="p-1.5 rounded-lg bg-wharf-cyan/30">
                 <GitBranch className="w-4 h-4 text-wharf-cyan-darker" />
               </div>
-              <span className="font-mono font-bold text-sm uppercase tracking-wider">
+              <span className="font-mono font-bold text-sm uppercase tracking-wide">
                 Repository Statistics
               </span>
             </div>
-            <Badge variant="default" size="sm" className="gap-1">
+            <Badge variant="default" size="sm" className="hidden md:flex gap-1">
               <Users className="w-3 h-3" />
               {stats.contributors} contributors
             </Badge>
@@ -205,7 +205,7 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
               <div className="p-1 rounded-lg bg-wharf-cyan/30">
                 <GitBranch className="w-4 h-4 text-wharf-cyan-darker" />
               </div>
-              <h4 className="font-mono font-bold text-sm uppercase tracking-wider">Commit Count</h4>
+              <h4 className="font-mono font-bold text-sm uppercase tracking-wide">Commit Count</h4>
             </div>
             <p className="mt-1.5 font-mono text-xs text-wharf-text-secondary capitalize">
               Select the number of commits to include
@@ -273,10 +273,10 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
 
         {/* Quick Select Buttons */}
         <div className="flex flex-wrap items-center gap-2 mt-8 pt-4 border-t border-wharf-border-secondary">
-          <span className="font-mono text-[10px] text-wharf-text-secondary uppercase tracking-wider">
+          <span className="font-mono text-[10px] text-wharf-text-secondary uppercase tracking-wide">
             Quick select:
           </span>
-          {[10, 25, 50, 100].map((num) => (
+          {[10, 50, 100].map((num) => (
             <button
               key={num}
               onClick={() => {
@@ -304,7 +304,8 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
                   : 'border-wharf-border-secondary hover:border-wharf-cyan-dark text-wharf-text-secondary hover:text-wharf-cyan-darker'
               }`}
             >
-              All ({maxCommits})
+              <span className="md:hidden">All</span>
+              <span className="hidden md:block">All ({maxCommits})</span>
             </button>
           )}
         </div>
@@ -316,7 +317,7 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
           <div className="p-1 rounded-lg bg-wharf-purple/30">
             <FileText className="w-4 h-4 text-wharf-purple-darker" />
           </div>
-          <h4 className="font-mono font-bold text-sm uppercase tracking-wider">Format</h4>
+          <h4 className="font-mono font-bold text-sm uppercase tracking-wide">Format</h4>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -330,8 +331,8 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
                 onClick={() => onChange({ ...options, format: format.id })}
                 className={`group p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
                   isSelected
-                    ? 'border-wharf-cyan-dark bg-wharf-cyan/5 ring-2 ring-wharf-cyan/20'
-                    : 'border-wharf-border-secondary hover:border-wharf-border-primary hover:bg-wharf-surface-secondary'
+                    ? 'border-wharf-purple-dark bg-wharf-purple/30 ring-2 ring-wharf-purple/20'
+                    : 'border-wharf-border-secondary hover:border-wharf-purple-dark hover:bg-wharf-purple/10'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -361,7 +362,7 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
           <div className="p-1 rounded-lg bg-wharf-green/30">
             <Settings2 className="w-4 h-4 text-wharf-green-darker" />
           </div>
-          <h4 className="font-mono font-bold text-sm uppercase tracking-wider">Options</h4>
+          <h4 className="font-mono font-bold text-sm uppercase tracking-wide">Options</h4>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -370,13 +371,13 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
               id: 'includeTags' as const,
               label: 'Include Tags',
               icon: Tag,
-              description: 'Add version tags to changelog',
+              description: 'Add version tags',
             },
             {
               id: 'includeContributors' as const,
               label: 'Include Contributors',
               icon: Users,
-              description: 'List contributors in changelog',
+              description: 'List contributors',
             },
             {
               id: 'groupByType' as const,
@@ -393,8 +394,8 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
                 key={toggle.id}
                 className={`group p-3 rounded-xl border-2 transition-all cursor-pointer ${
                   isChecked
-                    ? 'border-wharf-cyan bg-wharf-cyan/5'
-                    : 'border-wharf-border-secondary hover:border-wharf-border-primary hover:bg-wharf-surface-secondary'
+                    ? 'border-wharf-green-dark bg-wharf-green/10'
+                    : 'border-wharf-border-secondary hover:border-wharf-green-dark hover:bg-wharf-green/10'
                 }`}
               >
                 <div className="flex items-center gap-4">
@@ -402,7 +403,7 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
                     type="checkbox"
                     checked={isChecked}
                     onChange={(e) => onChange({ ...options, [toggle.id]: e.target.checked })}
-                    className="w-4 h-4 border-2 border-wharf-border-primary accent-wharf-cyan cursor-pointer"
+                    className="w-4 h-4 border-2 border-wharf-border-primary accent-wharf-green-dark cursor-pointer"
                   />
                   <div
                     className={`p-1.5 rounded-lg transition-colors bg-wharf-surface-tertiary/70`}
@@ -434,22 +435,22 @@ export const ChangelogOptions = ({ options, onChange, stats }: ChangelogOptionsP
             <span className="font-mono text-sm font-bold text-wharf-text-secondary">
               {options.commitCount} Commits
             </span>
-          </div>{' '}
-          <span className="h-5 w-0.5 bg-wharf-text-secondary"></span>
+          </div>
+          <span className="hidden md:block h-5 w-0.5 bg-wharf-text-secondary"></span>
           {options.includeTags && (
-            <Badge variant="default" size="sm" className="gap-1">
+            <Badge variant="default" size="sm" className="gap-1 hidden md:flex">
               <Tag className="w-3 h-3" />
               Tags
             </Badge>
           )}
           {options.includeContributors && (
-            <Badge variant="default" size="sm" className="gap-1">
+            <Badge variant="default" size="sm" className="gap-1 hidden md:flex">
               <Users className="w-3 h-3" />
               Contributors
             </Badge>
           )}
           {options.groupByType && (
-            <Badge variant="default" size="sm" className="gap-1">
+            <Badge variant="default" size="sm" className="gap-1 hidden md:flex">
               <Settings2 className="w-3 h-3" />
               Grouped
             </Badge>

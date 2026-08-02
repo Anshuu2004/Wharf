@@ -1,4 +1,4 @@
-import { Users, Code, GraduationCap, Zap, Check, Target, Leaf } from 'lucide-react';
+import { Users, Code, GraduationCap } from 'lucide-react';
 
 interface ToneSelectorProps {
   value: 'technical' | 'recruiter' | 'beginner';
@@ -14,7 +14,6 @@ const tones = [
     color: 'border-wharf-cyan',
     bgColor: 'bg-gradient-to-br from-wharf-cyan to-wharf-cyan-darker',
     hoverColor: 'hover:border-wharf-cyan',
-    badge: Zap,
     details: 'Code examples, API docs, architecture',
   },
   {
@@ -25,7 +24,6 @@ const tones = [
     color: 'border-wharf-purple',
     bgColor: 'bg-gradient-to-br from-wharf-purple to-wharf-purple-darker',
     hoverColor: 'hover:border-wharf-purple',
-    badge: Target,
     details: 'Impact-focused, problem solved, metrics',
   },
   {
@@ -36,7 +34,6 @@ const tones = [
     color: 'border-wharf-green',
     bgColor: 'bg-gradient-to-br from-wharf-green to-wharf-green-darker',
     hoverColor: 'hover:border-wharf-green',
-    badge: Leaf,
     details: 'Step-by-step, welcoming, accessible',
   },
 ];
@@ -46,7 +43,6 @@ export const ToneSelector = ({ value, onChange }: ToneSelectorProps) => {
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
       {tones.map((tone) => {
         const isActive = value === tone.id;
-        const BadgeIcon = tone.badge;
 
         return (
           <button
@@ -61,14 +57,6 @@ export const ToneSelector = ({ value, onChange }: ToneSelectorProps) => {
               }
             `}
           >
-            {/* Badge Icon */}
-            <div className="absolute -top-2 -right-2 w-5 h-5 border-3 border-wharf-border-primary bg-wharf-surface-primary flex items-center justify-center">
-              {isActive ? (
-                <Check className="w-3 h-3 text-wharf-black" />
-              ) : (
-                <BadgeIcon className="w-3 h-3 text-wharf-text-tertiary" />
-              )}
-            </div>
 
             {/* Icon */}
             <div
