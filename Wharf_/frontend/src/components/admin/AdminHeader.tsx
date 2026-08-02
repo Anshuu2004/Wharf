@@ -1,5 +1,4 @@
-import { Shield, RefreshCw } from 'lucide-react';
-import { Badge } from '../ui/Badge';
+import { RefreshCw } from 'lucide-react';
 
 interface AdminHeaderProps {
   onRefresh?: () => void;
