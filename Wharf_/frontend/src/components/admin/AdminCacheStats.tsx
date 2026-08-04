@@ -18,9 +18,12 @@ export const AdminCacheStats = ({ stats }: AdminCacheStatsProps) => {
     return 'bg-wharf-orange-dark';
   };
 
-  const hitColor = getHitRateColor(stats.hitRate);
-  const barColor = getHitRateBarColor(stats.hitRate);
-  const efficiency = Math.round((stats.hitRate / 100) * 100);
+  const hitRate = stats?.hitRate ?? 0;
+  const missRate = stats?.missRate ?? 0;
+  const size = stats?.size ?? 0;
+  const hitColor = getHitRateColor(hitRate);
+  const barColor = getHitRateBarColor(hitRate);
+  const efficiency = Math.round((hitRate / 100) * 100);
 
   return (
     <Card variant="hard" rounded="3xl" className="overflow-hidden p-6">
@@ -43,7 +46,7 @@ export const AdminCacheStats = ({ stats }: AdminCacheStatsProps) => {
         <div className="flex items-center justify-end gap-2">
           <Badge variant="cyan" size="sm" className="gap-1">
             <Shield className="w-3 h-3" />
-            {stats.size.toLocaleString()} cached items
+            {size.toLocaleString()} cached items
           </Badge>
         </div>
       </div>
@@ -64,7 +67,7 @@ export const AdminCacheStats = ({ stats }: AdminCacheStatsProps) => {
           <div className="h-2.5 rounded-full border border-wharf-border-secondary bg-wharf-surface-secondary overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-1000 ease-out ${barColor}`}
-              style={{ width: `${stats.hitRate}%` }}
+              style={{ width: `${hitRate}%` }}
             />
           </div>
         </div>
@@ -83,7 +86,7 @@ export const AdminCacheStats = ({ stats }: AdminCacheStatsProps) => {
           <div className="h-2.5 rounded-full border border-wharf-border-secondary bg-wharf-surface-secondary overflow-hidden">
             <div
               className="h-full rounded-full bg-wharf-error transition-all duration-1000 ease-out"
-              style={{ width: `${stats.missRate}%` }}
+              style={{ width: `${missRate}%` }}
             />
           </div>
         </div>
@@ -102,7 +105,7 @@ export const AdminCacheStats = ({ stats }: AdminCacheStatsProps) => {
                 Entries
               </p>
               <p className="font-mono text-sm font-bold text-wharf-text-primary">
-                {stats.size.toLocaleString()}
+                {size.toLocaleString()}
               </p>
             </div>
           </div>
@@ -155,7 +158,7 @@ export const AdminCacheStats = ({ stats }: AdminCacheStatsProps) => {
               <p className="font-mono text-[10px] text-wharf-text-secondary uppercase tracking-wider">
                 Hit Rate
               </p>
-              <p className={`font-mono text-sm font-bold ${hitColor}`}>{stats.hitRate}%</p>
+              <p className={`font-mono text-sm font-bold ${hitColor}`}>{hitRate}%</p>
             </div>
           </div>
 
@@ -168,7 +171,7 @@ export const AdminCacheStats = ({ stats }: AdminCacheStatsProps) => {
               <p className="font-mono text-[10px] text-wharf-text-secondary uppercase tracking-wider">
                 Miss Rate
               </p>
-              <p className="font-mono text-sm font-bold text-wharf-error">{stats.missRate}%</p>
+              <p className="font-mono text-sm font-bold text-wharf-error">{missRate}%</p>
             </div>
           </div>
         </div>

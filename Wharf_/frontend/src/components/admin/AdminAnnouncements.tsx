@@ -209,7 +209,7 @@ export const AdminAnnouncements = () => {
                 Title
               </th>
               <th className="p-4 font-bold border-r-2 border-wharf-border-primary w-[15%]">
-                Type / Reads
+                Reads
               </th>
               <th className="p-4 font-bold border-r-2 border-wharf-border-primary w-[15%]">
                 Status

@@ -139,14 +139,14 @@ export const AdminTokenUsage = ({ data }: AdminTokenUsageProps) => {
       <div className="flex flex-col lg:flex-row items-center w-full gap-6">
         {/* Chart */}
         <div className="flex-1 w-full min-w-[200px]">
-          <ResponsiveContainer width="100%" height={380}>
+          <ResponsiveContainer width="100%" height={390}>
             <PieChart>
               <Pie
                 data={pieData}
                 cx="50%"
                 cy="50%"
                 innerRadius={0}
-                outerRadius={160}
+                outerRadius={150}
                 paddingAngle={2}
                 dataKey="value"
                 label={renderCustomLabel}
