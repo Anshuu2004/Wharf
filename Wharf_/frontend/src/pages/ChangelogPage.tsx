@@ -468,7 +468,7 @@ export const ChangelogPage = () => {
                 variant="hard-sm"
                 className="text-center group hover:translate-y-[-2px] transition-all duration-300 rounded-[24px]"
               >
-                <div className="flex flex-col items-center p-3">
+                <div className="flex flex-col items-center p-2">
                   <div
                     className={`w-10 h-10 ${stat.color} border-2 border-wharf-border-primary flex items-center justify-center mb-3 shadow-brutal-sm group-hover:shadow-brutal transition-all`}
                   >
