@@ -1028,7 +1028,7 @@ export const ProfileGeneratorPage = () => {
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`
-                                      relative flex items-center justify-center gap-2.5 px-2 py-3
+                                      relative flex items-center justify-center gap-2 px-1 py-3
                                       font-mono text-sm font-bold transition-all duration-300 rounded-md cursor-pointer
                                       ${
                                         isActive
