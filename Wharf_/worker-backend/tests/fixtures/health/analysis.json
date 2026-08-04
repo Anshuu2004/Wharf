@@ -1,0 +1,17 @@
+{
+  "repoUrl": "https://github.com/FrostByte-49/Wharf",
+  "score": 85,
+  "breakdown": {
+    "description": 18,
+    "installation": 20,
+    "usage": 15,
+    "techStack": 15,
+    "contributing": 10,
+    "license": 5,
+    "visuals": 2
+  },
+  "suggestions": [
+    "Add more comprehensive test coverage details to your README (+5 points).",
+    "Include a community support link or Discord badge (+3 points)."
+  ]
+}

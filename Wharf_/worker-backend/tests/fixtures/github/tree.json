@@ -1,0 +1,38 @@
+{
+  "sha": "base-tree-sha",
+  "url": "https://api.github.com/repos/FrostByte-49/Wharf/git/trees/base-tree-sha",
+  "tree": [
+    {
+      "path": "package.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "sha1",
+      "size": 1200,
+      "url": "https://api.github.com/..."
+    },
+    {
+      "path": "src",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "sha2",
+      "url": "https://api.github.com/..."
+    },
+    {
+      "path": "src/index.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "sha3",
+      "size": 500,
+      "url": "https://api.github.com/..."
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "sha4",
+      "size": 2500,
+      "url": "https://api.github.com/..."
+    }
+  ],
+  "truncated": false
+}

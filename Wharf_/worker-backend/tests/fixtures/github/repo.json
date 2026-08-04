@@ -1,0 +1,35 @@
+{
+  "id": 1296269,
+  "node_id": "MDEwOlJlcG9zaXRvcnkxMjk2MjY5",
+  "name": "Wharf",
+  "full_name": "FrostByte-49/Wharf",
+  "private": false,
+  "owner": {
+    "login": "FrostByte-49",
+    "id": 1,
+    "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+    "html_url": "https://github.com/FrostByte-49"
+  },
+  "html_url": "https://github.com/FrostByte-49/Wharf",
+  "description": "AI-Powered Documentation Generator",
+  "fork": false,
+  "url": "https://api.github.com/repos/FrostByte-49/Wharf",
+  "stargazers_count": 80,
+  "watchers_count": 80,
+  "language": "TypeScript",
+  "has_issues": true,
+  "has_projects": true,
+  "has_downloads": true,
+  "has_wiki": true,
+  "has_pages": false,
+  "forks_count": 9,
+  "archived": false,
+  "disabled": false,
+  "open_issues_count": 0,
+  "license": {
+    "key": "mit",
+    "name": "MIT License",
+    "spdx_id": "MIT",
+    "url": "https://api.github.com/licenses/mit"
+  }
+}
