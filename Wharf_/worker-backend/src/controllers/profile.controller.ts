@@ -61,8 +61,11 @@ export const generate = async (c: AppContext) => {
   const { template, theme } = options;
 
   try {
-    // Basic Hash Logic Using Naive String Manipulation If Crypto Is Missing On Edge Or Imported Incorrectly
-    const hash = `${username}:${template}:${theme}`; 
+    const encoder = new TextEncoder();
+    const data = encoder.encode(JSON.stringify(options));
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
     const cachedReadme = await cacheService.getProfileReadme(username, template, theme, hash);
     if (cachedReadme) {

@@ -98,7 +98,7 @@ describe('ProfileController', () => {
       expect(streamBuffer).toContain(`data: ${JSON.stringify({ text: 'hello' })}\n\n`);
       expect(streamBuffer).toContain(`data: ${JSON.stringify({ text: ' markdown' })}\n\n`);
       expect(cacheService.setProfileReadme).toHaveBeenCalledWith(
-        'target-user', 'classic', undefined, 'target-user:classic:undefined', 'hello markdown'
+        'target-user', 'classic', undefined, expect.any(String), 'hello markdown'
       );
       
       expect(prismaObj.profileReadme.create).toHaveBeenCalledWith(expect.objectContaining({
