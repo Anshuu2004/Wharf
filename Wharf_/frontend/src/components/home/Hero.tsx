@@ -148,32 +148,32 @@ export const Hero = () => {
             </div>
 
             {/* Stats */}
-            <div className="flex flex-wrap items-center gap-3 md:gap-4 w-full">
-              <div className="group cursor-pointer flex-1 min-w-[100px] max-w-[180px] px-4 py-3 flex flex-col items-center justify-center text-center border-2 border-wharf-border-primary hover:border-wharf-border-primary bg-wharf-surface-primary/80 rounded-2xl shadow-sm hover:shadow-brutal-sm transition-all">
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 md:gap-4 w-full">
+              <div className="group cursor-pointer flex-1 min-w-[120px] max-w-[48%] lg:max-w-[180px] px-2 sm:px-4 py-3 flex flex-col items-center justify-center text-center border-2 border-wharf-border-primary hover:border-wharf-border-primary bg-wharf-surface-primary/80 rounded-2xl shadow-sm hover:shadow-brutal-sm transition-all">
                 <div className="flex items-center justify-center gap-1">
-                  <span className="font-display font-black text-2xl group-hover:text-wharf-cyan-darker transition-colors tracking-tighter">
+                  <span className="font-display font-black text-xl sm:text-2xl group-hover:text-wharf-cyan-darker transition-colors tracking-tighter">
                     {statsLoading ? '0' : <CountUp end={stats.totalGenerations} />}
                   </span>
                 </div>
-                <p className="font-mono font-bold text-[10px] text-wharf-text-secondary uppercase tracking-wider mt-1 text-center">Repos Documented</p>
+                <p className="font-mono font-bold text-[9px] sm:text-[10px] text-wharf-text-secondary uppercase tracking-wider mt-1 text-center">Repos Documented</p>
               </div>
               
-              <div className="group cursor-pointer flex-1 min-w-[100px] max-w-[180px] px-4 py-3 flex flex-col items-center justify-center text-center border-2 border-wharf-border-primary hover:border-wharf-border-primary bg-wharf-surface-primary/80 rounded-2xl shadow-sm hover:shadow-brutal-sm transition-all">
+              <div className="group cursor-pointer flex-1 min-w-[120px] max-w-[48%] lg:max-w-[180px] px-2 sm:px-4 py-3 flex flex-col items-center justify-center text-center border-2 border-wharf-border-primary hover:border-wharf-border-primary bg-wharf-surface-primary/80 rounded-2xl shadow-sm hover:shadow-brutal-sm transition-all">
                 <div className="flex items-center justify-center gap-1">
-                  <span className="font-display font-black text-2xl group-hover:text-red-600 transition-colors tracking-tighter">
+                  <span className="font-display font-black text-xl sm:text-2xl group-hover:text-red-600 transition-colors tracking-tighter">
                     {statsLoading ? '0' : <CountUp end={stats.totalTokens} />}
                   </span>
                 </div>
-                <p className="font-mono font-bold text-[10px] text-wharf-text-secondary uppercase tracking-wider mt-1 text-center">Tokens Burned</p>
+                <p className="font-mono font-bold text-[9px] sm:text-[10px] text-wharf-text-secondary uppercase tracking-wider mt-1 text-center">Tokens Burned</p>
               </div>
 
-              <div className="hidden sm:block group cursor-pointer flex-1 min-w-[100px] max-w-[180px] px-4 py-3 flex flex-col items-center justify-center text-center border-2 border-wharf-border-primary hover:border-wharf-border-primary bg-wharf-surface-primary/80 rounded-2xl shadow-sm hover:shadow-brutal-sm transition-all">
+              <div className="hidden sm:flex group cursor-pointer flex-1 min-w-[120px] max-w-[48%] lg:max-w-[180px] px-2 sm:px-4 py-3 flex-col items-center justify-center text-center border-2 border-wharf-border-primary hover:border-wharf-border-primary bg-wharf-surface-primary/80 rounded-2xl shadow-sm hover:shadow-brutal-sm transition-all">
                 <div className="flex items-center justify-center gap-1">
-                  <span className="font-display font-black text-2xl group-hover:text-wharf-green-darker transition-colors tracking-tighter text-black">
+                  <span className="font-display font-black text-xl sm:text-2xl group-hover:text-wharf-green-darker transition-colors tracking-tighter text-black">
                     &lt;30s
                   </span>
                 </div>
-                <p className="font-mono font-bold text-[10px] text-wharf-text-secondary uppercase tracking-wider mt-1 text-center">Avg Gen Time</p>
+                <p className="font-mono font-bold text-[9px] sm:text-[10px] text-wharf-text-secondary uppercase tracking-wider mt-1 text-center">Avg Gen Time</p>
               </div>
             </div>
           </div>
