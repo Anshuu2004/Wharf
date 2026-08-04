@@ -78,7 +78,7 @@ export const Hero = () => {
   }, [isTyping, fullText]);
 
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center -mt-8 pb-8 md:pb-0 border-b-4 border-wharf-border-primary overflow-hidden bg-[#fafafa]">
+    <section className="relative min-h-[700px] flex items-center justify-center -mt-8 pb-12 pt-4 md:pt-8 md:pb-12 border-b-4 border-wharf-border-primary overflow-hidden bg-[#fafafa]">
       
       {/* Abstract Background Grid */}
       <div className="absolute inset-0 z-0">
@@ -93,7 +93,7 @@ export const Hero = () => {
       </div>
 
       <div className="container mx-auto px-4 relative z-10 mt-12 lg:mt-0">
-        <div className="flex flex-col lg:flex-row items-start justify-between gap-12 lg:gap-20 py-12 lg:py-20 min-h-[80vh]">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-20 pt-6 pb-12 lg:pt-10 lg:pb-8">
           
           {/* Left Column: Typography, CTAs & Stats */}
           <div className="flex-[1.2] w-full z-10 flex flex-col items-start text-left">
@@ -179,11 +179,11 @@ export const Hero = () => {
           </div>
 
           {/* Right Column: Graphic */}
-          <div className="flex flex-[0.8] w-full min-h-[350px] relative items-center justify-center lg:justify-end -mt-24 sm:-mt-8 -lg:mt-2">
+          <div className="flex flex-[0.8] w-full min-h-[350px] relative items-center justify-center lg:justify-end -mt-24 sm:-mt-8 lg:-mt-32 xl:-mt-32">
             <div className="relative w-full max-w-[500px] lg:max-w-none lg:w-[120%] aspect-square lg:aspect-[4/3] flex items-center justify-center lg:justify-end xl:translate-x-12 2xl:translate-x-20">
               
               {/* Overlapping README Mockup Graphic */}
-              <div className="absolute inset-x-0 mx-auto lg:inset-auto lg:mx-0 lg:-left-[32%] top-[65%] lg:top-[80%] z-30 w-[95%] sm:w-[100%] lg:w-[125%] lg:h-[65%] bg-[#fafafa] border-2 border-wharf-border-primary rounded-xl shadow-brutal p-3 lg:p-5 transform hover:-translate-y-2 transition-all duration-500 cursor-pointer overflow-hidden">
+              <div className="absolute inset-x-0 mx-auto lg:inset-auto lg:mx-0 lg:-left-[30%] top-[70%] lg:top-[70%] z-30 w-[100%] sm:w-[110%] lg:w-[120%] bg-[#fafafa] border-2 border-wharf-border-primary rounded-xl shadow-brutal p-3 lg:p-5 transform hover:-translate-y-2 transition-all duration-500 cursor-pointer overflow-hidden">
                 {/* Shimmer Effect Overlay */}
                 <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/40 to-transparent" />
                       
@@ -210,7 +210,7 @@ export const Hero = () => {
               <img
                 src="https://res.cloudinary.com/dhn92qb61/image/upload/f_auto,q_auto/v1785674284/hero_img__ofc8fz.webp"
                 alt="Wharf Isometric Graphic"
-                className={`w-[120%] lg:w-[165%] max-w-[165%] h-auto object-contain lg:object-right transition-opacity duration-1000 transform lg:translate-x-12 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                className={`w-[120%] lg:w-[150%] max-w-[150%] h-auto object-contain lg:object-right transition-opacity duration-1000 transform lg:translate-x-8 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                 onLoad={() => setImageLoaded(true)}
               />
             </div>
