@@ -92,7 +92,7 @@ export const Hero = () => {
         <div className="absolute right-0 bottom-0 w-[40rem] h-[40rem] bg-wharf-cyan opacity-20 blur-[120px] rounded-full mix-blend-multiply pointer-events-none translate-x-1/3 translate-y-1/3" />
       </div>
 
-      <div className="container mx-auto px-4 relative z-10 mt-12 lg:mt-0">
+      <div className="container max-w-[1240px] mx-auto px-4 relative z-10 mt-12 lg:mt-0">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-20 pt-6 pb-12 lg:pt-10 lg:pb-8">
           
           {/* Left Column: Typography, CTAs & Stats */}
