@@ -1,11 +1,10 @@
 import type { Mock } from "vitest";
-import { announcementService } from '../../../src/services/announcement.service';
+import { AnnouncementService } from '../../../src/services/announcement.service';
 import prisma from '../../../src/db';
 import { AnnouncementType } from '@prisma/client';
 
-vi.mock('../../../src/db', () => ({
-  __esModule: true,
-  default: {
+vi.mock('../../../src/db', () => {
+  const prismaObj = {
     announcement: {
       create: vi.fn(),
       update: vi.fn(),
@@ -17,12 +16,20 @@ vi.mock('../../../src/db', () => ({
       upsert: vi.fn(),
       createMany: vi.fn(),
     }
-  }
-}));
+  };
+  return {
+    __esModule: true,
+    default: prismaObj,
+    getPrisma: vi.fn().mockReturnValue(prismaObj),
+  };
+});
 
 describe('AnnouncementService', () => {
+  let announcementService: AnnouncementService;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    announcementService = new AnnouncementService('mock-db');
   });
 
   describe('Admin Methods', () => {

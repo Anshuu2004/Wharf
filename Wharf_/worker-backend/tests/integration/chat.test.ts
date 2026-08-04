@@ -12,12 +12,14 @@ vi.mock('../../src/middleware/auth.middleware', () => ({
 }));
 
 vi.mock('../../src/services/chat.service', () => ({
-  chatService: {
-    analyzeRepository: vi.fn().mockResolvedValue({ summary: 'test repo' }),
-    generateChatStream: vi.fn().mockResolvedValue({
-      textStream: (async function*() { yield 'shiver'; })()
-    })
-  }
+  ChatService: vi.fn().mockImplementation(function() {
+    return {
+      analyzeRepository: vi.fn().mockResolvedValue({ summary: 'test repo' }),
+      generateChatStream: vi.fn().mockResolvedValue({
+        textStream: (async function*() { yield 'shiver'; })()
+      })
+    };
+  })
 }));
 
 vi.mock('../../src/db', () => {

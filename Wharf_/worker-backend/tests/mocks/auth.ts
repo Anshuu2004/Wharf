@@ -1,16 +1,17 @@
 import { vi } from 'vitest';
-import { Request, Response, NextFunction } from 'express';
 
 // Comprehensive Mock For Authentication Middleware Components
-export const optionalAuth = vi.fn((req: Request, res: Response, next: NextFunction) => {
+export const optionalAuth = vi.fn(async (c: any, next: any) => {
   // By Default, Just Call Next In Tests Via This Mock
-  next();
+  await next();
 });
 
-export const requireAuth = vi.fn((req: Request, res: Response, next: NextFunction) => {
-  const customReq = req as any;
-  if (!customReq.user) {
-    customReq.user = { id: 'mock-user-cuid', username: 'testuser' };
+export const requireAuth = vi.fn(async (c: any, next: any) => {
+  if (c.get) {
+    const user = c.get('user');
+    if (!user) {
+      c.set('user', { id: 'mock-user-cuid', username: 'testuser' });
+    }
   }
-  next();
+  await next();
 });

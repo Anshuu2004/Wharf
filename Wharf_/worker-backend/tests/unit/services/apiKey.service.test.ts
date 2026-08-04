@@ -2,9 +2,8 @@ import type { Mock } from "vitest";
 import { APIKeyService } from '../../../src/services/apiKey.service';
 import prisma from '../../../src/db';
 
-vi.mock('../../../src/db', () => ({
-  __esModule: true,
-  default: {
+vi.mock('../../../src/db', () => {
+  const prismaObj = {
     userApiKey: {
       upsert: vi.fn(),
       findFirst: vi.fn(),
@@ -12,8 +11,13 @@ vi.mock('../../../src/db', () => ({
       update: vi.fn(),
       findMany: vi.fn(),
     },
-  },
-}));
+  };
+  return {
+    __esModule: true,
+    default: prismaObj,
+    getPrisma: vi.fn().mockReturnValue(prismaObj),
+  };
+});
 
 vi.mock('../../../src/utils/encryption', () => ({
   encrypt: vi.fn((key) => `encrypted_${key}`),
@@ -27,7 +31,7 @@ describe('APIKeyService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    apiKeyService = new APIKeyService();
+    apiKeyService = new APIKeyService('mock-db-url');
   });
 
   describe('addKey', () => {

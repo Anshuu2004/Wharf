@@ -8,17 +8,21 @@ import prisma from '../../../src/db';
 vi.mock('../../../src/services/github.service');
 vi.mock('../../../src/services/ai.service');
 vi.mock('../../../src/services/cache.service');
-vi.mock('../../../src/db', () => ({
-  __esModule: true,
-  default: {
+vi.mock('../../../src/db', () => {
+  const prismaObj = {
     changelog: {
       findMany: vi.fn(),
       delete: vi.fn(),
       count: vi.fn(),
     },
     $executeRaw: vi.fn(),
-  }
-}));
+  };
+  return {
+    __esModule: true,
+    default: prismaObj,
+    getPrisma: vi.fn().mockReturnValue(prismaObj),
+  };
+});
 
 describe('ChangelogService', () => {
   let changelogService: ChangelogService;
@@ -28,8 +32,8 @@ describe('ChangelogService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGithubService = new GithubService();
-    mockAiService = new AiService();
-    changelogService = new ChangelogService(mockGithubService, mockAiService);
+    mockAiService = new AiService('mock-db-url');
+    changelogService = new ChangelogService(mockGithubService, mockAiService, 'mock-db-url');
   });
 
   describe('extractOwnerRepo', () => {

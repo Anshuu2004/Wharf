@@ -3,9 +3,8 @@ import { KeyRouterService } from '../../../src/services/keyRouter.service';
 import prisma from '../../../src/db';
 import { decrypt } from '../../../src/utils/encryption';
 
-vi.mock('../../../src/db', () => ({
-  __esModule: true,
-  default: {
+vi.mock('../../../src/db', () => {
+  const prismaObj = {
     userApiKey: {
       findFirst: vi.fn(),
       update: vi.fn(),
@@ -16,8 +15,13 @@ vi.mock('../../../src/db', () => ({
       update: vi.fn(),
       updateMany: vi.fn(),
     }
-  }
-}));
+  };
+  return {
+    __esModule: true,
+    default: prismaObj,
+    getPrisma: vi.fn().mockReturnValue(prismaObj),
+  };
+});
 
 vi.mock('../../../src/utils/encryption', () => ({
   decrypt: vi.fn()
@@ -30,7 +34,7 @@ describe('KeyRouterService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    keyRouter = new KeyRouterService();
+    keyRouter = new KeyRouterService('mock-db-url');
   });
 
   describe('getUserKey', () => {

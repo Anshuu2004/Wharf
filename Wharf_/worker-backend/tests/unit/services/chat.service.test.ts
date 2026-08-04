@@ -18,9 +18,8 @@ vi.mock('@ai-sdk/groq');
 vi.mock('../../../src/utils/chatPromptBuilder');
 vi.mock('../../../src/utils/encryption');
 vi.mock('../../../src/utils/dailyStats');
-vi.mock('../../../src/db', () => ({
-  __esModule: true,
-  default: {
+vi.mock('../../../src/db', () => {
+  const prismaObj = {
     user: {
       findUnique: vi.fn(),
     },
@@ -31,15 +30,20 @@ vi.mock('../../../src/db', () => ({
       create: vi.fn(),
     },
     $executeRaw: vi.fn(),
-  },
-}));
+  };
+  return {
+    __esModule: true,
+    default: prismaObj,
+    getPrisma: vi.fn().mockReturnValue(prismaObj),
+  };
+});
 
 describe('ChatService', () => {
   let chatService: ChatService;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    chatService = new ChatService();
+    chatService = new ChatService('mock-db-url');
   });
 
   describe('analyzeRepository', () => {

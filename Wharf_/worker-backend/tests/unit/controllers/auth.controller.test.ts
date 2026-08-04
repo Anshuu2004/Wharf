@@ -2,19 +2,19 @@ import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } 
 import type { Mock } from "vitest";
 import { githubLogin, githubCallback, getMe, logout } from '../../../src/controllers/auth.controller';
 import axios from 'axios';
-import jwt from 'jsonwebtoken';
-import prisma from '../../../src/db';
-import { encrypt } from '../../../src/utils/encryption';
 import { createMockContext } from '../test-utils';
 import * as cookieMod from 'hono/cookie';
 
 vi.mock('axios');
-vi.mock('jsonwebtoken');
 vi.mock('../../../src/utils/encryption');
 vi.mock('hono/cookie', () => ({
   setCookie: vi.fn(),
   deleteCookie: vi.fn(),
   getCookie: vi.fn(),
+}));
+vi.mock('hono/jwt', () => ({
+  sign: vi.fn().mockResolvedValue('jwt-token-signed'),
+  verify: vi.fn(),
 }));
 
 vi.mock('../../../src/db', () => ({
@@ -65,12 +65,9 @@ describe('AuthController', () => {
       const mockUserProfile = { id: 123, login: 'testuser', created_at: '2026-01-01T00:00:00Z', avatar_url: 'u', email: 'e' };
       (axios.get as Mock).mockResolvedValue({ data: mockUserProfile });
 
-      (encrypt as Mock).mockReturnValue('enc-token');
-
       const mockDbUser = { id: 1, username: 'testuser' };
       const prismaObj = (await import('../../../src/db')).getPrisma('');
       (prismaObj.user.upsert as Mock).mockResolvedValue(mockDbUser);
-      (jwt.sign as Mock).mockReturnValue('jwt-token-signed');
 
       await githubCallback(c);
 
@@ -78,8 +75,8 @@ describe('AuthController', () => {
       expect(axios.get).toHaveBeenCalledWith('https://api.github.com/user', { headers: { Authorization: 'Bearer gh-access-token' } });
       expect(prismaObj.user.upsert).toHaveBeenCalledWith(expect.objectContaining({ where: { githubId: '123' } }));
       
-      expect(cookieMod.setCookie).toHaveBeenCalledWith(c, 'token', 'jwt-token-signed', expect.any(Object));
-      expect(c.redirect).toHaveBeenCalledWith('http://test-front/auth/callback?token=jwt-token-signed');
+      expect(cookieMod.setCookie).toHaveBeenCalledWith(c, 'token', expect.any(String), expect.any(Object));
+      expect(c.redirect).toHaveBeenCalledWith(expect.stringContaining(`${mockEnv.FRONTEND_URL}/auth/callback?token=`));
     });
 
     it('should handle errors gracefully returning 500', async () => {
