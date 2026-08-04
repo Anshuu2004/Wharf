@@ -222,7 +222,7 @@ export const SocialBadgesInput = ({ links, onChange }: SocialBadgesInputProps) =
                 setError('');
               }}
               onKeyDown={handleKeyDown}
-              className="flex-1 font-mono text-sm min-w-[300px] h-10"
+              className="flex-1 font-mono text-[16px] sm:text-sm min-w-0 sm:min-w-[300px] h-10 w-full"
             />
 
             <Button
@@ -230,7 +230,7 @@ export const SocialBadgesInput = ({ links, onChange }: SocialBadgesInputProps) =
               variant="yellow"
               rounded="2xl"
               disabled={!url.trim() || (provider === 'Custom' && !customProvider.trim())}
-              className="px-4 whitespace-nowrap cursor-pointer"
+              className="px-4 whitespace-nowrap cursor-pointer w-full sm:w-auto"
             >
               <Plus className="w-4 h-4" />
               Add
