@@ -15,7 +15,7 @@ const CountUp = ({ end, duration = 2000 }: { end: number, duration?: number }) =
       if (!startTime) startTime = timestamp;
       const progress = timestamp - startTime;
       const percentage = Math.min(progress / duration, 1);
-      
+
       const easeOut = 1 - Math.pow(1 - percentage, 3);
       setCount(Math.floor(end * easeOut));
 
@@ -79,7 +79,7 @@ export const Hero = () => {
 
   return (
     <section className="relative min-h-[700px] flex items-center justify-center -mt-8 pb-12 pt-4 md:pt-8 md:pb-12 border-b-4 border-wharf-border-primary overflow-hidden bg-[#fafafa]">
-      
+
       {/* Abstract Background Grid */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 opacity-25 mix-blend-multiply"
@@ -94,7 +94,7 @@ export const Hero = () => {
 
       <div className="container max-w-[1240px] mx-auto px-4 relative z-10 mt-12 lg:mt-0">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-20 pt-6 pb-12 lg:pt-10 lg:pb-8">
-          
+
           {/* Left Column: Typography, CTAs & Stats */}
           <div className="flex-[1.2] w-full z-10 flex flex-col items-start text-left">
             {/* Badge */}
@@ -124,10 +124,10 @@ export const Hero = () => {
             {/* CTAs */}
             <div className="flex flex-row gap-4 w-full mb-8 lg:mb-10">
               <Link to="/generator" className="flex-1 sm:flex-none min-w-0">
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  rounded="xl" 
+                <Button
+                  variant="outline"
+                  size="lg"
+                  rounded="xl"
                   className="w-full !bg-wharf-pink hover:!bg-wharf-pink-dark hover:!text-wharf-text-primary !shadow-brutal-sm gap-2 text-xs sm:text-sm lg:text-base px-3 sm:px-6 whitespace-nowrap transition-colors duration-200"
                 >
                   <span className="sm:hidden">Repo README</span>
@@ -135,10 +135,10 @@ export const Hero = () => {
                 </Button>
               </Link>
               <Link to="/profile" className="flex-1 sm:flex-none min-w-0">
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  rounded="2xl" 
+                <Button
+                  variant="outline"
+                  size="lg"
+                  rounded="2xl"
                   className="w-full gap-2 text-xs sm:text-sm lg:text-base px-3 sm:px-6 whitespace-nowrap transition-colors duration-200"
                 >
                   <span className="sm:hidden">Profile README</span>
@@ -157,7 +157,7 @@ export const Hero = () => {
                 </div>
                 <p className="font-mono font-bold text-[9px] sm:text-[10px] text-wharf-text-secondary uppercase tracking-wider mt-1 text-center">Repos Documented</p>
               </div>
-              
+
               <div className="group cursor-pointer flex-1 min-w-[120px] max-w-[48%] lg:max-w-[180px] px-2 sm:px-4 py-3 flex flex-col items-center justify-center text-center border-2 border-wharf-border-primary hover:border-wharf-border-primary bg-wharf-surface-primary/80 rounded-2xl shadow-sm hover:shadow-brutal-sm transition-all">
                 <div className="flex items-center justify-center gap-1">
                   <span className="font-display font-black text-xl sm:text-2xl group-hover:text-red-600 transition-colors tracking-tighter">
@@ -179,14 +179,14 @@ export const Hero = () => {
           </div>
 
           {/* Right Column: Graphic */}
-          <div className="flex flex-[0.8] w-full min-h-[350px] relative items-center justify-center lg:justify-end -mt-24 sm:-mt-8 lg:-mt-32 xl:-mt-32">
+          <div className="flex flex-[0.8] w-full min-h-[350px] relative items-center justify-center lg:justify-end -mt-24 sm:-mt-8 lg:-mt-32 xl:-mt-40">
             <div className="relative w-full max-w-[500px] lg:max-w-none lg:w-[120%] aspect-square lg:aspect-[4/3] flex items-center justify-center lg:justify-end xl:translate-x-12 2xl:translate-x-20">
-              
+
               {/* Overlapping README Mockup Graphic */}
-              <div className="absolute inset-x-0 mx-auto lg:inset-auto lg:mx-0 lg:-left-[30%] top-[70%] lg:top-[70%] z-30 w-[100%] sm:w-[110%] lg:w-[120%] bg-[#fafafa] border-2 border-wharf-border-primary rounded-xl shadow-brutal p-3 lg:p-5 transform hover:-translate-y-2 transition-all duration-500 cursor-pointer overflow-hidden">
+              <div className="absolute inset-x-0 mx-auto lg:inset-auto lg:mx-0 lg:-left-[30%] top-[70%] lg:top-[75%] z-30 w-[100%] sm:w-[110%] lg:w-[120%] bg-[#fafafa] border-2 border-wharf-border-primary rounded-xl shadow-brutal p-3 lg:p-5 transform hover:-translate-y-2 transition-all duration-500 cursor-pointer overflow-hidden">
                 {/* Shimmer Effect Overlay */}
                 <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-                      
+
                 <div className="flex gap-1.5 lg:gap-2 mb-3 lg:mb-5">
                   <div className="w-2.5 lg:w-3.5 h-2.5 lg:h-3.5 rounded-full bg-wharf-pink"></div>
                   <div className="w-2.5 lg:w-3.5 h-2.5 lg:h-3.5 rounded-full bg-wharf-cyan"></div>
@@ -197,7 +197,7 @@ export const Hero = () => {
                   <div className="h-2 lg:h-3 w-full bg-wharf-border-primary/10 rounded"></div>
                   <div className="h-2 lg:h-3 w-5/6 bg-wharf-border-primary/10 rounded"></div>
                   <div className="h-2 lg:h-3 w-full bg-wharf-border-primary/10 rounded"></div>
-                      
+
                   <div className="mt-3 lg:mt-5 pt-3 lg:pt-5 border-t-2 border-wharf-border-primary/5">
                     <div className="h-8 lg:h-12 w-full rounded-md bg-gradient-to-r from-wharf-pink-darker/20 to-wharf-purple/20 border border-wharf-border-primary/10 flex items-center px-3 lg:px-5">
                       <div className="h-2 lg:h-3 w-1/2 bg-black/20 rounded"></div>

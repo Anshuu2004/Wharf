@@ -1,4 +1,4 @@
-import { FileText, GitBranch, Activity, BarChart3, Settings, Zap, Shield } from 'lucide-react';
+import { FileText, User, MessageSquare, Activity, Settings, Zap, Key } from 'lucide-react';
 import { Badge, Card } from '../ui';
 
 const features = [
@@ -6,28 +6,28 @@ const features = [
     icon: FileText,
     title: 'README Generator',
     description:
-      'Generate professional README.md with auto-detected tech stack and install commands',
+      'Generate professional README.md with auto-detected tech stack & install commands',
     gradient: 'from-wharf-pink to-wharf-pink-dark',
     iconGradient: 'text-wharf-pink',
   },
   {
-    icon: GitBranch,
-    title: 'Tree Map',
-    description: 'Visualize your repository structure with beautiful ASCII folder trees',
+    icon: User,
+    title: 'Profile README',
+    description: 'Create stunning, recruiter-ready GitHub profile pages tailored to your tech stack',
     gradient: 'from-wharf-cyan to-wharf-cyan-darker',
     iconGradient: 'text-wharf-cyan',
   },
   {
-    icon: Activity,
-    title: 'Health Score',
-    description: 'Get instant 0-100 score with actionable suggestions for improvement',
+    icon: MessageSquare,
+    title: 'AI Chat Assistant',
+    description: 'Ask questions about any repository codebase & get contextual answers instantly',
     gradient: 'from-wharf-green to-wharf-green-dark',
     iconGradient: 'text-wharf-green',
   },
   {
-    icon: BarChart3,
-    title: 'Analytics',
-    description: 'Track documentation quality & contribution readiness over time',
+    icon: Activity,
+    title: 'Repository Health',
+    description: 'Get instant 0-100 scores with actionable suggestions to improve your repo quality',
     gradient: 'from-wharf-yellow to-wharf-yellow-dark',
     iconGradient: 'text-wharf-yellow',
   },
@@ -40,9 +40,9 @@ const features = [
     iconGradient: 'text-wharf-purple',
   },
   {
-    icon: Shield,
-    title: 'Contribution Score',
-    description: 'Rate how welcoming your repository is to open-source contributors',
+    icon: Key,
+    title: 'Bring Your Own Key',
+    description: 'Add your own AI API keys to generate unlimited documentation securely',
     gradient: 'from-wharf-orange to-wharf-orange-dark',
     iconGradient: 'text-wharf-orange',
   },
