@@ -1,0 +1,153 @@
+import { Context } from 'hono';
+import { streamText } from 'hono/streaming';
+import { ChatService } from '../services/chat.service';
+import { getPrisma } from '../db';
+import { loggerService, saveRequestLog } from '../utils/logger';
+import { Bindings } from '../index';
+
+type AppContext = Context<{ Bindings: Bindings; Variables: { user: any; contextStore: any } }>;
+
+export const analyzeRepository = async (c: AppContext) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const { repoUrl } = body;
+    const user = c.get('user');
+    const userId = user?.userId || user?.id;
+
+    if (!repoUrl) return c.json({ success: false, error: 'repoUrl is required' }, 400);
+
+    const chatService = new ChatService(c.env.DATABASE_URL);
+    const data = await chatService.analyzeRepository(repoUrl, userId);
+    return c.json({ success: true, data });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+};
+
+export const sendMessage = async (c: AppContext) => {
+  const reqStart = Date.now();
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const { sessionId, question, persona, repoUrl, history = [], repoData } = body;
+    const user = c.get('user');
+    const userId = user?.userId || user?.id;
+
+    if (!sessionId || !question || !repoUrl || !persona) {
+      return c.json({ success: false, error: 'Missing required parameters' }, 400);
+    }
+
+    const prisma = getPrisma(c.env.DATABASE_URL);
+    let session = await prisma.chatSession.findUnique({ where: { id: sessionId } });
+    if (!session && userId) {
+      session = await prisma.chatSession.create({
+        data: {
+          id: sessionId,
+          userId,
+          title: 'Chat Session',
+          repoUrl,
+          repoData: repoData || undefined,
+        },
+      });
+    } else if (session && repoData && !session.repoData) {
+      session = await prisma.chatSession.update({
+        where: { id: sessionId },
+        data: { repoData, repoUrl },
+      });
+    }
+
+    const chatService = new ChatService(c.env.DATABASE_URL);
+    const result = await chatService.generateChatStream(
+      repoUrl,
+      question,
+      persona,
+      history,
+      sessionId,
+      userId
+    );
+
+    return streamText(c, async (stream) => {
+      for await (const textPart of result.textStream) {
+        const escapedText = JSON.stringify({ text: textPart });
+        await stream.write(`data: ${escapedText}\n\n`);
+      }
+
+      await stream.write('data: "[DONE]"\n\n');
+
+      loggerService.info('chat.generation.completed', 'Chat generated successfully', {
+        repository: repoUrl,
+        durationMs: Date.now() - reqStart,
+      });
+      await saveRequestLog({
+        route: c.req.path,
+        method: c.req.method,
+        feature: 'CHAT',
+        statusCode: 200,
+        cacheHit: false,
+        totalDurationMs: Date.now() - reqStart,
+      });
+    });
+  } catch (error: any) {
+    loggerService.error('chat.generation.error', 'Chat generation error', error);
+    await saveRequestLog({
+      route: c.req.path,
+      method: c.req.method,
+      feature: 'CHAT',
+      statusCode: 500,
+      error: error.message,
+      totalDurationMs: Date.now() - reqStart,
+    });
+    return streamText(c, async (stream) => {
+      await stream.write(`data: ${JSON.stringify({ success: false, error: error.message })}\n\n`);
+    });
+  }
+};
+
+export const getHistory = async (c: AppContext) => {
+  try {
+    const user = c.get('user');
+    const userId = user?.userId || user?.id;
+    const page = parseInt(c.req.query('page') || '1');
+    const limit = Math.min(parseInt(c.req.query('limit') || '50'), 200);
+    const skip = (page - 1) * limit;
+
+    if (!userId) return c.json({ success: false, error: 'Unauthorized' }, 401);
+
+    const prisma = getPrisma(c.env.DATABASE_URL);
+    const sessions = await prisma.chatSession.findMany({
+      where: { userId, isArchived: false },
+      skip,
+      take: limit,
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
+    });
+
+    return c.json({ success: true, data: sessions });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+};
+
+export const getSession = async (c: AppContext) => {
+  try {
+    const id = c.req.param('id');
+    const prisma = getPrisma(c.env.DATABASE_URL);
+    const session = await prisma.chatSession.findUnique({
+      where: { id },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+
+    if (!session) return c.json({ success: false, error: 'Session not found' }, 404);
+    return c.json({ success: true, data: session });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+};

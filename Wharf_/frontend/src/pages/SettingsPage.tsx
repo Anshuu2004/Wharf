@@ -132,7 +132,7 @@ export const SettingsPage = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-6">
+    <div className="max-w-7xl mx-auto px-5 sm:px-12 py-4 sm:py-8 space-y-6">
       <SettingsHeader />
 
       <div className="mb-8">

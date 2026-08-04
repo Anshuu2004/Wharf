@@ -18,7 +18,7 @@ const sections = [
   { id: 'tech-stack', name: 'Tech Stack', icon: Layout, default: true },
   { id: 'features', name: 'Features', icon: Zap, default: false },
   { id: 'api-reference', name: 'API Reference', icon: Code2, default: false },
-  { id: 'project-structure', name: 'Tree Structure', icon: FolderTree, default: false },
+  { id: 'project-structure', name: 'Structure', icon: FolderTree, default: false },
   { id: 'architecture', name: 'Architecture', icon: GitBranch, default: false },
   { id: 'contributing', name: 'Contributors', icon: Users, default: true },
   { id: 'license', name: 'License', icon: Scale, default: true },

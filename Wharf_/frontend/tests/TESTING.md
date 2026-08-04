@@ -1,31 +1,8 @@
-# Wharf Testing Documentation
+# Frontend Testing
 
-This document outlines the testing architecture for the Wharf platform. We utilize a multi-layered testing approach to ensure high reliability across both the Backend API and the Frontend UI.
+**Framework**: Vitest, React Testing Library (RTL), Mock Service Worker (MSW), Playwright
 
-<br />
-
-## 1. Backend Testing
-
-**Framework**: Jest, Supertest
-**Location**: `Wharf_/backend/tests/`
-
-The backend utilizes **Integration-style Unit Tests**. Instead of merely testing pure functions in isolation, we spin up the Express application and fire actual HTTP requests using `supertest`.
-
-### Key Areas Tested
-*   **Authentication**: Registration, Login, Token generation, and Protected Route middlewares.
-*   **Generators**: Verifying that the Markdown generation services return properly formulated READMEs, Changelogs, and Architecture documents.
-*   **User Routes**: Fetching and manipulating user profile data.
-*   **Factories**: Leveraging `/tests/factories` to spin up mock Users and Payloads for safe database mocking.
-
-### Important Commands
-*   `npm run test` (Runs all Backend test suites)
-
-<br />
-
-## 2. Frontend Component & Integration Testing
-
-**Framework**: Vitest, React Testing Library (RTL), Mock Service Worker (MSW)
-**Location**: `Wharf_/frontend/tests/`
+## 1. Component & Integration Testing
 
 The frontend utilizes a blend of Unit Tests for pure UI components and Integration Tests for major Pages.
 
@@ -44,7 +21,7 @@ Rather than painfully mocking `fetch` or `axios` layer by layer, Wharf uses MSW 
 
 <br />
 
-## 3. End-to-End (E2E) Testing
+## 2. End-to-End (E2E) Testing (Playwright)
 
 **Framework**: Playwright
 **Location**: `Wharf_/frontend/tests/e2e/`
@@ -58,7 +35,7 @@ Playwright acts as an actual user navigating the Wharf platform. It launches hea
 4.  **Settings (`settings.spec.ts`)**: Interacting with BYOK preferences.
 5.  **Profile (`profile.spec.ts`)**: Viewing statistics.
 
-*(Note: Playwright will automatically boot up the frontend `npm run dev` server in the background for you via `playwright.config.ts`. However, the Backend Dev Server must be running independently if you aren't mocking the API).*
+*(Note: Playwright will automatically boot up the frontend `npm run dev` server in the background for you via `playwright.config.ts`. However, the Backend Dev Server or Worker Backend must be running independently if you aren't mocking the API).*
 
 ### Important Commands
 *   `npx playwright test` (Runs all E2E tests headless)

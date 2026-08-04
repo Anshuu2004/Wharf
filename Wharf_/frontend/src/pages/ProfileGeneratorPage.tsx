@@ -963,7 +963,7 @@ export const ProfileGeneratorPage = () => {
                           {/* Tab Navigation */}
                           <div className="w-full bg-wharf-surface-primary border-2 border-wharf-border-primary rounded-lg p-2 shadow-brutal-sm">
                             <div
-                              className={`grid gap-4 w-full ${options.template === 'terminal' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-5'}`}
+                              className={`grid gap-3 w-full ${options.template === 'terminal' ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-5'}`}
                             >
                               {[
                                 {

@@ -275,7 +275,7 @@ const UserStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) => {
               rounded="3xl"
               className="text-center group hover:translate-y-[-2px] transition-all duration-300"
             >
-              <div className="flex flex-col items-center p-3">
+              <div className="flex flex-col items-center p-2">
                 <div
                   className={`w-10 h-10 ${stat.color} border-2 border-wharf-border-primary flex items-center justify-center mb-3 shadow-brutal-sm group-hover:shadow-brutal transition-all`}
                 >
@@ -785,7 +785,8 @@ export const GeneratorPage = () => {
                             onClick={handleGenerate}
                             icon={<Zap className="w-4 h-4" />}
                           >
-                            Start Generating
+                            <span className="sm:hidden">Generate</span>
+                            <span className="hidden sm:block">Start Generating</span>
                           </Button>
                         </div>
                       </>

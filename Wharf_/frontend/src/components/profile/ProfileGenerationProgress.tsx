@@ -68,7 +68,7 @@ export const ProfileGenerationProgress = ({
         />
       </div>
 
-      <div className="relative p-6 md:p-8 text-center">
+      <div className="relative py-6 px-2 md:p-8 text-center">
         {/* Status Icon */}
         <div className="flex justify-center mb-5">
           <div

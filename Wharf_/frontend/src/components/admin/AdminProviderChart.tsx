@@ -30,14 +30,14 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     const total = payload.reduce((sum, p) => sum + p.value, 0);
-    const percentage = ((data.value / total) * 100).toFixed(1);
+    const percentage = total > 0 ? ((data.value / total) * 100).toFixed(1) : '0.0';
 
     return (
       <div className="bg-wharf-surface-primary border-2 border-wharf-border-primary p-3 rounded-xl shadow-brutal-sm min-w-[140px]">
         <p className="font-mono text-xs font-bold text-wharf-text-primary mb-1">{data.name}</p>
         <div className="flex items-center justify-between gap-4">
-          <span className="font-mono text-xs text-wharf-text-secondary">Usage:</span>
-          <span className="font-mono text-sm font-bold text-wharf-text-primary">{data.value}%</span>
+          <span className="font-mono text-xs text-wharf-text-secondary">Requests:</span>
+          <span className="font-mono text-sm font-bold text-wharf-text-primary">{data.value}</span>
         </div>
         <div className="flex items-center justify-between gap-4">
           <span className="font-mono text-xs text-wharf-text-secondary">Share:</span>
@@ -98,6 +98,9 @@ const renderCustomLabel = (props: PieLabelRenderProps) => {
 export const AdminProviderChart = ({ data }: AdminProviderChartProps) => {
   const total = data.reduce((sum, item) => sum + item.value, 0);
   const topProvider = data.length > 0 ? data.reduce((a, b) => (a.value > b.value ? a : b)) : null;
+  // Ensure we always have valid data
+  const chartData = data.length > 0 ? data : [{ name: 'No Data', value: 1 }];
+  const chartTotal = Math.max(total, 1);
 
   return (
     <Card variant="hard" rounded="3xl" className="overflow-hidden p-6">
@@ -115,22 +118,22 @@ export const AdminProviderChart = ({ data }: AdminProviderChartProps) => {
 
       <div className="flex flex-col lg:flex-row items-center w-full gap-6">
         {/* Chart */}
-        <div className="flex-1 w-full min-w-[200px]">
-          <ResponsiveContainer width="100%" height={380}>
+        <div className="flex-1 w-full min-w-[200px] overflow-hidden">
+          <ResponsiveContainer width="100%" height={390}>
             <PieChart>
               <Pie
-                data={data}
+                data={chartData}
                 cx="50%"
                 cy="50%"
                 innerRadius={0}
-                outerRadius={160}
+                outerRadius={150}
                 paddingAngle={2}
                 dataKey="value"
                 label={renderCustomLabel}
                 labelLine={false}
                 strokeWidth={0}
               >
-                {data.map((_entry, index) => (
+                {chartData.map((_entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={COLORS[index % COLORS.length].main}
@@ -151,13 +154,13 @@ export const AdminProviderChart = ({ data }: AdminProviderChartProps) => {
             <p className="font-mono text-[10px] text-wharf-text-secondary uppercase tracking-wider">
               Total Usage
             </p>
-            <p className="font-display font-black text-2xl text-wharf-text-primary">{total}%</p>
+            <p className="font-display font-black text-xl text-wharf-text-primary">{total} Reqs</p>
           </div>
 
           <div className="space-y-1.5">
             {data.slice(0, 3).map((item, index) => {
               const color = COLORS[index % COLORS.length];
-              const percentage = ((item.value / total) * 100).toFixed(1);
+              const percentage = chartTotal > 0 ? ((item.value / chartTotal) * 100).toFixed(1) : '0.0';
               return (
                 <div
                   key={item.name}
@@ -172,10 +175,7 @@ export const AdminProviderChart = ({ data }: AdminProviderChartProps) => {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs font-bold text-wharf-text-primary">
-                      {item.value}%
-                    </span>
-                    <span className="font-mono text-[10px] text-wharf-text-tertiary">
-                      ({percentage}%)
+                      {percentage}%
                     </span>
                   </div>
                 </div>
