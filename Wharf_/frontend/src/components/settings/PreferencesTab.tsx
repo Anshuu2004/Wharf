@@ -26,8 +26,8 @@ export const PreferencesTab = () => {
   const fetchPreferences = useCallback(async () => {
     try {
       const response = await api.get('/user/preferences');
-      if (response.data.success) {
-        setPreferences(response.data.data);
+      if (response.data.success && response.data.data) {
+        setPreferences((prev) => ({ ...prev, ...response.data.data }));
       }
     } catch {
       showToast('Failed To Load Preferences', 'error');
