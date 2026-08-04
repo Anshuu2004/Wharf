@@ -357,37 +357,44 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
                   </div>
 
                   {/* Right - Actions */}
-                  <div className="flex items-center gap-3 flex-wrap md:flex-nowrap">
+                  <div className="flex items-center gap-3 flex-wrap w-full md:w-auto pt-3 border-t-2 border-wharf-border-secondary md:pt-0 md:mt-0 md:border-t-0 md:flex-nowrap">
                     <Button
                       variant="secondary"
                       size="sm"
+                      rounded="md"
                       onClick={() => handleCopy(record.id, record.repository.name)}
-                      className="group/btn"
+                      className="flex-1 md:flex-none min-w-[50px] h-8 group/btn text-xs"
                     >
-                      <Copy className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
-                      <span className="hidden sm:inline">Copy</span>
+                      <Copy className="w-3.5 h-3.5 group-hover/btn:scale-110 transition-transform" />
+                      <span className="hidden sm:inline text-xs">Copy</span>
                     </Button>
                     <Button
                       variant="secondary"
                       size="sm"
+                      rounded="md"
                       onClick={() => handleDownload(record.id, record.repository.name)}
-                      className="group/btn"
+                      className="flex-1 md:flex-none min-w-[50px] h-8 group/btn text-xs"
                     >
-                      <Download className="w-4 h-4 group-hover/btn:-translate-y-0.5 transition-transform" />
-                      <span className="hidden sm:inline">Download</span>
+                      <Download className="w-3.5 h-3.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+                      <span className="hidden sm:inline text-xs">Download</span>
                     </Button>
-                    <Button variant="primary" size="sm" onClick={() => handleView(record.id)}>
-                      <Eye className="w-4 h-4" />
-                      <span className="hidden sm:inline">View</span>
+                    <Button 
+                      variant="primary" 
+                      size="sm" 
+                      rounded="md"
+                      onClick={() => handleView(record.id)}
+                      className="flex-1 md:flex-none min-w-[50px] h-8 text-xs"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline text-xs">View</span>
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
+                    <button
                       onClick={() => handleDelete(record.id)}
-                      className="text-wharf-text-tertiary hover:text-wharf-orange hover:bg-transparent"
+                      className="p-1.75 text-wharf-text-primary hover:text-wharf-error bg-wharf-surface-tertiary hover:bg-wharf-error/10 transition-all border-2 border-wharf-border-primary hover:border-wharf-error rounded-lg cursor-pointer"
+                      title="Delete"
                     >
-                      <Trash2 className="w-4.5 h-4.5" />
-                    </Button>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               </Card>
