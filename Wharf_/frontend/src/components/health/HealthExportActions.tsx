@@ -100,8 +100,8 @@ ${healthData.contributionScore ? `## 🤝 Contribution Readiness\n\n**Score:** $
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <Button size="sm" variant="secondary" onClick={handleCopy} className="min-w-[100px]">
+        <div className="w-full sm:w-auto flex flex-wrap sm:flex-nowrap gap-3 items-center mt-2 sm:mt-0">
+          <Button size="sm" variant="secondary" onClick={handleCopy} className="flex-[1] sm:flex-none min-w-[100px]">
             {copied ? (
               <>
                 <Check className="w-4 h-4" />
@@ -115,14 +115,17 @@ ${healthData.contributionScore ? `## 🤝 Contribution Readiness\n\n**Score:** $
             )}
           </Button>
 
-          <Button size="sm" variant="secondary" onClick={handleDownload} className="min-w-[100px]">
+          <Button size="sm" variant="secondary" onClick={handleDownload} className="flex-[1] sm:flex-none min-w-[100px]">
             <Download className="w-4 h-4" />
             Download
           </Button>
 
-          <Button size="sm" variant="ghost" onClick={handlePrint}>
-            <Printer className="w-4 h-4" />
-          </Button>
+          <div className="w-full sm:w-auto flex justify-center">
+            <Button size="sm" variant="outline" onClick={handlePrint} className="w-full sm:w-auto max-w-[200px]">
+              <Printer className="w-4 h-4" />
+              Print
+            </Button>
+          </div>
         </div>
       </div>
     </Card>
