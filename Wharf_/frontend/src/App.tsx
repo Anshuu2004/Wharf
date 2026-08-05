@@ -75,7 +75,7 @@ function App() {
         {!isChatPage && <Header />}
 
         <main className="flex-1">
-        <Suspense
+          <Suspense
             fallback={
               <div className="flex min-h-[50vh] items-center justify-center animate-pulse">
                 <div className="flex flex-col items-center gap-4">

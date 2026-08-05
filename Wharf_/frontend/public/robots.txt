@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /settings
+Disallow: /auth/callback
 
 Sitemap: https://trywharf.vercel.app/sitemap.xml
