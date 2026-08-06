@@ -76,12 +76,13 @@ export class RepoService {
       'main.cpp',
     ];
 
-    for (const file of filesToFetch) {
-      if (filePaths.includes(file)) {
-        const content = await this.githubService.fetchFileContent(owner, repo, file);
-        if (content) keyFiles[file] = content;
-      }
-    }
+    const matchedFiles = filesToFetch.filter((f) => filePaths.includes(f));
+    const fileContents = await Promise.all(
+      matchedFiles.map((f) => this.githubService.fetchFileContent(owner, repo, f))
+    );
+    matchedFiles.forEach((f, i) => {
+      if (fileContents[i]) keyFiles[f] = fileContents[i]!;
+    });
     loggerService.stepEnd('github.fetch.completed', 'GitHub Fetch', githubStart, {
       repository: `${owner}/${repo}`,
     });

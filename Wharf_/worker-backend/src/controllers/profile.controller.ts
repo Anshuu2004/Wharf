@@ -125,36 +125,38 @@ export const generate = async (c: AppContext) => {
         fallbackProviderStr = result.provider;
       }
 
-      await cacheService.setProfileReadme(username, template, theme, hash, generatedMarkdown);
+      c.executionCtx.waitUntil((async () => {
+        await cacheService.setProfileReadme(username, template, theme, hash, generatedMarkdown);
 
-      if (userId) {
-        try {
-          const wordCount = generatedMarkdown.split(/\s+/).filter(Boolean).length;
-          const record = await prisma.profileReadme.create({
-            data: {
-              userId,
-              appUsername: c.get('contextStore')?.username || 'unknown',
-              username,
-              content: generatedMarkdown,
-              wordCount,
-              template,
-              theme,
-              badges: options.githubBadges || [],
-              showStats: options.showStats ?? true,
-              showTopLanguages: options.showTopLanguages ?? true,
-              showContributions: options.showContributions ?? true,
-            },
-          });
+        if (userId) {
+          try {
+            const wordCount = generatedMarkdown.split(/\s+/).filter(Boolean).length;
+            const record = await prisma.profileReadme.create({
+              data: {
+                userId,
+                appUsername: c.get('contextStore')?.username || 'unknown',
+                username,
+                content: generatedMarkdown,
+                wordCount,
+                template,
+                theme,
+                badges: options.githubBadges || [],
+                showStats: options.showStats ?? true,
+                showTopLanguages: options.showTopLanguages ?? true,
+                showContributions: options.showContributions ?? true,
+              },
+            });
 
-          const tokensGenerated = Math.round(wordCount * 1.37);
-          await Promise.all([
-            prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeProfiles" = "lifetimeProfiles" + 1 WHERE id = ${userId}`,
-            recordDailyGeneration(c.env.DATABASE_URL, userId),
-          ]);
-        } catch (dbError: any) {
-          loggerService.error('database.save.error', '[CRITICAL DB ERROR] Failed to save profile generation to DB', dbError);
+            const tokensGenerated = Math.round(wordCount * 1.37);
+            await Promise.all([
+              prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeProfiles" = "lifetimeProfiles" + 1 WHERE id = ${userId}`,
+              recordDailyGeneration(c.env.DATABASE_URL, userId),
+            ]);
+          } catch (dbError: any) {
+            loggerService.error('database.save.error', '[CRITICAL DB ERROR] Failed to save profile generation to DB', dbError);
+          }
         }
-      }
+      })());
 
       await stream.write('data: [DONE]\n\n');
     });

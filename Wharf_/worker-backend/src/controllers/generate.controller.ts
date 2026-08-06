@@ -108,57 +108,59 @@ export const generateReadme = async (c: AppContext) => {
         provider,
       });
 
-      const mdProcStart = loggerService.stepStart();
-      await cacheService.setReadme(owner, repo, tone, sections, generatedMarkdown);
+      // Background non-blocking tasks
+      c.executionCtx.waitUntil((async () => {
+        const mdProcStart = loggerService.stepStart();
+        await cacheService.setReadme(owner, repo, tone, sections, generatedMarkdown);
 
-      if (userId) {
-        const dbStart = loggerService.stepStart();
-        try {
-          const repository = await prisma.repository.upsert({
-            where: { owner_name_userId: { owner, name: repo, userId } },
-            update: {
-              description: repoContext.meta.description,
-              stars: repoContext.meta.stars,
-              language: repoContext.meta.language,
-            },
-            create: {
-              owner,
-              name: repo,
-              userId,
-              url: repoUrl,
-              description: repoContext.meta.description,
-              stars: repoContext.meta.stars,
-              language: repoContext.meta.language,
-            },
-          });
+        if (userId) {
+          const dbStart = loggerService.stepStart();
+          try {
+            const repository = await prisma.repository.upsert({
+              where: { owner_name_userId: { owner, name: repo, userId } },
+              update: {
+                description: repoContext.meta.description,
+                stars: repoContext.meta.stars,
+                language: repoContext.meta.language,
+              },
+              create: {
+                owner,
+                name: repo,
+                userId,
+                url: repoUrl,
+                description: repoContext.meta.description,
+                stars: repoContext.meta.stars,
+                language: repoContext.meta.language,
+              },
+            });
 
-          const wordCount = generatedMarkdown.split(/\s+/).filter(Boolean).length;
-          const tokensGenerated = Math.round(wordCount * 1.37);
+            const wordCount = generatedMarkdown.split(/\s+/).filter(Boolean).length;
+            const tokensGenerated = Math.round(wordCount * 1.37);
 
-          const genRecord = await prisma.generation.create({
-            data: {
-              type: 'README',
-              content: generatedMarkdown,
-              wordCount,
-              options: { tone, sections },
-              repoId: repository.id,
-            },
-          });
-          loggerService.stepEnd('database.save.completed', 'DB Save Completed', dbStart, {
-            table: 'Generation',
-            recordId: genRecord.id,
-          });
+            const genRecord = await prisma.generation.create({
+              data: {
+                type: 'README',
+                content: generatedMarkdown,
+                wordCount,
+                options: { tone, sections },
+                repoId: repository.id,
+              },
+            });
+            loggerService.stepEnd('database.save.completed', 'DB Save Completed', dbStart, {
+              table: 'Generation',
+              recordId: genRecord.id,
+            });
 
-          await Promise.all([
-            prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeReadmes" = "lifetimeReadmes" + 1 WHERE id = ${userId}`,
-            recordDailyGeneration(c.env.DATABASE_URL, userId)
-          ]);
-        } catch (dbError) {
-          loggerService.error('database.save.error', 'Failed to save generation to DB', dbError);
+            await Promise.all([
+              prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeReadmes" = "lifetimeReadmes" + 1 WHERE id = ${userId}`,
+              recordDailyGeneration(c.env.DATABASE_URL, userId)
+            ]);
+          } catch (dbError) {
+            loggerService.error('database.save.error', 'Failed to save generation to DB', dbError);
+          }
         }
-      }
-
-      loggerService.stepEnd('markdown.processing.completed', 'Markdown Processing Completed', mdProcStart);
+        loggerService.stepEnd('markdown.processing.completed', 'Markdown Processing Completed', mdProcStart);
+      })());
 
       loggerService.info('generation.completed', 'README generated successfully', {
         repository: `${owner}/${repo}`,

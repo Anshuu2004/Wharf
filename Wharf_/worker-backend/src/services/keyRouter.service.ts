@@ -75,7 +75,50 @@ export class KeyRouterService {
     return null;
   }
 
-  /* Legacy: User Key First, Then System Fallback (Fept For Backward Compat) */
+  /* Optimized: Find Best Available Key In 1-2 DB Queries Across All Providers */
+  async getBestAvailableKey(userId?: string): Promise<KeyInfo | null> {
+    const prisma = getPrisma(this.dbUrl);
+    // Provider priority — first match wins
+    const providerOrder = ['GEMINI', 'GROQ', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK'];
+
+    // 1. Try user BYOK keys first — single query, sort by priority in memory
+    if (userId) {
+      const userKeys = await prisma.userApiKey.findMany({
+        where: { userId, isExhausted: false, isVerified: true, isActive: true },
+      });
+      const bestUserKey = userKeys.sort(
+        (a, b) => providerOrder.indexOf(a.provider.toUpperCase()) - providerOrder.indexOf(b.provider.toUpperCase())
+      )[0];
+
+      if (bestUserKey) {
+        await prisma.userApiKey.update({
+          where: { id: bestUserKey.id },
+          data: { lastUsed: new Date(), usageCount: { increment: 1 } },
+        });
+        return { id: bestUserKey.id, key: decrypt(bestUserKey.key), provider: bestUserKey.provider, isSystem: false };
+      }
+    }
+
+    // 2. Fall back to system key pool — single query, sort by priority in memory
+    const systemKeys = await prisma.systemKey.findMany({
+      where: { isExhausted: false },
+    });
+    const bestSystemKey = systemKeys.sort(
+      (a, b) => providerOrder.indexOf(a.provider.toUpperCase()) - providerOrder.indexOf(b.provider.toUpperCase())
+    )[0];
+
+    if (bestSystemKey) {
+      await prisma.systemKey.update({
+        where: { id: bestSystemKey.id },
+        data: { lastUsed: new Date(), usageCount: { increment: 1 } },
+      });
+      return { id: bestSystemKey.id, key: decrypt(bestSystemKey.key), provider: bestSystemKey.provider, isSystem: true };
+    }
+
+    return null;
+  }
+
+  /* Legacy: User Key First, Then System Fallback (Kept For Backward Compat) */
   async getAvailableKey(provider: string, userId?: string): Promise<KeyInfo | null> {
     if (userId) {
       const userKey = await this.getUserKey(provider, userId);

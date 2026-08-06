@@ -102,43 +102,44 @@ export class ChangelogController {
           await stream.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
         }
 
-        // Save To Cache
-        await cacheService.setChangelog(repoUrl, options, fullContent);
-
-        const userId = c.get('user')?.id || c.get('user')?.userId;
-        if (userId) {
-          try {
-            const wordCount = fullContent.split(/\s+/).filter(Boolean).length;
-            const dbStart = loggerService.stepStart();
-            const prisma = getPrisma(c.env.DATABASE_URL);
-            
-            const changelogRecord = await prisma.changelog.create({
-              data: {
-                repoUrl,
-                repoName: extractRepoName(repoUrl),
-                content: fullContent,
-                wordCount,
-                format: options.format || 'keep-a-changelog',
-                commitCount: Number(options.commitCount) || 100,
-                includeTags: options.includeTags ?? true,
-                includeContributors: options.includeContributors ?? true,
-                groupByType: options.groupByType ?? true,
-                userId,
-              },
-            });
-            loggerService.stepEnd('database.save.completed', 'DB Save Completed', dbStart, {
-              table: 'Changelog',
-              recordId: changelogRecord.id,
-            });
-            const tokensGenerated = Math.round(wordCount * 1.37);
-            await Promise.all([
-              prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeChangelogs" = "lifetimeChangelogs" + 1 WHERE id = ${userId}`,
-              recordDailyGeneration(c.env.DATABASE_URL, userId)
-            ]);
-          } catch (dbError) {
-            loggerService.error('database.save.error', 'Changelog DB Save Error', dbError);
+        // Save To Cache & DB in Background
+        c.executionCtx.waitUntil((async () => {
+          await cacheService.setChangelog(repoUrl, options, fullContent);
+          const userId = c.get('user')?.id || c.get('user')?.userId;
+          if (userId) {
+            try {
+              const wordCount = fullContent.split(/\s+/).filter(Boolean).length;
+              const dbStart = loggerService.stepStart();
+              const prisma = getPrisma(c.env.DATABASE_URL);
+              
+              const changelogRecord = await prisma.changelog.create({
+                data: {
+                  repoUrl,
+                  repoName: extractRepoName(repoUrl),
+                  content: fullContent,
+                  wordCount,
+                  format: options.format || 'keep-a-changelog',
+                  commitCount: Number(options.commitCount) || 100,
+                  includeTags: options.includeTags ?? true,
+                  includeContributors: options.includeContributors ?? true,
+                  groupByType: options.groupByType ?? true,
+                  userId,
+                },
+              });
+              loggerService.stepEnd('database.save.completed', 'DB Save Completed', dbStart, {
+                table: 'Changelog',
+                recordId: changelogRecord.id,
+              });
+              const tokensGenerated = Math.round(wordCount * 1.37);
+              await Promise.all([
+                prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeChangelogs" = "lifetimeChangelogs" + 1 WHERE id = ${userId}`,
+                recordDailyGeneration(c.env.DATABASE_URL, userId)
+              ]);
+            } catch (dbError) {
+              loggerService.error('database.save.error', 'Changelog DB Save Error', dbError);
+            }
           }
-        }
+        })());
 
         loggerService.info('generation.completed', 'Changelog generated successfully', {
           repository: repoUrl,

@@ -22,24 +22,8 @@ export class AiService {
     userId?: string,
     onChunk?: (text: string) => void
   ): Promise<{ text: string; provider: string }> {
-    const preferredProviders = ['GEMINI', 'GROQ', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK'];
-    let keyInfo = null;
-
-    // Step 1: Check For User BYOK Key Across ALL Providers First
-    if (userId) {
-      for (const provider of preferredProviders) {
-        keyInfo = await this.keyRouter.getUserKey(provider, userId);
-        if (keyInfo) break;
-      }
-    }
-
-    // Step 2: Only If No User Key Found, Fall Back To System Pool
-    if (!keyInfo) {
-      for (const provider of preferredProviders) {
-        keyInfo = await this.keyRouter.getSystemKey(provider);
-        if (keyInfo) break;
-      }
-    }
+    // Single optimized query: user BYOK first, then system pool
+    const keyInfo = await this.keyRouter.getBestAvailableKey(userId);
 
     if (!keyInfo) {
       throw new Error(
@@ -74,7 +58,7 @@ export class AiService {
         case 'GROQ': {
           const groq = new Groq({ apiKey: keyInfo.key });
           const stream = await groq.chat.completions.create({
-            model: 'llama-3.1-8b-instant',
+            model: 'llama-3.3-70b-versatile',
             messages: [{ role: 'user', content: prompt }],
             stream: true,
           });
@@ -162,10 +146,15 @@ export class AiService {
         error.status === 429 ||
         error.status === 503 ||
         error.status === 403 ||
+        error.status === 413 ||
+        error.status === 400 ||
+        error.status === 402 ||
         error.message?.includes('429') ||
         error.message?.includes('503') ||
         error.message?.includes('403') ||
-        error.status === 402 ||
+        error.message?.includes('413') ||
+        error.message?.includes('400') ||
+        error.message?.includes('Request too large') ||
         error.message?.includes('Failed to parse stream') ||
         error.message?.includes('Service Unavailable') ||
         error.message?.includes('Overloaded') ||
@@ -186,24 +175,8 @@ export class AiService {
     userId?: string,
     onChunk?: (text: string) => void
   ): Promise<{ text: string; provider: string }> {
-    const preferredProviders = ['GEMINI', 'GROQ', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK'];
-    let keyInfo = null;
-
-    // Step 1: Check For User BYOK Key Across ALL Providers First
-    if (userId) {
-      for (const provider of preferredProviders) {
-        keyInfo = await this.keyRouter.getUserKey(provider, userId);
-        if (keyInfo) break;
-      }
-    }
-
-    // Step 2: Only If No User Key Found, Fall Back To System Pool
-    if (!keyInfo) {
-      for (const provider of preferredProviders) {
-        keyInfo = await this.keyRouter.getSystemKey(provider);
-        if (keyInfo) break;
-      }
-    }
+    // Single optimized query: user BYOK first, then system pool
+    const keyInfo = await this.keyRouter.getBestAvailableKey(userId);
 
     if (!keyInfo) {
       throw new Error(
@@ -234,7 +207,7 @@ export class AiService {
         case 'GROQ': {
           const groq = new Groq({ apiKey: keyInfo.key });
           const stream = await groq.chat.completions.create({
-            model: 'llama-3.1-8b-instant',
+            model: 'llama-3.3-70b-versatile',
             messages: [{ role: 'user', content: prompt }],
             stream: true,
           });
@@ -322,10 +295,13 @@ export class AiService {
         error.status === 429 ||
         error.status === 503 ||
         error.status === 403 ||
+        error.status === 413 ||
+        error.status === 402 ||
         error.message?.includes('429') ||
         error.message?.includes('503') ||
         error.message?.includes('403') ||
-        error.status === 402 ||
+        error.message?.includes('413') ||
+        error.message?.includes('Request too large') ||
         error.message?.includes('Failed to parse stream') ||
         error.message?.includes('Service Unavailable') ||
         error.message?.includes('Overloaded') ||
@@ -341,13 +317,8 @@ export class AiService {
   }
 
   async generateChangelogStream(prompt: string, userId?: string): Promise<{ stream: AsyncGenerator<string>; provider: string }> {
-    const preferredProviders = ['GEMINI', 'GROQ', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK'];
-    let keyInfo = null;
-
-    for (const provider of preferredProviders) {
-      keyInfo = await this.keyRouter.getAvailableKey(provider, userId);
-      if (keyInfo) break;
-    }
+    // Single optimized query: user BYOK first, then system pool
+    const keyInfo = await this.keyRouter.getBestAvailableKey(userId);
 
     if (!keyInfo) {
       throw new Error('No API keys available for any supported provider.');
@@ -373,7 +344,7 @@ export class AiService {
         case 'GROQ': {
           const groq = new Groq({ apiKey: keyInfo.key });
           const stream = await groq.chat.completions.create({
-            model: 'llama-3.1-8b-instant',
+            model: 'llama-3.1-70b-versatile',
             messages: [{ role: 'user', content: prompt }],
             stream: true,
           });
