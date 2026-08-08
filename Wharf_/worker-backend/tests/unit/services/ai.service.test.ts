@@ -1,7 +1,7 @@
 import type { Mock } from "vitest";
 import { AiService } from '../../../src/services/ai.service';
 import { KeyRouterService } from '../../../src/services/keyRouter.service';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 vi.mock('../../../src/services/keyRouter.service');
 vi.mock('../../../src/db', () => ({
@@ -22,14 +22,14 @@ vi.mock('../../../src/utils/logger', () => ({
 }));
 
 // We Only Need To Deeply Test One Provider Fallback Path To Prove The Logic
-vi.mock('@google/generative-ai', () => ({
-  GoogleGenerativeAI: vi.fn().mockImplementation(function() {
+vi.mock('@google/genai', () => ({
+  GoogleGenAI: vi.fn().mockImplementation(function() {
     return {
-      getGenerativeModel: vi.fn().mockReturnValue({
-        generateContentStream: vi.fn().mockResolvedValue({
-          stream: [{ text: () => 'chunk1' }, { text: () => 'chunk2' }]
-        })
-      })
+      models: {
+        generateContentStream: vi.fn().mockResolvedValue([
+          { text: 'chunk1' }, { text: 'chunk2' }
+        ])
+      }
     };
   })
 }));
@@ -48,7 +48,7 @@ describe('AiService', () => {
       
       await expect(
         aiService.generateReadmeStream({} as any, 'technical', [])
-      ).rejects.toThrow('No API keys available');
+      ).rejects.toThrow('No API Keys Available');
     });
 
     it('should use system GEMINI key if user has no keys', async () => {
@@ -72,7 +72,7 @@ describe('AiService', () => {
       expect(result.provider).toBe('GEMINI');
       expect(result.text).toBe('chunk1chunk2');
       expect(chunks).toBe('chunk1chunk2');
-      expect(GoogleGenerativeAI).toHaveBeenCalledWith('sys-gem');
+      expect(GoogleGenAI).toHaveBeenCalledWith({ apiKey: 'sys-gem' });
     });
 
     it('should fallback to NEXT_AVAILABLE if exhaustion error occurs', async () => {
@@ -82,11 +82,11 @@ describe('AiService', () => {
 
       // First Gen Fails With 429
       const mockFailModel = { generateContentStream: vi.fn().mockRejectedValue({ status: 429 }) };
-      const mockWinModel = { generateContentStream: vi.fn().mockResolvedValue({ stream: [{ text: () => 'win' }] }) };
+      const mockWinModel = { generateContentStream: vi.fn().mockResolvedValue([{ text: 'win' }]) };
 
-      (GoogleGenerativeAI as Mock)
-        .mockImplementationOnce(function() { return { getGenerativeModel: () => mockFailModel }; })
-        .mockImplementationOnce(function() { return { getGenerativeModel: () => mockWinModel }; });
+      (GoogleGenAI as Mock)
+        .mockImplementationOnce(function() { return { models: mockFailModel }; })
+        .mockImplementationOnce(function() { return { models: mockWinModel }; });
 
       const mockContext = { 
         meta: { name: 'repo', owner: 'owner', description: 'desc', language: 'ts', topics: [], stars: 10, license: 'MIT', defaultBranch: 'main' },
