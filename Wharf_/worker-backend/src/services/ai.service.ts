@@ -1,12 +1,21 @@
 import { KeyRouterService } from './keyRouter.service';
 import { loggerService } from '../utils/logger';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import Groq from 'groq-sdk';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { buildReadmePrompt } from '../utils/promptBuilder';
 import { buildProfilePrompt, ProfileData, ProfileOptions } from '../utils/profilePromptBuilder';
 import { RepoContext } from './repo.service';
+
+const SYSTEM_PROMPT = 'You are an expert technical writer and developer. You MUST follow every single instruction in the prompt strictly. Do not skip any requested sections, steps, or details. Provide extremely detailed, exhaustive, and rich content. Expand fully on all points without abbreviating or summarizing excessively. Your output must be highly verbose and comprehensive, guaranteeing high-quality content.';
+
+// Groq Free Tier: 12k TPM Limit. ~8k Tokens For Input (~32k Chars), 4k For Output.
+const GROQ_MAX_PROMPT_CHARS = 32000;
+function truncateForGroq(prompt: string): string {
+  if (prompt.length <= GROQ_MAX_PROMPT_CHARS) return prompt;
+  return prompt.slice(0, GROQ_MAX_PROMPT_CHARS) + '\n\n[Note: context was trimmed to fit model limits — generate the best possible output from the above]';
+}
 
 export class AiService {
   private keyRouter: KeyRouterService;
@@ -15,6 +24,7 @@ export class AiService {
     this.keyRouter = new KeyRouterService(dbUrl);
   }
 
+  // 1. README Generation
   async generateReadmeStream(
     context: RepoContext,
     tone: 'technical' | 'recruiter' | 'beginner',
@@ -22,12 +32,12 @@ export class AiService {
     userId?: string,
     onChunk?: (text: string) => void
   ): Promise<{ text: string; provider: string }> {
-    // Single optimized query: user BYOK first, then system pool
-    const keyInfo = await this.keyRouter.getBestAvailableKey(userId);
+    
+    const keyInfo = await this.keyRouter.getBestAvailableKey(userId, ['GEMINI', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK']);
 
     if (!keyInfo) {
       throw new Error(
-        'No API keys available for any supported provider. Please add your own API key in settings.'
+        'No API Keys Available. Please Add Your Own API Key In Settings To Continue.'
       );
     }
 
@@ -44,26 +54,16 @@ export class AiService {
       loggerService.providerStarted(keyInfo.provider.toUpperCase(), { feature: 'README' });
       switch (keyInfo.provider.toUpperCase()) {
         case 'GEMINI': {
-          const genAI = new GoogleGenerativeAI(keyInfo.key);
-          const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-          const result = await model.generateContentStream(prompt);
-          for await (const chunk of result.stream) {
-            const text = chunk.text();
-            fullText += text;
-            if (onChunk) onChunk(text);
-          }
-          break;
-        }
-
-        case 'GROQ': {
-          const groq = new Groq({ apiKey: keyInfo.key });
-          const stream = await groq.chat.completions.create({
-            model: 'llama-3.3-70b-versatile',
-            messages: [{ role: 'user', content: prompt }],
-            stream: true,
+          const genAI = new GoogleGenAI({ apiKey: keyInfo.key });
+          const result = await genAI.models.generateContentStream({
+            model: 'gemini-3.5-flash',
+            contents: prompt,
+            config: {
+              systemInstruction: SYSTEM_PROMPT
+            }
           });
-          for await (const chunk of stream) {
-            const text = chunk.choices[0]?.delta?.content || '';
+          for await (const chunk of result) {
+            const text = chunk.text || '';
             fullText += text;
             if (onChunk) onChunk(text);
           }
@@ -74,7 +74,7 @@ export class AiService {
           const openai = new OpenAI({ apiKey: keyInfo.key });
           const stream = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
-            messages: [{ role: 'user', content: prompt }],
+            messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
             stream: true,
           });
           for await (const chunk of stream) {
@@ -90,6 +90,7 @@ export class AiService {
           const stream = await anthropic.messages.create({
             model: 'claude-3-haiku-20240307',
             max_tokens: 4096,
+            system: SYSTEM_PROMPT,
             messages: [{ role: 'user', content: prompt }],
             stream: true,
           });
@@ -110,7 +111,7 @@ export class AiService {
           });
           const stream = await deepseek.chat.completions.create({
             model: 'deepseek-chat',
-            messages: [{ role: 'user', content: prompt }],
+            messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
             stream: true,
           });
           for await (const chunk of stream) {
@@ -125,7 +126,7 @@ export class AiService {
           const grok = new OpenAI({ apiKey: keyInfo.key, baseURL: 'https://api.x.ai/v1' });
           const stream = await grok.chat.completions.create({
             model: 'grok-beta',
-            messages: [{ role: 'user', content: prompt }],
+            messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
             stream: true,
           });
           for await (const chunk of stream) {
@@ -169,18 +170,19 @@ export class AiService {
     }
   }
 
+  // 2. Profile Generation
   async generateProfileStream(
     profileData: ProfileData,
     options: ProfileOptions,
     userId?: string,
     onChunk?: (text: string) => void
   ): Promise<{ text: string; provider: string }> {
-    // Single optimized query: user BYOK first, then system pool
-    const keyInfo = await this.keyRouter.getBestAvailableKey(userId);
+    
+    const keyInfo = await this.keyRouter.getBestAvailableKey(userId, ['GROQ', 'PROXY_OPENAI', 'GEMINI', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK']);
 
     if (!keyInfo) {
       throw new Error(
-        'No API keys available for any supported provider. Please add your own API key in settings.'
+        'No API Keys Available. Please Add Your Own API Key In Settings To Continue.'
       );
     }
 
@@ -193,11 +195,16 @@ export class AiService {
       loggerService.providerStarted(keyInfo.provider.toUpperCase(), { feature: 'PROFILE' });
       switch (keyInfo.provider.toUpperCase()) {
         case 'GEMINI': {
-          const genAI = new GoogleGenerativeAI(keyInfo.key);
-          const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-          const result = await model.generateContentStream(prompt);
-          for await (const chunk of result.stream) {
-            const text = chunk.text();
+          const genAI = new GoogleGenAI({ apiKey: keyInfo.key });
+          const result = await genAI.models.generateContentStream({
+            model: 'gemini-3.5-flash',
+            contents: prompt,
+            config: {
+              systemInstruction: SYSTEM_PROMPT
+            }
+          });
+          for await (const chunk of result) {
+            const text = chunk.text || '';
             fullText += text;
             if (onChunk) onChunk(text);
           }
@@ -208,8 +215,10 @@ export class AiService {
           const groq = new Groq({ apiKey: keyInfo.key });
           const stream = await groq.chat.completions.create({
             model: 'llama-3.3-70b-versatile',
-            messages: [{ role: 'user', content: prompt }],
+            messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: truncateForGroq(prompt) }],
             stream: true,
+            max_tokens: 4000,
+            temperature: 0.7,
           });
           for await (const chunk of stream) {
             const text = chunk.choices[0]?.delta?.content || '';
@@ -223,7 +232,7 @@ export class AiService {
           const openai = new OpenAI({ apiKey: keyInfo.key });
           const stream = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
-            messages: [{ role: 'user', content: prompt }],
+            messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
             stream: true,
           });
           for await (const chunk of stream) {
@@ -239,6 +248,7 @@ export class AiService {
           const stream = await anthropic.messages.create({
             model: 'claude-3-haiku-20240307',
             max_tokens: 4096,
+            system: SYSTEM_PROMPT,
             messages: [{ role: 'user', content: prompt }],
             stream: true,
           });
@@ -259,7 +269,7 @@ export class AiService {
           });
           const stream = await deepseek.chat.completions.create({
             model: 'deepseek-chat',
-            messages: [{ role: 'user', content: prompt }],
+            messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
             stream: true,
           });
           for await (const chunk of stream) {
@@ -274,7 +284,25 @@ export class AiService {
           const grok = new OpenAI({ apiKey: keyInfo.key, baseURL: 'https://api.x.ai/v1' });
           const stream = await grok.chat.completions.create({
             model: 'grok-beta',
-            messages: [{ role: 'user', content: prompt }],
+            messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
+            stream: true,
+          });
+          for await (const chunk of stream) {
+            const text = chunk.choices[0]?.delta?.content || '';
+            fullText += text;
+            if (onChunk) onChunk(text);
+          }
+          break;
+        }
+
+        case 'PROXY_OPENAI': {
+          const proxyOpenai = new OpenAI({ apiKey: keyInfo.key, baseURL: 'https://api.chatanywhere.tech' });
+          const stream = await proxyOpenai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT + ' You MUST provide extremely verbose, comprehensive, and detailed output. Follow the exact prompt strictly and deliver high-quality rich content.' },
+              { role: 'user', content: prompt }
+            ],
             stream: true,
           });
           for await (const chunk of stream) {
@@ -316,12 +344,13 @@ export class AiService {
     }
   }
 
+  // 3. Changelog Generation
   async generateChangelogStream(prompt: string, userId?: string): Promise<{ stream: AsyncGenerator<string>; provider: string }> {
-    // Single optimized query: user BYOK first, then system pool
-    const keyInfo = await this.keyRouter.getBestAvailableKey(userId);
+    
+    const keyInfo = await this.keyRouter.getBestAvailableKey(userId, ['GEMINI', 'PROXY_OPENAI', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK']);
 
     if (!keyInfo) {
-      throw new Error('No API keys available for any supported provider.');
+      throw new Error('No API Keys Available. Please Add Your Own API Key In Settings To Continue.');
     }
 
     let generator: AsyncGenerator<string>;
@@ -330,12 +359,17 @@ export class AiService {
       loggerService.providerStarted(keyInfo.provider.toUpperCase(), { feature: 'CHANGELOG' });
       switch (keyInfo.provider.toUpperCase()) {
         case 'GEMINI': {
-          const genAI = new GoogleGenerativeAI(keyInfo.key);
-          const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-          const result = await model.generateContentStream(prompt);
+          const genAI = new GoogleGenAI({ apiKey: keyInfo.key });
+          const result = await genAI.models.generateContentStream({
+            model: 'gemini-3.5-flash',
+            contents: prompt,
+            config: {
+              systemInstruction: SYSTEM_PROMPT
+            }
+          });
           generator = (async function* () {
-            for await (const chunk of result.stream) {
-              yield chunk.text();
+            for await (const chunk of result) {
+              yield chunk.text || '';
             }
           })();
           break;
@@ -344,9 +378,11 @@ export class AiService {
         case 'GROQ': {
           const groq = new Groq({ apiKey: keyInfo.key });
           const stream = await groq.chat.completions.create({
-            model: 'llama-3.1-70b-versatile',
-            messages: [{ role: 'user', content: prompt }],
+            model: 'llama-3.3-70b-versatile',
+            messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: truncateForGroq(prompt) }],
             stream: true,
+            max_tokens: 4000,
+            temperature: 0.7,
           });
           generator = (async function* () {
             for await (const chunk of stream) {
@@ -360,7 +396,7 @@ export class AiService {
           const openai = new OpenAI({ apiKey: keyInfo.key });
           const stream = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
-            messages: [{ role: 'user', content: prompt }],
+            messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
             stream: true,
           });
           generator = (async function* () {
@@ -376,6 +412,7 @@ export class AiService {
           const stream = await anthropic.messages.create({
             model: 'claude-3-haiku-20240307',
             max_tokens: 4096,
+            system: SYSTEM_PROMPT,
             messages: [{ role: 'user', content: prompt }],
             stream: true,
           });
@@ -396,7 +433,7 @@ export class AiService {
           });
           const stream = await deepseek.chat.completions.create({
             model: 'deepseek-chat',
-            messages: [{ role: 'user', content: prompt }],
+            messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
             stream: true,
           });
           generator = (async function* () {
@@ -411,7 +448,25 @@ export class AiService {
           const grok = new OpenAI({ apiKey: keyInfo.key, baseURL: 'https://api.x.ai/v1' });
           const stream = await grok.chat.completions.create({
             model: 'grok-beta',
-            messages: [{ role: 'user', content: prompt }],
+            messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
+            stream: true,
+          });
+          generator = (async function* () {
+            for await (const chunk of stream) {
+              yield chunk.choices[0]?.delta?.content || '';
+            }
+          })();
+          break;
+        }
+
+        case 'PROXY_OPENAI': {
+          const proxyOpenai = new OpenAI({ apiKey: keyInfo.key, baseURL: 'https://api.chatanywhere.tech' });
+          const stream = await proxyOpenai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT + ' You MUST provide extremely verbose, comprehensive, and detailed output. Follow the exact prompt strictly and deliver high-quality rich content.' },
+              { role: 'user', content: prompt }
+            ],
             stream: true,
           });
           generator = (async function* () {
@@ -442,5 +497,3 @@ export class AiService {
     }
   }
 }
-
-
