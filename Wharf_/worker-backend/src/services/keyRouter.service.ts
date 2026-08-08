@@ -76,17 +76,18 @@ export class KeyRouterService {
   }
 
   /* Optimized: Find Best Available Key In 1-2 DB Queries Across All Providers */
-  async getBestAvailableKey(userId?: string): Promise<KeyInfo | null> {
+  async getBestAvailableKey(userId?: string, preferredOrder?: string[]): Promise<KeyInfo | null> {
     const prisma = getPrisma(this.dbUrl);
-    // Provider priority — first match wins
-    const providerOrder = ['GEMINI', 'GROQ', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK'];
+    
+    const providerOrder = preferredOrder?.map((p) => p.toUpperCase()) ?? ['GEMINI', 'GROQ', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK', 'PROXY_OPENAI'];
 
-    // 1. Try user BYOK keys first — single query, sort by priority in memory
+    // 1. Try User BYOK Keys First — Single Query, Sort By Priority In Memory
     if (userId) {
       const userKeys = await prisma.userApiKey.findMany({
         where: { userId, isExhausted: false, isVerified: true, isActive: true },
       });
-      const bestUserKey = userKeys.sort(
+      const validUserKeys = userKeys.filter(k => providerOrder.includes(k.provider.toUpperCase()));
+      const bestUserKey = validUserKeys.sort(
         (a, b) => providerOrder.indexOf(a.provider.toUpperCase()) - providerOrder.indexOf(b.provider.toUpperCase())
       )[0];
 
@@ -99,11 +100,12 @@ export class KeyRouterService {
       }
     }
 
-    // 2. Fall back to system key pool — single query, sort by priority in memory
+    // 2. Fallback To System Key Pool — Single Query, Sort By Priority In Memory
     const systemKeys = await prisma.systemKey.findMany({
       where: { isExhausted: false },
     });
-    const bestSystemKey = systemKeys.sort(
+    const validSystemKeys = systemKeys.filter(k => providerOrder.includes(k.provider.toUpperCase()));
+    const bestSystemKey = validSystemKeys.sort(
       (a, b) => providerOrder.indexOf(a.provider.toUpperCase()) - providerOrder.indexOf(b.provider.toUpperCase())
     )[0];
 
