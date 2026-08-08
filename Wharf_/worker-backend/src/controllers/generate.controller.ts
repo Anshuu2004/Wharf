@@ -109,7 +109,7 @@ export const generateReadme = async (c: AppContext) => {
       });
 
       // Background non-blocking tasks
-      c.executionCtx.waitUntil((async () => {
+      const bgTask = async () => {
         const mdProcStart = loggerService.stepStart();
         await cacheService.setReadme(owner, repo, tone, sections, generatedMarkdown);
 
@@ -160,7 +160,15 @@ export const generateReadme = async (c: AppContext) => {
           }
         }
         loggerService.stepEnd('markdown.processing.completed', 'Markdown Processing Completed', mdProcStart);
-      })());
+      };
+
+      try {
+        c.executionCtx.waitUntil(bgTask());
+      } catch {
+        if (process.env.NODE_ENV !== 'test') {
+          bgTask().catch(console.error);
+        }
+      }
 
       loggerService.info('generation.completed', 'README generated successfully', {
         repository: `${owner}/${repo}`,

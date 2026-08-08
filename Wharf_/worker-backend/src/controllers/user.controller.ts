@@ -219,7 +219,14 @@ export const getProfile = async (c: AppContext) => {
       }
     } else {
       // Run It In The Background If It Exists, So Response Is Fast
-      c.executionCtx.waitUntil(syncGitHubProfile());
+      try {
+        c.executionCtx.waitUntil(syncGitHubProfile());
+      } catch {
+        // Fallback For Node, Don't Execute In Vitest To Avoid Floating Promises Keeping Runner Alive
+        if (process.env.NODE_ENV !== 'test') {
+          syncGitHubProfile().catch(console.error);
+        }
+      }
     }
 
     const payload = {

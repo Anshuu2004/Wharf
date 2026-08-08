@@ -91,8 +91,8 @@ export const generate = async (c: AppContext) => {
       });
     }
 
-    let generatedMarkdown;
-    let fallbackProviderStr;
+    let generatedMarkdown: string;
+    let fallbackProviderStr: string;
     const prisma = getPrisma(c.env.DATABASE_URL);
 
     return streamText(c, async (stream) => {
@@ -125,7 +125,7 @@ export const generate = async (c: AppContext) => {
         fallbackProviderStr = result.provider;
       }
 
-      c.executionCtx.waitUntil((async () => {
+      const bgTask = async () => {
         await cacheService.setProfileReadme(username, template, theme, hash, generatedMarkdown);
 
         if (userId) {
@@ -156,7 +156,15 @@ export const generate = async (c: AppContext) => {
             loggerService.error('database.save.error', '[CRITICAL DB ERROR] Failed to save profile generation to DB', dbError);
           }
         }
-      })());
+      };
+
+      try {
+        c.executionCtx.waitUntil(bgTask());
+      } catch {
+        if (process.env.NODE_ENV !== 'test') {
+          bgTask().catch(console.error);
+        }
+      }
 
       await stream.write('data: [DONE]\n\n');
     });

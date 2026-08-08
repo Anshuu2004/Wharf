@@ -102,8 +102,7 @@ export class ChangelogController {
           await stream.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
         }
 
-        // Save To Cache & DB in Background
-        c.executionCtx.waitUntil((async () => {
+        const bgTask = async () => {
           await cacheService.setChangelog(repoUrl, options, fullContent);
           const userId = c.get('user')?.id || c.get('user')?.userId;
           if (userId) {
@@ -139,7 +138,15 @@ export class ChangelogController {
               loggerService.error('database.save.error', 'Changelog DB Save Error', dbError);
             }
           }
-        })());
+        };
+
+        try {
+          c.executionCtx.waitUntil(bgTask());
+        } catch {
+          if (process.env.NODE_ENV !== 'test') {
+            bgTask().catch(console.error);
+          }
+        }
 
         loggerService.info('generation.completed', 'Changelog generated successfully', {
           repository: repoUrl,
