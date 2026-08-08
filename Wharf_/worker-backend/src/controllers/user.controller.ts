@@ -177,32 +177,49 @@ export const getProfile = async (c: AppContext) => {
     });
     if (!user) return c.json({ success: false, error: 'User not found' }, 404);
 
-    try {
-      const token = user.githubAccessToken ? decrypt(user.githubAccessToken, c.env.ENCRYPTION_SECRET) : undefined;
-      const profileService = new ProfileService({ token });
-      const ghProfile = await profileService.getProfileData(user.username);
+    const forceSync = c.req.query('sync') === 'true';
+    const profileMissing = !user.profile || user.profile.reposCount === 0;
 
-      const newProfile = await prisma.userProfile.upsert({
-        where: { userId },
-        update: {
-          reposCount: ghProfile.repos || 0,
-          followersCount: ghProfile.followers || 0,
-          followingCount: ghProfile.following || 0,
-          githubJoinedAt: ghProfile.joinDate !== 'Unknown' ? new Date(ghProfile.joinDate) : null,
-          starsCount: ghProfile.totalStars || 0,
-        },
-        create: {
-          userId,
-          reposCount: ghProfile.repos || 0,
-          followersCount: ghProfile.followers || 0,
-          followingCount: ghProfile.following || 0,
-          githubJoinedAt: ghProfile.joinDate !== 'Unknown' ? new Date(ghProfile.joinDate) : null,
-          starsCount: ghProfile.totalStars || 0,
-        },
-      });
-      user = { ...user, profile: newProfile };
-    } catch (err) {
-      console.warn('Could not fetch new GitHub stats', err);
+    const syncGitHubProfile = async () => {
+      try {
+        const token = user!.githubAccessToken ? decrypt(user!.githubAccessToken, c.env.ENCRYPTION_SECRET) : undefined;
+        const profileService = new ProfileService({ token });
+        const ghProfile = await profileService.getProfileData(user!.username);
+
+        const newProfile = await prisma.userProfile.upsert({
+          where: { userId },
+          update: {
+            reposCount: ghProfile.repos || 0,
+            followersCount: ghProfile.followers || 0,
+            followingCount: ghProfile.following || 0,
+            githubJoinedAt: ghProfile.joinDate !== 'Unknown' ? new Date(ghProfile.joinDate) : null,
+            starsCount: ghProfile.totalStars || 0,
+          },
+          create: {
+            userId,
+            reposCount: ghProfile.repos || 0,
+            followersCount: ghProfile.followers || 0,
+            followingCount: ghProfile.following || 0,
+            githubJoinedAt: ghProfile.joinDate !== 'Unknown' ? new Date(ghProfile.joinDate) : null,
+            starsCount: ghProfile.totalStars || 0,
+          },
+        });
+        return newProfile;
+      } catch (err) {
+        console.warn('Could not fetch new GitHub stats', err);
+        return null;
+      }
+    };
+
+    if (profileMissing || forceSync) {
+      // Must Wait Synchronously If Missing Or Manually Forced
+      const newProfile = await syncGitHubProfile();
+      if (newProfile) {
+        user = { ...user, profile: newProfile };
+      }
+    } else {
+      // Run It In The Background If It Exists, So Response Is Fast
+      c.executionCtx.waitUntil(syncGitHubProfile());
     }
 
     const payload = {
@@ -256,41 +273,45 @@ export const getUsageStats = async (c: AppContext) => {
     if (!userId) return c.json({ success: false, error: 'Unauthorized' }, 401);
 
     const prisma = getPrisma(c.env.DATABASE_URL);
-    const [chats, healthChecks, analytics, readmesData, profilesData, changelogsData] =
-      await Promise.all([
-        prisma.chatSession.count({ where: { userId } }),
-        prisma.healthScore.count({ where: { userId } }),
-        prisma.chatAnalytics.aggregate({
-          where: { session: { userId } },
-          _sum: { totalTokens: true },
-        }),
-        prisma.generation.aggregate({
-          where: { repository: { userId }, type: 'README' },
-          _count: true,
-          _sum: { wordCount: true },
-        }),
-        prisma.profileReadme.aggregate({
-          where: { userId },
-          _count: true,
-          _sum: { wordCount: true },
-        }),
-        prisma.changelog.aggregate({
-          where: { userId },
-          _count: true,
-          _sum: { wordCount: true },
-        }),
-      ]);
+    // Batch 1: Less Heavy Aggregate Tables
+    const [chats, healthChecks, analytics] = await Promise.all([
+      prisma.chatSession.count({ where: { userId } }),
+      prisma.healthScore.count({ where: { userId } }),
+      prisma.chatAnalytics.aggregate({
+        where: { session: { userId } },
+        _sum: { totalTokens: true },
+      }),
+    ]);
+
+    // Batch 2: Heavy Generation Metrics
+    const [readmesData, profilesData, changelogsData] = await Promise.all([
+      prisma.generation.aggregate({
+        where: { repository: { userId }, type: 'README' },
+        _count: true,
+        _sum: { wordCount: true },
+      }),
+      prisma.profileReadme.aggregate({
+        where: { userId },
+        _count: true,
+        _sum: { wordCount: true },
+      }),
+      prisma.changelog.aggregate({
+        where: { userId },
+        _count: true,
+        _sum: { wordCount: true },
+      }),
+    ]);
       
     const readmesGenerated = readmesData._count;
     const profilesGenerated = profilesData._count;
     const changelogsGenerated = changelogsData._count;
 
-    const readmeTokens = Math.round((readmesData._sum.wordCount || readmesGenerated * 1150) * 1.37);
+    const readmeTokens = Math.round((readmesData._sum.wordCount || readmesGenerated * 1150) * 1.7);
     const profileTokens = Math.round(
-      (profilesData._sum.wordCount || profilesGenerated * 420) * 1.37
+      (profilesData._sum.wordCount || profilesGenerated * 420) * 1.7
     );
     const changelogTokens = Math.round(
-      (changelogsData._sum.wordCount || changelogsGenerated * 620) * 1.37
+      (changelogsData._sum.wordCount || changelogsGenerated * 620) * 1.7
     );
     const healthTokens = healthChecks * 213;
 
@@ -333,7 +354,8 @@ export const getUsageStats = async (c: AppContext) => {
 
     const sinceDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
     // Gather Heat Maps By Pulling All Activity Timestamps Over The Last Year
-    const [generations, profilesRes, changelogsRes, chatsRes, healthsRes] = await Promise.all([
+    // Batch 1: Primary Generative Items Over Time
+    const [generations, profilesRes, changelogsRes] = await Promise.all([
       prisma.generation.findMany({
         where: { repository: { userId }, createdAt: { gte: sinceDate } },
         select: { createdAt: true },
@@ -346,6 +368,10 @@ export const getUsageStats = async (c: AppContext) => {
         where: { userId, generatedAt: { gte: sinceDate } },
         select: { generatedAt: true },
       }),
+    ]);
+    
+    // Batch 2: Chat & Health Sessions Over Time
+    const [chatsRes, healthsRes] = await Promise.all([
       prisma.chatSession.findMany({
         where: { userId, createdAt: { gte: sinceDate } },
         select: { createdAt: true },
