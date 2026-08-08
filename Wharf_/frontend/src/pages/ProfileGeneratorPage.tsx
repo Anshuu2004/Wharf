@@ -49,6 +49,7 @@ import { generatePreviewMarkdown } from '../utils/previewGenerator';
 import { Badge, Button, Card } from '../components/ui';
 import api from '../lib/api';
 import { useAnalytics } from '../hooks/useAnalytics';
+import { useToast } from '../components/ui/useToast';
 
 // Define Proper Types
 interface ProfileData {
@@ -334,6 +335,7 @@ const ProfileStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) =>
 export const ProfileGeneratorPage = () => {
   const { user } = useAuthStore();
   const analytics = useAnalytics();
+  const { showToast } = useToast();
 
   // Helper For LocalStorage State Initialization
   const initializeState = <T,>(key: string, defaultValue: T): T => {
@@ -486,8 +488,11 @@ export const ProfileGeneratorPage = () => {
         setProfileData(data.data);
         setCurrentStep(2);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch profile:', error);
+      const errMsg = error.message || 'Failed To Fetch GitHub Profile. Check The Username And Try Again.';
+      const titleCasedMsg = errMsg.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+      showToast(titleCasedMsg, 'error');
     } finally {
       setIsGenerating(false);
     }
@@ -571,7 +576,19 @@ export const ProfileGeneratorPage = () => {
             const parsed = JSON.parse(dataStr);
             if (parsed.error) {
               console.error(parsed.error);
-              alert(parsed.error);
+              const errText = parsed.error;
+              const isKeyExhaustion = errText.toLowerCase().includes('no api keys') || (errText.toLowerCase().includes('key') && errText.toLowerCase().includes('exhaust'));
+
+              let displayMsg = errText;
+              if (isKeyExhaustion) {
+                displayMsg = 'All API Keys Are Exhausted. Add Your Own API Key In Settings To Continue.';
+              } else {
+                displayMsg = errText.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+              }
+
+              showToast(displayMsg, isKeyExhaustion ? 'warning' : 'error');
+              setIsGenerating(false);
+              setCurrentStep(2);
               break;
             }
             if (parsed.text) {
@@ -583,8 +600,12 @@ export const ProfileGeneratorPage = () => {
           }
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Generation failed:', error);
+      const errMsg = error.message || 'Profile Generation Failed. Please Try Again.';
+      const titleCasedMsg = errMsg.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+      showToast(titleCasedMsg, 'error');
+      setCurrentStep(2);
     } finally {
       setIsGenerating(false);
     }

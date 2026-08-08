@@ -11,6 +11,7 @@ import {
 } from '../components/chat';
 import { Code, Users, Briefcase, Shield, Star, GitFork } from 'lucide-react';
 import { useAnalytics } from '../hooks/useAnalytics';
+import { useToast } from '../components/ui/useToast';
 
 interface Message {
   id: string;
@@ -72,6 +73,7 @@ const personas = [
 
 export const ChatPage = () => {
   const analytics = useAnalytics();
+  const { showToast } = useToast();
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
     try {
       const saved = localStorage.getItem('wharf_chat_sessions');
@@ -209,8 +211,11 @@ export const ChatPage = () => {
       });
       setIsRepoAnalyzed(true);
       analytics.track('Repository Analyzed', { repoUrl });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to analyze repository:', error);
+      const errMsg = error.response?.data?.error || error.message || 'Failed To Analyze Repository. Check The URL And Try Again.';
+      const titleCasedMsg = errMsg.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+      showToast(titleCasedMsg, 'error');
     } finally {
       setIsAnalyzingRepo(false);
     }
@@ -334,6 +339,21 @@ export const ChatPage = () => {
             if (dataStr) {
               try {
                 const parsed = JSON.parse(dataStr);
+                if (parsed.error) {
+                  console.error(parsed.error);
+                  const errText = parsed.error;
+                  const isKeyExhaustion = typeof errText === 'string' && (errText.toLowerCase().includes('no api keys') || (errText.toLowerCase().includes('key') && errText.toLowerCase().includes('exhaust')));
+
+                  let displayMsg = errText;
+                  if (isKeyExhaustion) {
+                    displayMsg = 'All API Keys Are Exhausted. Add Your Own API Key In Settings To Continue.';
+                  } else if (typeof errText === 'string') {
+                    displayMsg = errText.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+                  }
+
+                  showToast(displayMsg, isKeyExhaustion ? 'warning' : 'error');
+                  break;
+                }
                 if (parsed.text) fullResponse += parsed.text;
               } catch {
                 console.warn('Failed to parse SSE line JSON', dataStr);
@@ -354,8 +374,11 @@ export const ChatPage = () => {
           })
         );
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to get AI response:', error);
+      const errMsg = error.message || 'AI Response Failed. Please Try Again.';
+      const titleCasedMsg = errMsg.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+      showToast(titleCasedMsg, 'error');
     } finally {
       setIsSendingMessage(false);
     }
