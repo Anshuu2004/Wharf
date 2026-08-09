@@ -33,11 +33,7 @@ export class AiService {
     onChunk?: (text: string) => void
   ): Promise<{ text: string; provider: string }> {
     
-    // Fetch Key & Build Prompt In Parallel — Both Are Independent
-    const [keyInfo, prompt] = await Promise.all([
-      this.keyRouter.getBestAvailableKey(userId, ['GEMINI', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK']),
-      Promise.resolve(buildReadmePrompt(context, tone, sections)),
-    ]);
+    const keyInfo = await this.keyRouter.getBestAvailableKey(userId, ['GEMINI', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK']);
 
     if (!keyInfo) {
       throw new Error(
@@ -46,6 +42,10 @@ export class AiService {
     }
 
     loggerService.providerSelected(keyInfo.provider.toUpperCase(), { keyType: keyInfo.isSystem ? 'system' : 'user', feature: 'README' });
+    
+    const promptStart = loggerService.stepStart();
+    const prompt = buildReadmePrompt(context, tone, sections);
+    loggerService.stepEnd('prompt.construction.completed', 'Prompt Construction', promptStart, { feature: 'README' });
     
     let fullText = '';
     const aiStart = loggerService.stepStart();

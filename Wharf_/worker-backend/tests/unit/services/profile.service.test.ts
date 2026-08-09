@@ -10,17 +10,7 @@ vi.mock('../../../src/services/cache.service', () => ({
   },
 }));
 
-const { mockGetUserProfile, mockGetTopStarredRepos } = vi.hoisted(() => ({
-  mockGetUserProfile: vi.fn(),
-  mockGetTopStarredRepos: vi.fn(),
-}));
-
-vi.mock('../../../src/services/github.service', () => ({
-  GithubService: class {
-    getUserProfile = mockGetUserProfile;
-    getTopStarredRepos = mockGetTopStarredRepos;
-  },
-}));
+vi.mock('../../../src/services/github.service');
 
 describe('ProfileService', () => {
   let profileService: ProfileService;
@@ -41,7 +31,7 @@ describe('ProfileService', () => {
 
       expect(cacheService.getProfileData).toHaveBeenCalledWith(mockUsername);
       expect(result).toEqual(cachedData);
-      expect(mockGetUserProfile).not.toHaveBeenCalled();
+      expect(GithubService.prototype.getUserProfile).not.toHaveBeenCalled();
     });
 
     it('should fetch from GitHub and compute stats if not cached', async () => {
@@ -61,13 +51,13 @@ describe('ProfileService', () => {
         { name: 'repo3', stargazers_count: 20, language: 'Python' }
       ];
 
-      mockGetUserProfile.mockResolvedValue(mockUserProfile);
-      mockGetTopStarredRepos.mockResolvedValue(mockRepos);
+      (GithubService.prototype.getUserProfile as Mock).mockResolvedValue(mockUserProfile);
+      (GithubService.prototype.getTopStarredRepos as Mock).mockResolvedValue(mockRepos);
 
       const result = await profileService.getProfileData(mockUsername);
 
-      expect(mockGetUserProfile).toHaveBeenCalledWith(mockUsername);
-      expect(mockGetTopStarredRepos).toHaveBeenCalledWith(mockUsername, 10);
+      expect(GithubService.prototype.getUserProfile).toHaveBeenCalledWith(mockUsername);
+      expect(GithubService.prototype.getTopStarredRepos).toHaveBeenCalledWith(mockUsername, 10);
       expect(result.username).toBe(mockUsername);
       expect(result.totalStars).toBe(100);
       expect(result.totalForks).toBe(15);
@@ -84,7 +74,7 @@ describe('ProfileService', () => {
     it('should throw an error if GitHub fetch fails', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       (cacheService.getProfileData as Mock).mockResolvedValue(null);
-      mockGetUserProfile.mockRejectedValue(new Error('Rate limit'));
+      (GithubService.prototype.getUserProfile as Mock).mockRejectedValue(new Error('Rate limit'));
       
       await expect(profileService.getProfileData(mockUsername)).rejects.toThrow('Failed to fetch profile data from GitHub');
       consoleSpy.mockRestore();

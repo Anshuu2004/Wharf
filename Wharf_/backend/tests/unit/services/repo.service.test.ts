@@ -62,7 +62,7 @@ describe('RepoService', () => {
 
       // Verifies GitHub Calls
       expect(GithubService.prototype.fetchRepoMeta).toHaveBeenCalledWith('owner', 'repo');
-      expect(GithubService.prototype.fetchRepoTree).toHaveBeenCalledWith('owner', 'repo', 'main');
+      expect(GithubService.prototype.fetchRepoTree).toHaveBeenCalledWith('owner', 'repo', 'HEAD');
       expect(GithubService.prototype.fetchFileContent).toHaveBeenCalledWith('owner', 'repo', 'package.json');
 
       // Verifies Parsing Logic
