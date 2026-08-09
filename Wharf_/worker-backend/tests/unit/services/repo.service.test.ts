@@ -54,7 +54,7 @@ describe('RepoService', () => {
 
       (GithubService.prototype.fetchRepoMeta as Mock).mockResolvedValue(mockMeta);
       (GithubService.prototype.fetchRepoTree as Mock).mockResolvedValue(mockTree);
-      (GithubService.prototype.bulkFetchFileContents as Mock).mockImplementation((owner, repo, branch, files) => {
+      (GithubService.prototype.bulkFetchFileContents as Mock).mockImplementation((owner, repo, files, branch = 'HEAD') => {
         const results: any = {};
         if (files.includes('package.json')) results['package.json'] = '{"name": "test-pkg"}';
         return Promise.resolve(results);

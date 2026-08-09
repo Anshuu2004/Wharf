@@ -53,10 +53,10 @@ describe('RepoService', () => {
 
       (GithubService.prototype.fetchRepoMeta as jest.Mock).mockResolvedValue(mockMeta);
       (GithubService.prototype.fetchRepoTree as jest.Mock).mockResolvedValue(mockTree);
-      (GithubService.prototype.bulkFetchFileContents as jest.Mock).mockImplementation((owner, repo, branch, files) => {
-        const results: any = {};
-        if (files.includes('package.json')) results['package.json'] = '{"name": "test-pkg"}';
-        return Promise.resolve(results);
+      (GithubService.prototype.bulkFetchFileContents as jest.Mock).mockImplementation(() => {
+        return Promise.resolve({
+          'package.json': '{"name": "test-pkg"}'
+        });
       });
 
       const result = await repoService.analyzeRepo('https://github.com/owner/repo', { bypassCache: true });
