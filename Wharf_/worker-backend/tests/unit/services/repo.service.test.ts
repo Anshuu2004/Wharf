@@ -54,9 +54,10 @@ describe('RepoService', () => {
 
       (GithubService.prototype.fetchRepoMeta as Mock).mockResolvedValue(mockMeta);
       (GithubService.prototype.fetchRepoTree as Mock).mockResolvedValue(mockTree);
-      (GithubService.prototype.fetchFileContent as Mock).mockImplementation((owner: any, repo: any, file: any) => {
-        if (file === 'package.json') return Promise.resolve('{"name": "test-pkg"}');
-        return Promise.resolve(null);
+      (GithubService.prototype.bulkFetchFileContents as Mock).mockImplementation((owner, repo, branch, files) => {
+        const results: any = {};
+        if (files.includes('package.json')) results['package.json'] = '{"name": "test-pkg"}';
+        return Promise.resolve(results);
       });
 
       const result = await repoService.analyzeRepo('https://github.com/owner/repo', { bypassCache: true });
@@ -64,7 +65,7 @@ describe('RepoService', () => {
       // Verifies GitHub Calls
       expect(GithubService.prototype.fetchRepoMeta).toHaveBeenCalledWith('owner', 'repo');
       expect(GithubService.prototype.fetchRepoTree).toHaveBeenCalledWith('owner', 'repo', 'HEAD');
-      expect(GithubService.prototype.fetchFileContent).toHaveBeenCalledWith('owner', 'repo', 'package.json');
+      expect(GithubService.prototype.bulkFetchFileContents).toHaveBeenCalled();
 
       // Verifies Parsing Logic
       expect(result.meta).toEqual(mockMeta);
