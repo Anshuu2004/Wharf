@@ -47,7 +47,7 @@ export class ChatService {
     sessionId: string,
     userId?: string
   ) {
-    // 1. Get Repository Metadata Context
+    // 1 (A) Determine Auth Context — Needed Before Parallel Work
     let contextRepoService = this.repoService;
     let bypassCache = false;
     if (userId) {
@@ -61,17 +61,20 @@ export class ChatService {
         bypassCache = true;
       }
     }
-    const repoContext = await contextRepoService.analyzeRepo(repoUrl, { bypassCache });
 
-    // 2. Build The System Prompt
-    let systemPrompt = buildChatPrompt({ question, persona, repoContext });
-
-    // 3. Find Available Key For Providers
-    const keyInfo = await this.keyRouter.getBestAvailableKey(userId, ['GROQ', 'PROXY_OPENAI', 'GEMINI', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK']);
+    // 1 (B) Get Repository Context & Best AI Key In Parallel
+    // Both Are Independent: Repo Hits Redis/GitHub, Key Lookup Hits DB
+    const [repoContext, keyInfo] = await Promise.all([
+      contextRepoService.analyzeRepo(repoUrl, { bypassCache }),
+      this.keyRouter.getBestAvailableKey(userId, ['GROQ', 'PROXY_OPENAI', 'GEMINI', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK']),
+    ]);
 
     if (!keyInfo) {
       throw new Error('No AI Providers Available. Please Add Your Own API Key In Settings To Continue.');
     }
+
+    // 2. Build The System Prompt
+    let systemPrompt = buildChatPrompt({ question, persona, repoContext });
 
     console.log(
       `[ChatService] Using ${keyInfo.isSystem ? 'System' : 'User'} key for ${keyInfo.provider}`

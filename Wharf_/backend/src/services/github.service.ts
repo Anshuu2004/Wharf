@@ -232,11 +232,14 @@ export class GithubService {
         'contributing.md',
         'docs/CONTRIBUTING.md',
       ];
-      for (const path of paths) {
-        const exists = await this.checkFileExists(owner, repo, path);
-        if (exists) return path;
-      }
-      return null;
+      // Check All Paths In Parallel — First Hit Wins
+      const results = await Promise.all(
+        paths.map(async (path) => {
+          const exists = await this.checkFileExists(owner, repo, path);
+          return exists ? path : null;
+        })
+      );
+      return results.find((r) => r !== null) ?? null;
     } catch (error) {
       return null;
     }

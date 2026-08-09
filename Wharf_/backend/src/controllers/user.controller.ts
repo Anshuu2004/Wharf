@@ -167,40 +167,41 @@ export const getProfile = async (req: Request, res: Response) => {
     const userId = (req as any).user?.userId;
     if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
-    let user = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: userId },
       include: { profile: true },
     });
     if (!user) return res.status(404).json({ success: false, error: 'User not found' });
 
-    // Fetch Latest GitHub Stats Seamlessly
-    try {
-      const token = user.githubAccessToken ? decrypt(user.githubAccessToken) : undefined;
-      const profileService = new ProfileService({ token });
-      const ghProfile = await profileService.getProfileData(user.username);
-
-      const newProfile = await prisma.userProfile.upsert({
-        where: { userId },
-        update: {
-          reposCount: ghProfile.repos || 0,
-          followersCount: ghProfile.followers || 0,
-          followingCount: ghProfile.following || 0,
-          githubJoinedAt: ghProfile.joinDate !== 'Unknown' ? new Date(ghProfile.joinDate) : null,
-          starsCount: ghProfile.totalStars || 0,
-        },
-        create: {
-          userId,
-          reposCount: ghProfile.repos || 0,
-          followersCount: ghProfile.followers || 0,
-          followingCount: ghProfile.following || 0,
-          githubJoinedAt: ghProfile.joinDate !== 'Unknown' ? new Date(ghProfile.joinDate) : null,
-          starsCount: ghProfile.totalStars || 0,
-        },
-      });
-      user = { ...user, profile: newProfile };
-    } catch (err) {
-      console.warn('Could not fetch new GitHub stats', err);
-    }
+    // Fire GitHub Sync In Background — Do NOT Block The Response
+    // The Next Profile Load Will Pick Up Refreshed Data From The DB
+    setImmediate(async () => {
+      try {
+        const token = user.githubAccessToken ? decrypt(user.githubAccessToken) : undefined;
+        const profileService = new ProfileService({ token });
+        const ghProfile = await profileService.getProfileData(user.username);
+        await prisma.userProfile.upsert({
+          where: { userId },
+          update: {
+            reposCount: ghProfile.repos || 0,
+            followersCount: ghProfile.followers || 0,
+            followingCount: ghProfile.following || 0,
+            githubJoinedAt: ghProfile.joinDate !== 'Unknown' ? new Date(ghProfile.joinDate) : null,
+            starsCount: ghProfile.totalStars || 0,
+          },
+          create: {
+            userId,
+            reposCount: ghProfile.repos || 0,
+            followersCount: ghProfile.followers || 0,
+            followingCount: ghProfile.following || 0,
+            githubJoinedAt: ghProfile.joinDate !== 'Unknown' ? new Date(ghProfile.joinDate) : null,
+            starsCount: ghProfile.totalStars || 0,
+          },
+        });
+      } catch (err) {
+        console.warn('[Background] Could not refresh GitHub stats:', err);
+      }
+    });
 
     // Combine Base User & Profile For Frontend
     const payload = {
