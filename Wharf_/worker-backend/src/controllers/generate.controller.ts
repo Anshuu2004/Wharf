@@ -1,5 +1,5 @@
 import { Context } from 'hono';
-import { streamText } from 'hono/streaming';
+import { stream } from 'hono/streaming';
 import { RepoService } from '../services/repo.service';
 import { AiService } from '../services/ai.service';
 import { cacheService } from '../services/cache.service';
@@ -48,14 +48,17 @@ export const generateReadme = async (c: AppContext) => {
         totalDurationMs: Date.now() - reqStart,
       });
 
-      return streamText(c, async (stream) => {
+      c.header('Content-Type', 'text/event-stream');
+      c.header('Cache-Control', 'no-cache');
+      c.header('Connection', 'keep-alive');
+      return stream(c, async (streamStr) => {
         const chunkSize = 100;
         for (let i = 0; i < cachedReadme.length; i += chunkSize) {
           const chunk = cachedReadme.slice(i, i + chunkSize);
-          await stream.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+          await streamStr.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
           await new Promise((resolve) => setTimeout(resolve, 10)); 
         }
-        await stream.write('data: [DONE]\n\n');
+          await streamStr.write('data: [DONE]\n\n');
       });
     }
 
@@ -91,7 +94,10 @@ export const generateReadme = async (c: AppContext) => {
     const repoContext = await repoService.analyzeRepo(repoUrl);
     loggerService.stepEnd('github.fetch.completed', 'GitHub Fetch Completed', githubStart, { repository: `${owner}/${repo}` });
 
-    return streamText(c, async (stream) => {
+    c.header('Content-Type', 'text/event-stream');
+    c.header('Cache-Control', 'no-cache');
+    c.header('Connection', 'keep-alive');
+    return stream(c, async (streamStr) => {
       const aiStart = loggerService.stepStart();
       const aiService = new AiService(c.env.DATABASE_URL);
       const { text: generatedMarkdown, provider } = await aiService.generateReadmeStream(
@@ -100,7 +106,7 @@ export const generateReadme = async (c: AppContext) => {
         sections,
         userId,
         async (chunk) => {
-          await stream.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+          await streamStr.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
         }
       );
       loggerService.stepEnd('generation.ai.completed', 'AI Generation Completed', aiStart, {
@@ -186,7 +192,7 @@ export const generateReadme = async (c: AppContext) => {
         totalDurationMs: Date.now() - reqStart,
       });
 
-      await stream.write('data: [DONE]\n\n');
+      await streamStr.write('data: [DONE]\n\n');
     });
   } catch (error: any) {
     loggerService.error('generation.error', 'README generation error', error, {
@@ -200,8 +206,11 @@ export const generateReadme = async (c: AppContext) => {
       error: error.message,
       totalDurationMs: Date.now() - reqStart,
     });
-    return streamText(c, async (stream) => {
-      await stream.write(`data: ${JSON.stringify({ error: error.message || 'Failed to generate README' })}\n\n`);
+    c.header('Content-Type', 'text/event-stream');
+    c.header('Cache-Control', 'no-cache');
+    c.header('Connection', 'keep-alive');
+    return stream(c, async (streamStr) => {
+      await streamStr.write(`data: ${JSON.stringify({ error: error.message || 'Failed to generate README' })}\n\n`);
     });
   }
 };

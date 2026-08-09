@@ -1,5 +1,5 @@
 import { Context } from 'hono';
-import { streamText } from 'hono/streaming';
+import { stream } from 'hono/streaming';
 import { ChatService } from '../services/chat.service';
 import { getPrisma } from '../db';
 import { loggerService, saveRequestLog } from '../utils/logger';
@@ -65,13 +65,16 @@ export const sendMessage = async (c: AppContext) => {
       userId
     );
 
-    return streamText(c, async (stream) => {
+    c.header('Content-Type', 'text/event-stream');
+    c.header('Cache-Control', 'no-cache');
+    c.header('Connection', 'keep-alive');
+    return stream(c, async (streamStr) => {
       for await (const textPart of result.textStream) {
         const escapedText = JSON.stringify({ text: textPart });
-        await stream.write(`data: ${escapedText}\n\n`);
+        await streamStr.write(`data: ${escapedText}\n\n`);
       }
 
-      await stream.write('data: "[DONE]"\n\n');
+      await streamStr.write('data: "[DONE]"\n\n');
 
       loggerService.info('chat.generation.completed', 'Chat generated successfully', {
         repository: repoUrl,
@@ -96,8 +99,11 @@ export const sendMessage = async (c: AppContext) => {
       error: error.message,
       totalDurationMs: Date.now() - reqStart,
     });
-    return streamText(c, async (stream) => {
-      await stream.write(`data: ${JSON.stringify({ success: false, error: error.message })}\n\n`);
+    c.header('Content-Type', 'text/event-stream');
+    c.header('Cache-Control', 'no-cache');
+    c.header('Connection', 'keep-alive');
+    return stream(c, async (streamStr) => {
+      await streamStr.write(`data: ${JSON.stringify({ success: false, error: error.message })}\n\n`);
     });
   }
 };
