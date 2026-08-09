@@ -42,14 +42,18 @@ export class RepoService {
     }
 
     const githubStart = loggerService.stepStart();
-    // 1. Fetch Metadata
-    const meta = await this.githubService.fetchRepoMeta(owner, repo);
 
-    // 2. Fetch Tree
-    const tree = await this.githubService.fetchRepoTree(owner, repo, meta.defaultBranch);
+    // 1 + 2. Fetch Metadata AND Tree In Parallel
+    // GitHub Accepts 'HEAD' As Tree_Sha, So We Don't Need Meta First.
+    const [meta, tree] = await Promise.all([
+      this.githubService.fetchRepoMeta(owner, repo),
+      this.githubService.fetchRepoTree(owner, repo, 'HEAD'),
+    ]);
     const filePaths = tree.map((item) => item.path);
 
-    // 3. Fetch Key Files For Deeper Analysis
+    // 3. Fetch Key Files — With Concurrency Cap To Avoid GitHub Rate Limiting
+    // Firing 40+ Simultaneous Requests Causes GitHub To Throttle Aggressively (3-8s Delay).
+    // Batching To CONCURRENCY=5 Keeps Latency Predictable: Ceil(N/5) * ~200ms Per Batch.
     const keyFiles: Record<string, string> = {};
     const filesToFetch = [
       // Package Manifests & Configs
@@ -131,16 +135,27 @@ export class RepoService {
     ];
     const discoveredRouteFiles = filePaths
       .filter((fp) => routePatterns.some((p) => p.test(fp)))
-      .slice(0, 20); // Cap At 20 Route Files
+      .slice(0, 10); // Reduced From 20 To 10 To Limit Total Fetches
 
     const allFilesToFetch = Array.from(new Set([...filesToFetch, ...discoveredRouteFiles]));
     const matchedFiles = allFilesToFetch.filter((f) => filePaths.includes(f));
-    const fileContents = await Promise.all(
-      matchedFiles.map((f) => this.githubService.fetchFileContent(owner, repo, f))
-    );
+
+    // Concurrency-Limited Batch Fetcher — Groups Of 5 Parallel Requests
+    const CONCURRENCY = 5;
+    const fetchedContents: (string | null)[] = new Array(matchedFiles.length).fill(null);
+    for (let i = 0; i < matchedFiles.length; i += CONCURRENCY) {
+      const batch = matchedFiles.slice(i, i + CONCURRENCY);
+      const results = await Promise.all(
+        batch.map((f) => this.githubService.fetchFileContent(owner, repo, f))
+      );
+      results.forEach((content, idx) => {
+        fetchedContents[i + idx] = content;
+      });
+    }
     matchedFiles.forEach((f, i) => {
-      if (fileContents[i]) keyFiles[f] = fileContents[i]!;
+      if (fetchedContents[i]) keyFiles[f] = fetchedContents[i]!;
     });
+
     loggerService.stepEnd('github.fetch.completed', 'GitHub Fetch', githubStart, {
       repository: `${owner}/${repo}`,
     });
