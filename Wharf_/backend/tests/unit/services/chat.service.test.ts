@@ -74,7 +74,7 @@ describe('ChatService', () => {
 
       await expect(
         chatService.generateChatStream('https://repo', 'hi', 'dev', [], 'session-1')
-      ).rejects.toThrow('No API keys available for AI chat generation.');
+      ).rejects.toThrow('No AI providers available. Please add your own API key in Settings to continue.');
     });
 
     it('should invoke streamText with GEMINI correctly', async () => {
