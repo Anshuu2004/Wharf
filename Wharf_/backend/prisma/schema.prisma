@@ -115,6 +115,7 @@ model UserApiKey {
 // ─── System Key Pool — Shared Keys For Rotation ──────────────────────────────
 model SystemKey {
   id            String   @id @default(cuid())
+  name          String?  // Added for convenience to track var names
   provider      String   // GEMINI, ANTHROPIC, etc.
   key           String   // Encrypted key
   usageCount    Int      @default(0)

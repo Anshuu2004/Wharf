@@ -52,36 +52,95 @@ export class RepoService {
     // 3. Fetch Key Files For Deeper Analysis
     const keyFiles: Record<string, string> = {};
     const filesToFetch = [
+      // Package Manifests & Configs
       'package.json',
       'requirements.txt',
-      'README.md',
-      'docker-compose.yml',
-      'src/index.ts',
-      'src/App.tsx',
-      'src/main.tsx',
-      'src/server.ts',
-      'main.py',
-      'app.py',
-      'index.html',
       'Cargo.toml',
-      'src/main.rs',
-      'src/lib.rs',
       'go.mod',
-      'main.go',
       'pom.xml',
       'build.gradle',
       'CMakeLists.txt',
       'Makefile',
+      'pyproject.toml',
+      'setup.py',
+      // Env & Deployment Configs
+      '.env.example',
+      '.env.sample',
+      'docker-compose.yml',
+      'Dockerfile',
+      'wrangler.toml',
+      'vercel.json',
+      'netlify.toml',
+      'railway.json',
+      // Entry Points
+      'src/index.ts',
+      'src/index.js',
+      'src/server.ts',
+      'src/server.js',
+      'src/app.ts',
+      'src/app.js',
+      'src/main.ts',
+      'src/main.js',
+      'src/App.tsx',
+      'src/main.tsx',
+      'index.js',
+      'index.ts',
+      'server.js',
+      'server.ts',
+      'app.js',
+      'app.ts',
+      'main.py',
+      'app.py',
+      'main.go',
+      'main.rs',
+      'src/main.rs',
+      'src/lib.rs',
       'main.c',
       'main.cpp',
+      'index.html',
+      // API Routes (Common Patterns)
+      'src/routes/index.ts',
+      'src/routes/index.js',
+      'src/routes.ts',
+      'src/routes.js',
+      'routes/index.ts',
+      'routes/index.js',
+      'routes.ts',
+      'routes.js',
+      'src/api/index.ts',
+      'src/api/index.js',
+      'src/api/routes.ts',
+      'src/api/routes.js',
+      'src/router.ts',
+      'src/router.js',
+      'api/index.ts',
+      'api/index.js',
+      // Controllers
+      'src/controllers/index.ts',
+      'src/controllers/index.js',
     ];
 
-    for (const file of filesToFetch) {
-      if (filePaths.includes(file)) {
-        const content = await this.githubService.fetchFileContent(owner, repo, file);
-        if (content) keyFiles[file] = content;
-      }
-    }
+    // Also Auto-Discover Route Files From The Tree
+    const routePatterns = [
+      /^src\/routes?\/.+\.(ts|js)$/,
+      /^routes?\/.+\.(ts|js)$/,
+      /^src\/api\/.+\.(ts|js)$/,
+      /^api\/.+\.(ts|js)$/,
+      /^src\/controllers?\/.+\.(ts|js)$/,
+      /^controllers?\/.+\.(ts|js)$/,
+    ];
+    const discoveredRouteFiles = filePaths
+      .filter((fp) => routePatterns.some((p) => p.test(fp)))
+      .slice(0, 20); // Cap At 20 Route Files
+
+    const allFilesToFetch = Array.from(new Set([...filesToFetch, ...discoveredRouteFiles]));
+    const matchedFiles = allFilesToFetch.filter((f) => filePaths.includes(f));
+    const fileContents = await Promise.all(
+      matchedFiles.map((f) => this.githubService.fetchFileContent(owner, repo, f))
+    );
+    matchedFiles.forEach((f, i) => {
+      if (fileContents[i]) keyFiles[f] = fileContents[i]!;
+    });
     loggerService.stepEnd('github.fetch.completed', 'GitHub Fetch', githubStart, {
       repository: `${owner}/${repo}`,
     });

@@ -32,5 +32,8 @@ export function createMockContext(req: any = {}, env: any = {}, user: any = unde
       return { _isHonoRedirect: true, url, status: status || 302 };
     }),
     header: vi.fn(),
+    executionCtx: {
+      waitUntil: vi.fn(),
+    },
   } as any;
 }

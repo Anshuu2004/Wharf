@@ -53,7 +53,7 @@ describe('AuthController', () => {
   describe('githubLogin', () => {
     it('should redirect to github oauth URL', () => {
       githubLogin(mockReq as Request, mockRes as Response);
-      expect(mockRedirect).toHaveBeenCalledWith('https://github.com/login/oauth/authorize?client_id=undefined&scope=user:email,repo');
+      expect(mockRedirect).toHaveBeenCalledWith('https://github.com/login/oauth/authorize?client_id=test-client-id&scope=user:email,repo');
     });
   });
 

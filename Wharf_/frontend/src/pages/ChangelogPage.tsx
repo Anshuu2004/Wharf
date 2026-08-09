@@ -33,6 +33,7 @@ import {
 import { Badge, Button, Card } from '../components/ui';
 import api from '../lib/api';
 import { useAnalytics } from '../hooks/useAnalytics';
+import { useToast } from '../components/ui/useToast';
 
 interface ChangelogData {
   content: string;
@@ -83,6 +84,7 @@ const getInitialState = <T,>(key: string, defaultValue: T): T => {
 export const ChangelogPage = () => {
   const { user } = useAuthStore();
   const analytics = useAnalytics();
+  const { showToast } = useToast();
   const [appState, setAppState] = useState<'landing' | 'wizard' | 'history'>(() =>
     getInitialState('wharf_changelog_appState', 'landing')
   );
@@ -174,6 +176,8 @@ export const ChangelogPage = () => {
         errorMsg = 'Repository not found or requires authentication.';
       }
       setApiError(errorMsg);
+      const titleCasedMsg = errorMsg.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+      showToast(titleCasedMsg, 'error');
     } finally {
       setIsAnalyzing(false);
     }
@@ -246,7 +250,19 @@ export const ChangelogPage = () => {
             const parsed = JSON.parse(dataStr);
             if (parsed.error) {
               console.error(parsed.error);
-              alert(parsed.error);
+              const errText = parsed.error;
+              const isKeyExhaustion = errText.toLowerCase().includes('no api keys') || (errText.toLowerCase().includes('key') && errText.toLowerCase().includes('exhaust'));
+
+              let displayMsg = errText;
+              if (isKeyExhaustion) {
+                displayMsg = 'All API Keys Are Exhausted. Add Your Own API Key In Settings To Continue.';
+              } else {
+                displayMsg = errText.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+              }
+
+              showToast(displayMsg, isKeyExhaustion ? 'warning' : 'error');
+              setIsGenerating(false);
+              setCurrentStep(2);
               break;
             }
             if (parsed.text) {
@@ -260,8 +276,11 @@ export const ChangelogPage = () => {
       }
 
       analytics.track('Changelog Generated', { repoUrl, format: options.format, commitCount: options.commitCount });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to generate changelog:', error);
+      const errMsg = error.message || 'Changelog Generation Failed. Please Try Again.';
+      const titleCasedMsg = errMsg.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+      showToast(titleCasedMsg, 'error');
     } finally {
       setIsGenerating(false);
     }

@@ -91,8 +91,8 @@ export const generate = async (c: AppContext) => {
       });
     }
 
-    let generatedMarkdown;
-    let fallbackProviderStr;
+    let generatedMarkdown: string;
+    let fallbackProviderStr: string;
     const prisma = getPrisma(c.env.DATABASE_URL);
 
     return streamText(c, async (stream) => {
@@ -125,34 +125,44 @@ export const generate = async (c: AppContext) => {
         fallbackProviderStr = result.provider;
       }
 
-      await cacheService.setProfileReadme(username, template, theme, hash, generatedMarkdown);
+      const bgTask = async () => {
+        await cacheService.setProfileReadme(username, template, theme, hash, generatedMarkdown);
 
-      if (userId) {
-        try {
-          const wordCount = generatedMarkdown.split(/\s+/).filter(Boolean).length;
-          const record = await prisma.profileReadme.create({
-            data: {
-              userId,
-              appUsername: c.get('contextStore')?.username || 'unknown',
-              username,
-              content: generatedMarkdown,
-              wordCount,
-              template,
-              theme,
-              badges: options.githubBadges || [],
-              showStats: options.showStats ?? true,
-              showTopLanguages: options.showTopLanguages ?? true,
-              showContributions: options.showContributions ?? true,
-            },
-          });
+        if (userId) {
+          try {
+            const wordCount = generatedMarkdown.split(/\s+/).filter(Boolean).length;
+            const record = await prisma.profileReadme.create({
+              data: {
+                userId,
+                appUsername: c.get('contextStore')?.username || 'unknown',
+                username,
+                content: generatedMarkdown,
+                wordCount,
+                template,
+                theme,
+                badges: options.githubBadges || [],
+                showStats: options.showStats ?? true,
+                showTopLanguages: options.showTopLanguages ?? true,
+                showContributions: options.showContributions ?? true,
+              },
+            });
 
-          const tokensGenerated = Math.round(wordCount * 1.37);
-          await Promise.all([
-            prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeProfiles" = "lifetimeProfiles" + 1 WHERE id = ${userId}`,
-            recordDailyGeneration(c.env.DATABASE_URL, userId),
-          ]);
-        } catch (dbError: any) {
-          loggerService.error('database.save.error', '[CRITICAL DB ERROR] Failed to save profile generation to DB', dbError);
+            const tokensGenerated = Math.round(wordCount * 1.37);
+            await Promise.all([
+              prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeProfiles" = "lifetimeProfiles" + 1 WHERE id = ${userId}`,
+              recordDailyGeneration(c.env.DATABASE_URL, userId),
+            ]);
+          } catch (dbError: any) {
+            loggerService.error('database.save.error', '[CRITICAL DB ERROR] Failed to save profile generation to DB', dbError);
+          }
+        }
+      };
+
+      try {
+        c.executionCtx.waitUntil(bgTask());
+      } catch {
+        if (process.env.NODE_ENV !== 'test') {
+          bgTask().catch(console.error);
         }
       }
 

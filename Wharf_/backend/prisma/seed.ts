@@ -22,20 +22,21 @@ function encrypt(text: string): string {
 async function main() {
   console.log('--- SEEDING SYSTEM KEYS ---');
 
-  const providers = ['GEMINI', 'ANTHROPIC', 'OPENAI', 'GROQ', 'DEEPSEEK'];
+  const providers = ['GEMINI', 'ANTHROPIC', 'OPENAI', 'GROQ', 'DEEPSEEK', 'PROXY_OPENAI'];
 
   for (const provider of providers) {
-    const keys: string[] = [];
-    
+    const keys: { key: string, name: string }[] = [];
+
     // Check For Single Key
     if (process.env[`SEED_${provider}_KEY`]) {
-      keys.push(process.env[`SEED_${provider}_KEY`]!);
+      keys.push({ key: process.env[`SEED_${provider}_KEY`]!, name: `SEED_${provider}_KEY` });
     }
 
     // Check For Numbered Keys (1 to 50)
     for (let i = 1; i <= 50; i++) {
-      const key = process.env[`SEED_${provider}_KEY_${i}`];
-      if (key) keys.push(key);
+      const varName = `SEED_${provider}_KEY_${i}`;
+      const key = process.env[varName];
+      if (key) keys.push({ key, name: varName });
     }
 
     if (keys.length === 0) {
@@ -43,17 +44,18 @@ async function main() {
       continue;
     }
 
-    for (const keyVal of keys) {
-      const encryptedKey = encrypt(keyVal);
-      
+    for (const keyObj of keys) {
+      const encryptedKey = encrypt(keyObj.key);
+
       await (prisma as any).systemKey.create({
         data: {
+          name: keyObj.name,
           provider: provider,
           key: encryptedKey,
         },
       });
-      
-      console.log(`Successfully added a ${provider} key to system pool.`);
+
+      console.log(`Successfully added a ${provider} key (${keyObj.name}) to system pool.`);
     }
   }
 

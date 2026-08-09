@@ -28,6 +28,7 @@ import {
 } from '../components/generator';
 import api from '../lib/api';
 import { useAnalytics } from '../hooks/useAnalytics';
+import { useToast } from '../components/ui/useToast';
 
 // Lazy-load The Heavy Markdown Preview
 const ReadmePreview = lazy(() =>
@@ -303,6 +304,7 @@ const UserStatsSection = ({ refreshTrigger }: { refreshTrigger?: number }) => {
 export const GeneratorPage = () => {
   const analytics = useAnalytics();
   const { user } = useAuthStore();
+  const { showToast } = useToast();
   // Helper For LocalStorage State Initialization
   const initializeState = <T,>(key: string, defaultValue: T): T => {
     if (typeof window !== 'undefined') {
@@ -451,7 +453,19 @@ export const GeneratorPage = () => {
             const parsed = JSON.parse(dataStr);
             if (parsed.error) {
               console.error(parsed.error);
-              alert(parsed.error);
+              const errText = parsed.error;
+              const isKeyExhaustion = errText.toLowerCase().includes('no api keys') || (errText.toLowerCase().includes('key') && errText.toLowerCase().includes('exhaust'));
+
+              let displayMsg = errText;
+              if (isKeyExhaustion) {
+                displayMsg = 'All API Keys Are Exhausted. Add Your Own API Key In Settings To Continue.';
+              } else {
+                displayMsg = errText.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+              }
+
+              showToast(displayMsg, isKeyExhaustion ? 'warning' : 'error');
+              setIsGenerating(false);
+              setCurrentStep(2);
               break;
             }
             if (parsed.text) {
@@ -463,8 +477,12 @@ export const GeneratorPage = () => {
           }
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Generation failed:', error);
+      const errMsg = error.message || 'README Generation Failed. Please Try Again.';
+      const titleCasedMsg = errMsg.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+      showToast(titleCasedMsg, 'error');
+      setCurrentStep(2);
     } finally {
       setIsGenerating(false);
     }

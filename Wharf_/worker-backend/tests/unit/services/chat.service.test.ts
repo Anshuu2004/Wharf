@@ -74,19 +74,19 @@ describe('ChatService', () => {
 
   describe('generateChatStream', () => {
     it('should throw an error if no API keys are available', async () => {
-      (KeyRouterService.prototype.getAvailableKey as Mock).mockResolvedValue(null);
+      (KeyRouterService.prototype.getBestAvailableKey as Mock).mockResolvedValue(null);
       (RepoService.prototype.analyzeRepo as Mock).mockResolvedValue({});
 
       await expect(
         chatService.generateChatStream('https://repo', 'hi', 'dev', [], 'session-1')
-      ).rejects.toThrow('No API keys available for AI chat generation.');
+      ).rejects.toThrow('No AI Providers Available');
     });
 
     it('should invoke streamText with GEMINI correctly', async () => {
       const mockKeyInfo = { provider: 'GEMINI', key: 'gemini-key', isSystem: true };
       const mockModel = vi.fn();
       
-      (KeyRouterService.prototype.getAvailableKey as Mock).mockResolvedValue(mockKeyInfo);
+      (KeyRouterService.prototype.getBestAvailableKey as Mock).mockResolvedValue(mockKeyInfo);
       (RepoService.prototype.analyzeRepo as Mock).mockResolvedValue({ name: 'test' });
       (buildChatPrompt as Mock).mockReturnValue('You are a dev.');
       (createGoogleGenerativeAI as Mock).mockReturnValue(() => mockModel);
@@ -94,7 +94,7 @@ describe('ChatService', () => {
 
       const result = await chatService.generateChatStream('https://repo', 'my question', 'dev', [], 'session-1');
 
-      expect(KeyRouterService.prototype.getAvailableKey).toHaveBeenCalledWith('GEMINI', undefined);
+      expect(KeyRouterService.prototype.getBestAvailableKey).toHaveBeenCalledWith(undefined, ['GROQ', 'PROXY_OPENAI', 'GEMINI', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK']);
       expect(createGoogleGenerativeAI).toHaveBeenCalledWith({ apiKey: 'gemini-key' });
       expect(streamText).toHaveBeenCalledWith(expect.objectContaining({
         model: mockModel,
