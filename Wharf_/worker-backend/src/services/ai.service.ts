@@ -178,7 +178,11 @@ export class AiService {
     onChunk?: (text: string) => void
   ): Promise<{ text: string; provider: string }> {
     
-    const keyInfo = await this.keyRouter.getBestAvailableKey(userId, ['GROQ', 'PROXY_OPENAI', 'GEMINI', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK']);
+    // Fetch key AND build prompt in parallel — both are independent
+    const [keyInfo, prompt] = await Promise.all([
+      this.keyRouter.getBestAvailableKey(userId, ['GROQ', 'PROXY_OPENAI', 'GEMINI', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK']),
+      Promise.resolve(buildProfilePrompt(profileData, options)),
+    ]);
 
     if (!keyInfo) {
       throw new Error(
@@ -187,7 +191,6 @@ export class AiService {
     }
 
     loggerService.providerSelected(keyInfo.provider.toUpperCase(), { keyType: keyInfo.isSystem ? 'system' : 'user', feature: 'PROFILE' });
-    const prompt = buildProfilePrompt(profileData, options);
     let fullText = '';
     const aiStart = loggerService.stepStart();
 
