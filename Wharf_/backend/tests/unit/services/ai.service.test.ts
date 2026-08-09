@@ -36,8 +36,7 @@ describe('AiService', () => {
 
   describe('generateReadmeStream', () => {
     it('should throw if no keys exist at all', async () => {
-      (KeyRouterService.prototype.getUserKey as jest.Mock).mockResolvedValue(null);
-      (KeyRouterService.prototype.getSystemKey as jest.Mock).mockResolvedValue(null);
+      (KeyRouterService.prototype.getBestAvailableKey as jest.Mock).mockResolvedValue(null);
       
       await expect(
         aiService.generateReadmeStream({} as any, 'technical', [])
@@ -45,11 +44,9 @@ describe('AiService', () => {
     });
 
     it('should use system GEMINI key if user has no keys', async () => {
-      (KeyRouterService.prototype.getUserKey as jest.Mock).mockResolvedValue(null);
-      (KeyRouterService.prototype.getSystemKey as jest.Mock).mockImplementation((provider) => {
-        if (provider === 'GEMINI') return Promise.resolve({ id: 's1', key: 'sys-gem', provider: 'GEMINI', isSystem: true });
-        return Promise.resolve(null);
-      });
+      (KeyRouterService.prototype.getBestAvailableKey as jest.Mock).mockResolvedValue(
+        { id: 's1', key: 'sys-gem', provider: 'GEMINI', isSystem: true }
+      );
 
       const mockContext = { 
         meta: { name: 'repo', owner: 'owner', description: 'desc', language: 'ts', topics: [], stars: 10, license: 'MIT', defaultBranch: 'main' },
@@ -71,7 +68,7 @@ describe('AiService', () => {
     });
 
     it('should fallback to NEXT_AVAILABLE if exhaustion error occurs', async () => {
-      (KeyRouterService.prototype.getSystemKey as jest.Mock)
+      (KeyRouterService.prototype.getBestAvailableKey as jest.Mock)
         .mockResolvedValueOnce({ id: 's1', key: 'sys-fail', provider: 'GEMINI', isSystem: true })
         .mockResolvedValueOnce({ id: 's2', key: 'sys-win', provider: 'GEMINI', isSystem: true });
 
