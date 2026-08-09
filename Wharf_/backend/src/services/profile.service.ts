@@ -17,11 +17,11 @@ export class ProfileService {
     }
 
     try {
-      // 1. Fetch User Profile
-      const user = await this.githubService.getUserProfile(username);
-
-      // 2. Fetch Top Starred Repositories (Pinned Proxy)
-      const topRepos = await this.githubService.getTopStarredRepos(username, 10);
+      // Fetch User Profile + Top Starred Repos In Parallel
+      const [user, topRepos] = await Promise.all([
+        this.githubService.getUserProfile(username),
+        this.githubService.getTopStarredRepos(username, 10),
+      ]);
 
       // Calculate Stats
       let totalStars = 0;
