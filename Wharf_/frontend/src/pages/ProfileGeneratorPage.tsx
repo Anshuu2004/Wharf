@@ -1915,7 +1915,7 @@ export const ProfileGeneratorPage = () => {
                       </p>
                     </div>
 
-                    {isGenerating && (
+                    {isGenerating && !generatedReadme && (
                       <div className="mb-6">
                         <ProfileGenerationProgress progress={generationProgress} />
                       </div>

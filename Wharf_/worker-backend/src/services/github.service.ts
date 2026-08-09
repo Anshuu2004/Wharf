@@ -89,24 +89,36 @@ export class GithubService {
     }));
   }
 
-  // Fetches The Content Of A Specific File
-  async fetchFileContent(owner: string, repo: string, path: string): Promise<string | null> {
+  // Fetches The Content Of A Specific File — Via Raw CDN (Much Faster Than API)
+  async fetchFileContent(owner: string, repo: string, path: string, branch = 'HEAD'): Promise<string | null> {
     try {
-      const { data } = await this.octokit.repos.getContent({
-        owner,
-        repo,
-        path,
+      const url = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
+      const response = await fetch(url, {
+        headers: {
+          ...(process.env.GITHUB_TOKEN ? { Authorization: `token ${process.env.GITHUB_TOKEN}` } : {}),
+        },
       });
-
-      if ('content' in data && typeof data.content === 'string') {
-        return Buffer.from(data.content, 'base64').toString('utf-8');
-      }
-
+      if (!response.ok) return null;
+      return await response.text();
+    } catch {
       return null;
-    } catch (error: any) {
-      if (error.status === 404) return null;
-      throw error;
     }
+  }
+
+  // Bulk-Fetches Multiple Files In A Single Parallel Round — No Sequential Batching Needed
+  async bulkFetchFileContents(
+    owner: string,
+    repo: string,
+    paths: string[],
+    branch = 'HEAD'
+  ): Promise<Record<string, string>> {
+    const results = await Promise.all(
+      paths.map(async (path) => {
+        const content = await this.fetchFileContent(owner, repo, path, branch);
+        return [path, content] as [string, string | null];
+      })
+    );
+    return Object.fromEntries(results.filter(([, v]) => v !== null) as [string, string][]);
   }
 
   // Fetches The Recent Commit History

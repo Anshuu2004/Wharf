@@ -841,7 +841,7 @@ export const ChangelogPage = () => {
                       </p>
                     </div>
 
-                    {isGenerating && (
+                    {isGenerating && !generatedContent && (
                       <ChangelogGenerationProgress progress={generationProgress} currentStep={generationProgress > 80 ? 2 : generationProgress > 30 ? 1 : 0} />
                     )}
 

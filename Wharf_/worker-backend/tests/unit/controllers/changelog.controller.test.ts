@@ -7,8 +7,8 @@ import { createMockContext } from '../test-utils';
 
 let streamBuffer = '';
 
-vi.mock('hono/streaming', () => ({
-  streamText: vi.fn().mockImplementation(async (c: any, cb: any) => {
+vi.mock('hono/streaming', () => {
+  const mockStreamFunc = vi.fn().mockImplementation(async (c: any, cb: any) => {
     const stream = {
       write: vi.fn().mockImplementation((chunk: any) => {
         streamBuffer += chunk;
@@ -17,8 +17,9 @@ vi.mock('hono/streaming', () => ({
     };
     await cb(stream);
     return { _isHonoResponse: true, streamed: true, buffer: streamBuffer };
-  }),
-}));
+  });
+  return { streamText: mockStreamFunc, stream: mockStreamFunc };
+});
 
 vi.mock('../../../src/services');
 vi.mock('../../../src/utils/encryption');

@@ -1,5 +1,5 @@
 import { Context } from 'hono';
-import { streamText } from 'hono/streaming';
+import { stream } from 'hono/streaming';
 import { ProfileService } from '../services/profile.service';
 import { AiService } from '../services/ai.service';
 import { cacheService } from '../services/cache.service';
@@ -80,14 +80,17 @@ export const generate = async (c: AppContext) => {
         totalDurationMs: Date.now() - reqStart,
       });
 
-      return streamText(c, async (stream) => {
+      c.header('Content-Type', 'text/event-stream');
+      c.header('Cache-Control', 'no-cache');
+      c.header('Connection', 'keep-alive');
+      return stream(c, async (streamStr) => {
         const chunkSize = 100;
         for (let i = 0; i < cachedReadme.length; i += chunkSize) {
           const chunk = cachedReadme.slice(i, i + chunkSize);
-          await stream.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+          await streamStr.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
           await new Promise((resolve) => setTimeout(resolve, 10));
         }
-        await stream.write('data: [DONE]\n\n');
+        await streamStr.write('data: [DONE]\n\n');
       });
     }
 
@@ -95,7 +98,10 @@ export const generate = async (c: AppContext) => {
     let fallbackProviderStr: string;
     const prisma = getPrisma(c.env.DATABASE_URL);
 
-    return streamText(c, async (stream) => {
+    c.header('Content-Type', 'text/event-stream');
+    c.header('Cache-Control', 'no-cache');
+    c.header('Connection', 'keep-alive');
+    return stream(c, async (streamStr) => {
       if (template === 'terminal') {
         const { generateTerminalReadmeDocs } = require('../utils/terminalTemplate');
         generatedMarkdown = generateTerminalReadmeDocs(
@@ -108,7 +114,7 @@ export const generate = async (c: AppContext) => {
         const chunkSize = 100;
         for (let i = 0; i < generatedMarkdown.length; i += chunkSize) {
           const chunk = generatedMarkdown.slice(i, i + chunkSize);
-          await stream.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+          await streamStr.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
           await new Promise((resolve) => setTimeout(resolve, 5));
         }
       } else {
@@ -118,7 +124,7 @@ export const generate = async (c: AppContext) => {
           options,
           userId,
           async (chunk) => {
-            await stream.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+            await streamStr.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
           }
         );
         generatedMarkdown = result.text;
@@ -166,7 +172,7 @@ export const generate = async (c: AppContext) => {
         }
       }
 
-      await stream.write('data: [DONE]\n\n');
+      await streamStr.write('data: [DONE]\n\n');
     });
   } catch (error: any) {
     return c.json({ success: false, error: error.message || 'Failed to generate Profile README' }, 500);

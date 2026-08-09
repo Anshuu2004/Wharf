@@ -835,7 +835,7 @@ export const GeneratorPage = () => {
                       </p>
                     </div>
 
-                    {isGenerating && (
+                    {isGenerating && !generatedReadme && (
                       <div className="mb-6">
                         <GenerationProgress progress={generationProgress} />
                       </div>

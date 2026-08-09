@@ -1,5 +1,5 @@
 import { Context } from 'hono';
-import { streamText } from 'hono/streaming';
+import { stream } from 'hono/streaming';
 import { ChangelogService, GithubService, cacheService } from '../services';
 import { AiService } from '../services/ai.service';
 import { getPrisma } from '../db';
@@ -81,10 +81,12 @@ export class ChangelogController {
           totalDurationMs: Date.now() - reqStart,
         });
 
-        // Hono Streaming API For SSE Caching
-        return streamText(c, async (stream) => {
-          await stream.write(`data: ${JSON.stringify({ text: cached })}\n\n`);
-          await stream.write('data: [DONE]\n\n');
+        c.header('Content-Type', 'text/event-stream');
+        c.header('Cache-Control', 'no-cache');
+        c.header('Connection', 'keep-alive');
+        return stream(c, async (streamStr) => {
+          await streamStr.write(`data: ${JSON.stringify({ text: cached })}\n\n`);
+          await streamStr.write('data: [DONE]\n\n');
         });
       }
 
@@ -94,12 +96,15 @@ export class ChangelogController {
         githubToken
       );
 
-      return streamText(c, async (stream) => {
+      c.header('Content-Type', 'text/event-stream');
+      c.header('Cache-Control', 'no-cache');
+      c.header('Connection', 'keep-alive');
+      return stream(c, async (streamStr) => {
         let fullContent = '';
 
         for await (const chunk of aiStream) {
           fullContent += chunk;
-          await stream.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+          await streamStr.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
         }
 
         const bgTask = async () => {
@@ -163,7 +168,7 @@ export class ChangelogController {
           totalDurationMs: Date.now() - reqStart,
         });
 
-        await stream.write('data: [DONE]\n\n');
+        await streamStr.write('data: [DONE]\n\n');
       });
     } catch (error: any) {
       loggerService.error('generation.error', 'Changelog generation error', error, {
@@ -179,8 +184,11 @@ export class ChangelogController {
       });
 
       // Stream Error Response
-      return streamText(c, async (stream) => {
-        await stream.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+      c.header('Content-Type', 'text/event-stream');
+      c.header('Cache-Control', 'no-cache');
+      c.header('Connection', 'keep-alive');
+      return stream(c, async (streamStr) => {
+        await streamStr.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
       });
     }
   }

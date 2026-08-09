@@ -53,9 +53,10 @@ describe('RepoService', () => {
 
       (GithubService.prototype.fetchRepoMeta as jest.Mock).mockResolvedValue(mockMeta);
       (GithubService.prototype.fetchRepoTree as jest.Mock).mockResolvedValue(mockTree);
-      (GithubService.prototype.fetchFileContent as jest.Mock).mockImplementation((owner, repo, file) => {
-        if (file === 'package.json') return Promise.resolve('{"name": "test-pkg"}');
-        return Promise.resolve(null);
+      (GithubService.prototype.bulkFetchFileContents as jest.Mock).mockImplementation(() => {
+        return Promise.resolve({
+          'package.json': '{"name": "test-pkg"}'
+        });
       });
 
       const result = await repoService.analyzeRepo('https://github.com/owner/repo', { bypassCache: true });
@@ -63,7 +64,7 @@ describe('RepoService', () => {
       // Verifies GitHub Calls
       expect(GithubService.prototype.fetchRepoMeta).toHaveBeenCalledWith('owner', 'repo');
       expect(GithubService.prototype.fetchRepoTree).toHaveBeenCalledWith('owner', 'repo', 'HEAD');
-      expect(GithubService.prototype.fetchFileContent).toHaveBeenCalledWith('owner', 'repo', 'package.json');
+      expect(GithubService.prototype.bulkFetchFileContents).toHaveBeenCalled();
 
       // Verifies Parsing Logic
       expect(result.meta).toEqual(mockMeta);

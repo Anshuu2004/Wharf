@@ -51,10 +51,7 @@ export class RepoService {
     ]);
     const filePaths = tree.map((item) => item.path);
 
-    // 3. Fetch Key Files — With Concurrency Cap To Avoid GitHub Rate Limiting
-    // Firing 40+ Simultaneous Requests Causes GitHub To Throttle Aggressively (3-8s Delay).
-    // Batching To CONCURRENCY=5 Keeps Latency Predictable: Ceil(N/5) * ~200ms Per Batch.
-    const keyFiles: Record<string, string> = {};
+    // 3. Fetch Key Files — All In Parallel Via raw.githubusercontent.com (CDN, Much Faster Than REST API)
     const filesToFetch = [
       // Package Manifests & Configs
       'package.json',
@@ -140,21 +137,8 @@ export class RepoService {
     const allFilesToFetch = Array.from(new Set([...filesToFetch, ...discoveredRouteFiles]));
     const matchedFiles = allFilesToFetch.filter((f) => filePaths.includes(f));
 
-    // Concurrency-Limited Batch Fetcher — Groups Of 5 Parallel Requests
-    const CONCURRENCY = 5;
-    const fetchedContents: (string | null)[] = new Array(matchedFiles.length).fill(null);
-    for (let i = 0; i < matchedFiles.length; i += CONCURRENCY) {
-      const batch = matchedFiles.slice(i, i + CONCURRENCY);
-      const results = await Promise.all(
-        batch.map((f) => this.githubService.fetchFileContent(owner, repo, f))
-      );
-      results.forEach((content, idx) => {
-        fetchedContents[i + idx] = content;
-      });
-    }
-    matchedFiles.forEach((f, i) => {
-      if (fetchedContents[i]) keyFiles[f] = fetchedContents[i]!;
-    });
+    // Fetch All Key Files In Parallel Via Raw CDN — No Sequential Batching Needed
+    const keyFiles = await this.githubService.bulkFetchFileContents(owner, repo, matchedFiles, meta.defaultBranch);
 
     loggerService.stepEnd('github.fetch.completed', 'GitHub Fetch', githubStart, {
       repository: `${owner}/${repo}`,

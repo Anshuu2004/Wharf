@@ -69,17 +69,20 @@ describe('GithubService', () => {
 
   describe('fetchFileContent', () => {
     it('should decode base64 file content', async () => {
-      const b64 = Buffer.from('console.log("hi");', 'utf-8').toString('base64');
-      mockGetContent.mockResolvedValue({ data: { content: b64 } });
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        text: () => Promise.resolve('console.log("hi");')
+      });
 
       const res = await githubService.fetchFileContent('Owner', 'Repo', 'index.ts');
       expect(res).toBe('console.log("hi");');
     });
 
     it('should return null if 404', async () => {
-      const notFoundError = new Error('Not found') as any;
-      notFoundError.status = 404;
-      mockGetContent.mockRejectedValue(notFoundError);
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 404
+      });
 
       const res = await githubService.fetchFileContent('O', 'R', 'missing.json');
       expect(res).toBeNull();
