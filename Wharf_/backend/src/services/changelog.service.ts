@@ -110,6 +110,7 @@ export class ChangelogService {
         id: true,
         repoUrl: true,
         repoName: true,
+        content: true,
         commitCount: true,
         generatedAt: true,
         format: true,

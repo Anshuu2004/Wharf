@@ -407,7 +407,7 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
                           variant="primary"
                           size="sm"
                           rounded="md"
-                          onClick={() => handleCopy(item.repoUrl, item.repoName)}
+                          onClick={() => handleCopy(item.content || '', item.repoName)}
                           className="flex-1 min-w-[50px] h-8 group/btn text-xs"
                           aria-label={`Copy ${item.repoName} changelog`}
                         >
@@ -418,7 +418,7 @@ export const ChangelogHistory = ({ onCopy, onBack, onCountChange }: ChangelogHis
                           variant="cyan"
                           size="sm"
                           rounded="md"
-                          onClick={() => handleDownload(item.repoUrl, item.repoName, item.format)}
+                          onClick={() => handleDownload(item.content || '', item.repoName, item.format)}
                           className="flex-1 min-w-[50px] h-8 group/btn text-xs"
                           aria-label={`Download ${item.repoName} changelog`}
                         >
