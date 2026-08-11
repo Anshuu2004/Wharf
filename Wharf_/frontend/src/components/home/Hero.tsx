@@ -151,8 +151,8 @@ export const Hero = () => {
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 md:gap-4 w-full">
               <div className="group cursor-pointer flex-1 min-w-[120px] max-w-[48%] lg:max-w-[180px] px-2 sm:px-4 py-3 flex flex-col items-center justify-center text-center border-2 border-wharf-border-primary hover:border-wharf-border-primary bg-wharf-surface-primary/80 rounded-2xl shadow-sm hover:shadow-brutal-sm transition-all">
                 <div className="flex items-center justify-center gap-1">
-                  <span className="font-display font-black text-xl sm:text-2xl group-hover:text-wharf-cyan-darker transition-colors tracking-tighter">
-                    {statsLoading ? '0' : <CountUp end={stats.totalGenerations} />}
+                  <span className={`font-display font-black text-xl sm:text-2xl group-hover:text-wharf-cyan-darker transition-colors tracking-tighter ${statsLoading ? 'animate-pulse opacity-100' : ''}`}>
+                    <CountUp end={stats.totalGenerations} duration={1500} />
                   </span>
                 </div>
                 <p className="font-mono font-bold text-[9px] sm:text-[10px] text-wharf-text-secondary uppercase tracking-wider mt-1 text-center">Repos Documented</p>
@@ -160,8 +160,8 @@ export const Hero = () => {
 
               <div className="group cursor-pointer flex-1 min-w-[120px] max-w-[48%] lg:max-w-[180px] px-2 sm:px-4 py-3 flex flex-col items-center justify-center text-center border-2 border-wharf-border-primary hover:border-wharf-border-primary bg-wharf-surface-primary/80 rounded-2xl shadow-sm hover:shadow-brutal-sm transition-all">
                 <div className="flex items-center justify-center gap-1">
-                  <span className="font-display font-black text-xl sm:text-2xl group-hover:text-red-600 transition-colors tracking-tighter">
-                    {statsLoading ? '0' : <CountUp end={stats.totalTokens} />}
+                  <span className={`font-display font-black text-xl sm:text-2xl group-hover:text-red-600 transition-colors tracking-tighter ${statsLoading ? 'animate-pulse opacity-100' : ''}`}>
+                    <CountUp end={stats.totalTokens} duration={1500} />
                   </span>
                 </div>
                 <p className="font-mono font-bold text-[9px] sm:text-[10px] text-wharf-text-secondary uppercase tracking-wider mt-1 text-center">Tokens Burned</p>
