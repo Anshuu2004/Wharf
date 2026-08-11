@@ -578,10 +578,13 @@ export const ProfileGeneratorPage = () => {
               console.error(parsed.error);
               const errText = parsed.error;
               const isKeyExhaustion = errText.toLowerCase().includes('no api keys') || (errText.toLowerCase().includes('key') && errText.toLowerCase().includes('exhaust'));
+              const isVpnError = errText.toLowerCase().includes('vpn') || errText.toLowerCase().includes('forbidden') || errText.toLowerCase().includes('access denied') || errText.toLowerCase().includes('connection blocked') || errText.toLowerCase().includes('403');
 
               let displayMsg = errText;
               if (isKeyExhaustion) {
                 displayMsg = 'All API Keys Are Exhausted. Add Your Own API Key In Settings To Continue.';
+              } else if (isVpnError) {
+                displayMsg = 'Connection Blocked — Please Turn Off Your VPN And Try Again.';
               } else {
                 displayMsg = errText.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
               }
@@ -603,7 +606,10 @@ export const ProfileGeneratorPage = () => {
     } catch (error: any) {
       console.error('Generation failed:', error);
       const errMsg = error.message || 'Profile Generation Failed. Please Try Again.';
-      const titleCasedMsg = errMsg.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+      const isVpn = errMsg.toLowerCase().includes('fetch failed') || errMsg.toLowerCase().includes('network error') || errMsg.toLowerCase().includes('forbidden');
+      const titleCasedMsg = isVpn
+        ? 'Connection blocked — please turn off your VPN and try again.'
+        : errMsg.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
       showToast(titleCasedMsg, 'error');
       setCurrentStep(2);
     } finally {

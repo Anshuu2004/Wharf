@@ -37,31 +37,7 @@ interface ChatSession {
     forks: number;
     description: string;
   };
-}
-
-// Type For Stored Session In LocalStorage
-interface StoredSession {
-  id: string;
-  title: string;
-  timestamp: string;
-  preview: string;
-  messages: Array<{
-    id: string;
-    role: 'user' | 'assistant';
-    content: string;
-    timestamp: string;
-    codeBlocks?: { code: string; language: string }[];
-  }>;
-  repoUrl?: string;
-  pinned?: boolean;
-  repoData?: {
-    name: string;
-    owner: string;
-    language: string;
-    stars: number;
-    forks: number;
-    description: string;
-  };
+  isLoaded?: boolean;
 }
 
 const personas = [
@@ -74,44 +50,94 @@ const personas = [
 export const ChatPage = () => {
   const analytics = useAnalytics();
   const { showToast } = useToast();
-  const [sessions, setSessions] = useState<ChatSession[]>(() => {
-    try {
-      const saved = localStorage.getItem('wharf_chat_sessions');
-      if (saved) {
-        const parsed: StoredSession[] = JSON.parse(saved);
-        // Ensure All Sessions Have Pinned Property & Proper Date Objects
-        return parsed.map((s: StoredSession) => ({
-          ...s,
-          pinned: s.pinned || false,
-          timestamp: new Date(s.timestamp),
-          messages: s.messages.map((m) => ({
-            ...m,
-            timestamp: new Date(m.timestamp),
-          })),
-        }));
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+
+  // Fetch Initial History
+  useEffect(() => {
+    const fetchHistory = async () => {
+      const token = useAuthStore.getState().token;
+      if (!token) {
+        setIsLoadingHistory(false);
+        return;
       }
-      return [];
-    } catch {
-      return [];
-    }
-  });
+      try {
+        const res = await api.get('/chat/history');
+        if (res.data?.success) {
+          const dbSessions = res.data.data.map((dbS: any) => {
+            let parsed = undefined;
+            if (dbS.repoData) {
+              try { parsed = typeof dbS.repoData === 'string' ? JSON.parse(dbS.repoData) : dbS.repoData; } catch {}
+            }
+            
+            const displayTitle = (dbS.title && dbS.title !== 'Chat Session') 
+              ? dbS.title 
+              : (parsed?.owner && parsed?.name ? `${parsed.owner}/${parsed.name}` : 'Chat Session');
 
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(() => {
-    return localStorage.getItem('wharf_current_session_id') || null;
-  });
+            return {
+              id: dbS.id,
+              title: displayTitle,
+              timestamp: new Date(dbS.updatedAt || dbS.createdAt),
+              preview: dbS.messages?.[0]?.content?.slice(0, 50) || 'Start a conversation...',
+              messages: [], 
+              repoUrl: dbS.repoUrl,
+              pinned: false,
+              repoData: parsed,
+              isLoaded: false
+            } as ChatSession;
+          });
+          setSessions(dbSessions);
+          // Set first available session as default if none selected
+          if (dbSessions.length > 0) {
+            setCurrentSessionId(dbSessions[0].id);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch chat history:", err);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+    fetchHistory();
+  }, []);
 
+  // Fetch Full Session Detail On Select
   useEffect(() => {
-    localStorage.setItem('wharf_chat_sessions', JSON.stringify(sessions));
-  }, [sessions]);
-
-  // Persist Active Session ID Across Refreshes
-  useEffect(() => {
-    if (currentSessionId) {
-      localStorage.setItem('wharf_current_session_id', currentSessionId);
-    } else {
-      localStorage.removeItem('wharf_current_session_id');
-    }
-  }, [currentSessionId]);
+    if (!currentSessionId) return;
+    const session = sessions.find(s => s.id === currentSessionId);
+    
+    // Only fetch if from DB and hasn't loaded full messages yet
+    if (!session || session.isLoaded) return;
+    
+    const fetchSessionDetail = async () => {
+      try {
+        const res = await api.get(`/chat/session/${currentSessionId}`);
+        if (res.data?.success) {
+          const dbSession = res.data.data;
+          setSessions(prev => prev.map(s => {
+            if (s.id === currentSessionId) {
+              return {
+                 ...s,
+                 messages: (dbSession.messages || []).map((m: any) => ({
+                   id: m.id,
+                   role: m.role,
+                   content: m.content,
+                   timestamp: new Date(m.createdAt),
+                   codeBlocks: typeof m.codeBlocks === 'string' ? JSON.parse(m.codeBlocks) : m.codeBlocks
+                 })),
+                 isLoaded: true
+              };
+            }
+            return s;
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to load full session:", err);
+      }
+    };
+    fetchSessionDetail();
+  }, [currentSessionId, sessions]);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
     // Default Closed On Mobile , Open On Desktop
@@ -155,6 +181,7 @@ export const ChatPage = () => {
       messages: [],
       repoUrl: undefined,
       pinned: false,
+      isLoaded: true, // Optimistically Marked So It Bypasses Fetch
     };
     setSessions([newSession, ...sessions]);
     setCurrentSessionId(newSession.id);
@@ -185,6 +212,7 @@ export const ChatPage = () => {
             messages: [],
             repoUrl: repoUrl,
             pinned: false,
+            isLoaded: true, // Optimistically Marked
           };
           newState = [newSession, ...newState];
           setCurrentSessionId(activeSessionId);
@@ -232,6 +260,7 @@ export const ChatPage = () => {
         messages: [],
         repoUrl: repoUrl || undefined,
         pinned: false,
+        isLoaded: true, // Optimistically Marked
       };
       setSessions([newSession, ...sessions]);
       setCurrentSessionId(newSession.id);
@@ -343,10 +372,19 @@ export const ChatPage = () => {
                   console.error(parsed.error);
                   const errText = parsed.error;
                   const isKeyExhaustion = typeof errText === 'string' && (errText.toLowerCase().includes('no api keys') || (errText.toLowerCase().includes('key') && errText.toLowerCase().includes('exhaust')));
+                  const isVpnError = typeof errText === 'string' && (
+                    errText.toLowerCase().includes('fetch failed') || 
+                    errText.toLowerCase().includes('forbidden') || 
+                    errText.toLowerCase().includes('403') || 
+                    errText.toLowerCase().includes('network') ||
+                    errText.toLowerCase().includes('econnrefused')
+                  );
 
                   let displayMsg = errText;
                   if (isKeyExhaustion) {
                     displayMsg = 'All API Keys Are Exhausted. Add Your Own API Key In Settings To Continue.';
+                  } else if (isVpnError) {
+                    displayMsg = 'Connection Blocked By Provider. If You Are Using A VPN, Please Try Disabling It.';
                   } else if (typeof errText === 'string') {
                     displayMsg = errText.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
                   }
@@ -374,10 +412,29 @@ export const ChatPage = () => {
           })
         );
       }
+
+      // Safety net: if stream closed and response is still empty, it was silently blocked
+      if (!fullResponse) {
+        showToast('Connection blocked — please turn off your VPN and try again.', 'error');
+        // Remove the blank assistant bubble from state
+        setSessions((prev) =>
+          prev.map((s) =>
+            s.id === activeSessionId
+              ? { ...s, messages: s.messages.filter((m) => m.id !== assistantMessageId) }
+              : s
+          )
+        );
+      }
     } catch (error: any) {
       console.error('Failed to get AI response:', error);
       const errMsg = error.message || 'AI Response Failed. Please Try Again.';
-      const titleCasedMsg = errMsg.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+      const isVpnError = errMsg.toLowerCase().includes('fetch failed') || errMsg.toLowerCase().includes('network error');
+      
+      let titleCasedMsg = errMsg.split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+      if (isVpnError) {
+        titleCasedMsg = 'Connection blocked. If you are using a VPN, please try disabling it.';
+      }
+      
       showToast(titleCasedMsg, 'error');
     } finally {
       setIsSendingMessage(false);
@@ -408,10 +465,19 @@ export const ChatPage = () => {
     }, 50);
   };
 
-  const handleDeleteSession = (id: string) => {
+  const handleDeleteSession = async (id: string) => {
+    // Delete enthusiastically from local UI state
     setSessions((prev) => prev.filter((s) => s.id !== id));
     if (currentSessionId === id) {
-      setCurrentSessionId(sessions.find((s) => s.id !== id)?.id || null);
+      const remaining = sessions.filter((s) => s.id !== id);
+      setCurrentSessionId(remaining.length > 0 ? remaining[0].id : null);
+    }
+    
+    // Attempt backend delete API - ignore if it fails or route doesn't exist yet
+    try {
+      await api.delete(`/chat/session/${id}`);
+    } catch (e) {
+      console.warn("Backend delete chat session not implemented or failed", e);
     }
   };
 
@@ -483,6 +549,7 @@ export const ChatPage = () => {
           `}
         >
           <ChatSidebar
+            isLoading={isLoadingHistory}
             sessions={sessions}
             currentSessionId={currentSessionId}
             onNewChat={createNewChat}
@@ -579,6 +646,7 @@ export const ChatPage = () => {
             <ChatMessages
               messages={messages}
               isLoading={isSendingMessage}
+              isFetchingSession={!!currentSession && !currentSession.isLoaded}
               messagesEndRef={messagesEndRef as React.RefObject<HTMLDivElement>}
               onQuickPromptSelect={handleSendMessage}
               onEditMessage={handleEditMessage}

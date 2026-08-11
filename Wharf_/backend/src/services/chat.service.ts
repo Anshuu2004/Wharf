@@ -154,6 +154,20 @@ export class ChatService {
     // Return The Result Directly Rather Than toDataStreamResponse
     return result;
   }
+
+  // Helper: Is This A VPN/Access-Blocked Error We Should Surface As-Is?
+  static isVpnOrAccessError(error: any): boolean {
+    const status = error?.statusCode ?? error?.status;
+    const body = typeof error?.responseBody === 'string' ? error.responseBody : '';
+    const msg = error?.message ?? '';
+    return (
+      status === 403 ||
+      body.includes('Access denied') ||
+      msg.includes('Forbidden') ||
+      msg.includes('Access denied') ||
+      msg.includes('403')
+    );
+  }
 }
 
 export const chatService = new ChatService();

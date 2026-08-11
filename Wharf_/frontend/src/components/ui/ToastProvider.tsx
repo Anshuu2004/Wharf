@@ -23,7 +23,7 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
 
     setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id))
-    }, 3000)
+    }, 7000)
   }, [])
 
   const toastStyles = {

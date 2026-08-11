@@ -267,8 +267,8 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
         // Loading skeleton cards
         <div className="grid gap-6">
           {[1, 2, 3, 4].map((index) => (
-            <Card key={index} variant="hard" rounded="3xl" className="p-4 animate-pulse">
-              <div className="flex flex-col md:flex-row md:items-center gap-4">
+            <Card key={index} variant="hard" rounded="3xl" className="p-4 animate-pulse overflow-hidden">
+              <div className="flex flex-col md:flex-row md:items-center gap-4 min-w-0">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-1">
                     <div className="w-10 h-10 bg-wharf-border-secondary rounded-lg flex-shrink-0" />
@@ -320,16 +320,16 @@ export const GenerationHistory = ({ onBack, onViewContent }: GenerationHistoryPr
                 key={record.id}
                 variant="hard"
                 rounded="3xl"
-                className="p-4 hover:translate-y-[-2px] transition-all duration-200 group"
+                className="p-4 hover:translate-y-[-2px] transition-all duration-200 group overflow-hidden"
               >
-                <div className="flex flex-col md:flex-row md:items-center gap-4">
+                <div className="flex flex-col md:flex-row md:items-center gap-4 min-w-0">
                   {/* Left - Repo Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-1">
+                    <div className="flex items-center gap-3 mb-1 min-w-0">
                       <div className="w-10 h-10 border-2 border-wharf-border-primary flex items-center justify-center flex-shrink-0 bg-wharf-surface-secondary rounded-lg">
                         <FaGithub className="w-5 h-5 text-wharf-text-primary" />
                       </div>
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <h3 className="font-mono font-bold text-lg truncate">
                           {record.repository.owner}/{record.repository.name}
                         </h3>

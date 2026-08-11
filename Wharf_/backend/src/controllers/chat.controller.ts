@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { chatService } from '../services/chat.service';
+import { chatService, ChatService } from '../services/chat.service';
 import prisma from '../db';
 import { loggerService, saveRequestLog } from '../utils/logger';
 
@@ -36,7 +36,7 @@ export const sendMessage = async (req: Request, res: Response) => {
         data: {
           id: sessionId,
           userId,
-          title: 'Chat Session',
+          title: req.body.repoData ? (() => { try { const d = typeof req.body.repoData === 'string' ? JSON.parse(req.body.repoData) : req.body.repoData; return d?.owner && d?.name ? `${d.owner}/${d.name}` : question.slice(0, 30); } catch { return question.slice(0, 30); } })() : question.slice(0, 30),
           repoUrl,
           repoData: req.body.repoData || undefined,
         },
@@ -61,14 +61,24 @@ export const sendMessage = async (req: Request, res: Response) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
-    for await (const textPart of result.textStream) {
-      // Escape Newlines For Valid JSON Parsing On Client
-      const escapedText = JSON.stringify({ text: textPart });
-      res.write(`data: ${escapedText}\n\n`);
+    try {
+      for await (const textPart of result.textStream) {
+        const escapedText = JSON.stringify({ text: textPart });
+        res.write(`data: ${escapedText}\n\n`);
+      }
+      res.write('data: "[DONE]"\n\n');
+      res.end();
+    } catch (streamError: any) {
+      // Mid-Stream Error (e.g. Groq 403 Blocked By VPN)
+      const isVpn = ChatService.isVpnOrAccessError(streamError);
+      const errorMsg = isVpn
+        ? 'Connection Blocked By Groq. Please Turn Off Your VPN And Try Again.'
+        : (streamError?.message || 'Stream Failed Unexpectedly.');
+      res.write(`data: ${JSON.stringify({ error: errorMsg })}\n\n`);
+      res.write('data: "[DONE]"\n\n');
+      res.end();
+      loggerService.error('chat.stream.error', 'Mid-stream error in chat', streamError);
     }
-
-    res.write('data: "[DONE]"\n\n');
-    res.end();
 
     loggerService.info('chat.generation.completed', 'Chat generated successfully', {
       repository: repoUrl,
