@@ -15,3 +15,4 @@ describe('Badge', () => {
     expect(badge.className).toContain('bg-wharf-pink');
   });
 });
+

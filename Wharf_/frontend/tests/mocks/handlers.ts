@@ -46,4 +46,8 @@ export const handlers = [
   http.get('/api/profile/history', () => {
     return HttpResponse.json({ success: true, data: [] });
   }),
+
+  http.get('/api/chat/history', () => {
+    return HttpResponse.json({ success: true, data: [] });
+  }),
 ];

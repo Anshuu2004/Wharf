@@ -10,7 +10,7 @@ type UseAuthStoreMock = MockedFunction<typeof useAuthStore>;
 
 // We Explicitly Mock useAuthStore So We Govern Login State
 vi.mock('../../../src/stores/authStore', () => ({
-  useAuthStore: vi.fn()
+  useAuthStore: Object.assign(vi.fn(), { getState: vi.fn(() => ({ token: 'fake-token' })) })
 }));
 
 // Import The Mocked Function For Configuring Returns Per Test

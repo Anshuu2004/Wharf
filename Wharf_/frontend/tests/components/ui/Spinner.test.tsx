@@ -15,3 +15,4 @@ describe('Spinner', () => {
     expect(spinnerDiv?.className).toContain('w-12');
   });
 });
+

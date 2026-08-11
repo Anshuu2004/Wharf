@@ -20,3 +20,4 @@ describe('Input', () => {
     expect(screen.getByText('Invalid input')).toBeInTheDocument();
   });
 });
+

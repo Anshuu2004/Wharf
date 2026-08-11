@@ -18,3 +18,4 @@ describe('Card ecosystem', () => {
     expect(screen.getByText('Footer text')).toBeInTheDocument();
   });
 });
+
