@@ -331,10 +331,10 @@ ${
   options.showStats
     ? `### 📊 GitHub Stats <br><br>
 <p align="center"> 
-  <img height="180em" width="430" src="https://github-readme-stats-sigma-five.vercel.app/api?username=${profileData.username}&show_icons=true&theme=${options.theme}&include_all_commits=true&count_private=true"/> &nbsp;
+  <img height="180em" width="430" src="https://github-stats-extended.vercel.app/api?username=${profileData.username}&show_icons=true&theme=${options.theme}&include_all_commits=true&count_private=true"/> &nbsp;
   ${
     options.showTopLanguages
-      ? `<img height="180em" width="386" src="https://github-readme-stats-sigma-five.vercel.app/api/top-langs/?username=${profileData.username}&layout=compact&theme=${options.theme}"/> <br>`
+      ? `<img height="180em" width="386" src="https://github-stats-extended.vercel.app/api/top-langs/?username=${profileData.username}&layout=compact&theme=${options.theme}"/> <br>`
       : '<br>'
   }
   ${

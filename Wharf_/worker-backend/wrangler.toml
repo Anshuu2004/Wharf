@@ -4,8 +4,8 @@ compatibility_date = "2024-09-23"
 compatibility_flags = [ "nodejs_compat" ]
 
 
-# [vars]
-# MY_VARIABLE = "production_value"
+[vars]
+FRONTEND_URL = "https://trywharf.vercel.app"
 
 [observability]
 enabled = false
