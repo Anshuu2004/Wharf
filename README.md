@@ -2,8 +2,7 @@
 
 <div align="center">
 
-[![GitHub Stars](https://img.shields.io/github/stars/FrostByte-49/Wharf?style=flat-square&color=yellow)](https://github.com/FrostByte-49/Wharf/stargazers)
-[![License](https://img.shields.io/github/license/FrostByte-49/Wharf?style=flat-square&color=blue)](https://github.com/FrostByte-49/Wharf/blob/main/LICENSE)
+
 [![Language](https://img.shields.io/badge/language-TypeScript-blue?style=flat-square)](https://www.typescriptlang.org/)
 [![Frontend](https://img.shields.io/badge/frontend-React%20%7C%20Vite%20%7C%20Tailwind-61dafb?style=flat-square)](https://react.dev/)
 [![Backend](https://img.shields.io/badge/backend-Express%20%7C%20Prisma%20%7C%20Postgres-3178c6?style=flat-square)](https://expressjs.com/)
