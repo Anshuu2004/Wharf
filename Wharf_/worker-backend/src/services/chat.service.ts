@@ -110,56 +110,54 @@ export class ChatService {
     // Append The Question To History So Vercel SDK Handles It
     const messages = [...history, { role: 'user', content: question }];
 
-    // 4. Generate Stream With Vercel AI SDK
-    const result = streamText({
-      model,
-      system: systemPrompt,
-      messages,
-      onFinish: async (completion) => {
-        try {
-          const prisma = getPrisma(this.dbUrl);
-          // Save The User Message + Assistant Answer To The Database
-          await prisma.chatMessage.createMany({
-            data: [
-              {
-                sessionId,
-                role: 'user',
-                content: question,
-              },
-              {
-                sessionId,
-                role: 'assistant',
-                content: completion.text,
-                tokens: completion.usage?.totalTokens || 0,
-              },
-            ],
-          });
-
-          // Also Save Chat Analytics
-          await prisma.chatAnalytics.create({
-            data: {
-              sessionId,
-              totalTokens: completion.usage?.totalTokens || 0,
-              totalMessages: 2,
-              avgResponseTime: 0,
-            },
-          });
-
-          if (userId && completion.usage?.totalTokens) {
-            // Permanently Bank These Tokens
-            const chatTokens = completion.usage.totalTokens;
-            await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${chatTokens}, "lifetimeChats" = "lifetimeChats" + 1 WHERE id = ${userId}`;
-            await recordDailyGeneration(this.dbUrl, userId);
+    // 4. Generate Stream With Vercel AI SDK — With Provider Fallback
+    let result;
+    try {
+      result = streamText({
+        model,
+        system: systemPrompt,
+        messages,
+        onFinish: async (completion) => {
+          try {
+            const prisma = getPrisma(this.dbUrl);
+            await prisma.chatMessage.createMany({
+              data: [
+                { sessionId, role: 'user', content: question },
+                { sessionId, role: 'assistant', content: completion.text, tokens: completion.usage?.totalTokens || 0 },
+              ],
+            });
+            await prisma.chatAnalytics.create({
+              data: { sessionId, totalTokens: completion.usage?.totalTokens || 0, totalMessages: 2, avgResponseTime: 0 },
+            });
+            if (userId && completion.usage?.totalTokens) {
+              const chatTokens = completion.usage.totalTokens;
+              await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${chatTokens}, "lifetimeChats" = "lifetimeChats" + 1 WHERE id = ${userId}`;
+              await recordDailyGeneration(this.dbUrl, userId);
+            }
+          } catch (dbError) {
+            console.error('[ChatService] Error saving message or analytics to DB:', dbError);
           }
-        } catch (dbError) {
-          console.error('[ChatService] Error saving message or analytics to DB:', dbError);
-        }
-      },
-    });
+        },
+      });
+    } catch (initError: any) {
+      // Error Before Streaming Even Starts (e.g. Invalid Model Config)
+      throw initError;
+    }
 
-    // Return The Result Directly Rather Than toDataStreamResponse
     return result;
   }
+
+  // Helper: Is This A VPN/Access-Blocked Error We Should Surface As-Is?
+  static isVpnOrAccessError(error: any): boolean {
+    const status = error?.statusCode ?? error?.status;
+    const body = typeof error?.responseBody === 'string' ? error.responseBody : '';
+    const msg = error?.message ?? '';
+    return (
+      status === 403 ||
+      body.includes('Access denied') ||
+      msg.includes('Forbidden') ||
+      msg.includes('Access denied') ||
+      msg.includes('403')
+    );
+  }
 }
-
-

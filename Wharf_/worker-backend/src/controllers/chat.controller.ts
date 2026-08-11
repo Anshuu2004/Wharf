@@ -43,7 +43,7 @@ export const sendMessage = async (c: AppContext) => {
         data: {
           id: sessionId,
           userId,
-          title: 'Chat Session',
+          title: repoData ? `${repoData.owner}/${repoData.name}` : (question.slice(0, 30) + (question.length > 30 ? '...' : '')),
           repoUrl,
           repoData: repoData || undefined,
         },
@@ -69,12 +69,22 @@ export const sendMessage = async (c: AppContext) => {
     c.header('Cache-Control', 'no-cache');
     c.header('Connection', 'keep-alive');
     return stream(c, async (streamStr) => {
-      for await (const textPart of result.textStream) {
-        const escapedText = JSON.stringify({ text: textPart });
-        await streamStr.write(`data: ${escapedText}\n\n`);
+      try {
+        for await (const textPart of result.textStream) {
+          const escapedText = JSON.stringify({ text: textPart });
+          await streamStr.write(`data: ${escapedText}\n\n`);
+        }
+        await streamStr.write('data: "[DONE]"\n\n');
+      } catch (streamError: any) {
+        // Mid-Stream Error (e.g. Groq 403 Blocked By VPN)
+        const isVpn = ChatService.isVpnOrAccessError(streamError);
+        const errorMsg = isVpn
+          ? 'Connection Blocked By Groq. Please Turn Off Your VPN And Try Again.'
+          : (streamError?.message || 'Stream Failed Unexpectedly.');
+        await streamStr.write(`data: ${JSON.stringify({ error: errorMsg })}\n\n`);
+        await streamStr.write('data: "[DONE]"\n\n');
+        loggerService.error('chat.stream.error', 'Mid-stream error in chat', streamError);
       }
-
-      await streamStr.write('data: "[DONE]"\n\n');
 
       loggerService.info('chat.generation.completed', 'Chat generated successfully', {
         repository: repoUrl,

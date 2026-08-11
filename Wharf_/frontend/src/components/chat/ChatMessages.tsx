@@ -15,6 +15,7 @@ interface Message {
 interface ChatMessagesProps {
   messages: Message[];
   isLoading: boolean;
+  isFetchingSession?: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement>;
   onQuickPromptSelect?: (prompt: string) => void;
   onEditMessage?: (msgId: string, newContent: string) => void;
@@ -23,10 +24,41 @@ interface ChatMessagesProps {
 export const ChatMessages = ({
   messages,
   isLoading,
+  isFetchingSession,
   messagesEndRef,
   onQuickPromptSelect,
   onEditMessage,
 }: ChatMessagesProps) => {
+  if (isFetchingSession) {
+    return (
+      <div className="space-y-6">
+        {[1, 2].map((i) => (
+          <div key={i} className="flex flex-col space-y-4">
+            {/* User Message Skeleton */}
+            <div className="flex justify-end pr-2">
+              <div className="w-2/3 max-w-xl border-2 border-wharf-border-primary bg-wharf-surface-secondary/40 p-4 rounded-xl rounded-tr-none animate-pulse">
+                <div className="h-4 bg-wharf-border-secondary rounded w-full mb-2" />
+                <div className="h-4 bg-wharf-border-secondary rounded w-5/6" />
+              </div>
+            </div>
+            {/* Bot Message Skeleton */}
+            <div className="flex justify-start">
+              <div className="flex gap-4 w-full">
+                <div className="w-10 h-10 border-2 border-wharf-border-primary bg-wharf-surface-secondary rounded-md flex-shrink-0 animate-pulse" />
+                <div className="flex-1 max-w-2xl border-2 border-wharf-border-primary bg-wharf-surface-primary p-4 rounded-xl rounded-tl-none animate-pulse">
+                  <div className="h-4 bg-wharf-border-secondary rounded w-3/4 mb-3" />
+                  <div className="h-4 bg-wharf-border-secondary rounded w-full mb-2" />
+                  <div className="h-4 bg-wharf-border-secondary rounded w-5/6 mb-2" />
+                  <div className="h-4 bg-wharf-border-secondary rounded w-4/6" />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   if (messages.length === 0) {
     return (
       <div className="h-full flex flex-col justify-between">

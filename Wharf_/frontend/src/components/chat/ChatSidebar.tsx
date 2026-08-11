@@ -34,11 +34,13 @@ interface ChatSidebarProps {
   onRenameSession?: (id: string, newTitle: string) => void;
   onPinSession?: (id: string) => void;
   onUnpinSession?: (id: string) => void;
+  isLoading?: boolean;
 }
 
 export const ChatSidebar = ({
   sessions,
   currentSessionId,
+  isLoading,
   onNewChat,
   onSelectSession,
   onDeleteSession,
@@ -150,6 +152,28 @@ export const ChatSidebar = ({
     setDropdownOpen(null);
   };
 
+  // Skeleton Card Component
+  const SkeletonCard = () => (
+    <div className="p-3 border-2 border-wharf-border-primary/60 rounded-xl animate-pulse">
+      <div className="flex flex-col">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="h-3.5 bg-wharf-border-secondary rounded w-3/4" />
+            </div>
+            <div className="h-2.5 bg-wharf-border-secondary rounded w-5/6" />
+          </div>
+          <div className="flex-shrink-0 ml-2">
+            <div className="w-6 h-6 bg-wharf-border-secondary rounded" />
+          </div>
+        </div>
+        <div className="flex justify-end mt-1">
+          <div className="h-2.5 bg-wharf-border-secondary rounded w-10" />
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="h-full flex flex-col bg-wharf-surface-secondary">
       {/* Delete Confirmation Dialog */}
@@ -214,7 +238,18 @@ export const ChatSidebar = ({
 
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-hidden">
-        {sortedSessions.length === 0 ? (
+        {isLoading ? (
+          // Enhanced Skeleton Cards
+          <>
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </>
+        ) : sortedSessions.length === 0 ? (
           <div className="text-center py-8">
             <MessageSquare className="w-8 h-8 text-wharf-text-secondary mx-auto mb-2" />
             <p className="text-xs font-mono text-wharf-text-secondary capitalize">
@@ -354,7 +389,7 @@ export const ChatSidebar = ({
       {/* Footer */}
       <div className="p-3 border-t-2 border-wharf-border-primary">
         <div className="text-[9px] font-mono text-wharf-text-secondary text-center capitalize">
-          {sortedSessions.length} conversation{sortedSessions.length !== 1 ? 's' : ''}
+          {isLoading ? 'Loading conversations...' : `${sortedSessions.length} conversation${sortedSessions.length !== 1 ? 's' : ''}`}
         </div>
       </div>
     </div>
