@@ -5,9 +5,11 @@ import { MemoryRouter } from 'react-router-dom';
 import { ToastProvider } from '../../src/components/ui/ToastProvider';
 
 vi.mock('../../src/stores/authStore', () => ({
-  useAuthStore: vi.fn(() => ({
+  useAuthStore: Object.assign(vi.fn(() => ({
     user: { username: 'testuser' },
-  })),
+  })), {
+    getState: vi.fn(() => ({ token: 'fake-token' }))
+  }),
 }));
 
 describe('GeneratorPage', () => {
@@ -26,3 +28,4 @@ describe('GeneratorPage', () => {
     expect(screen.getAllByText(/Generate Professional/i).length).toBeGreaterThan(0);
   });
 });
+
