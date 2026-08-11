@@ -7,7 +7,7 @@
 [![Language](https://img.shields.io/badge/language-TypeScript-blue?style=flat-square)](https://www.typescriptlang.org/)
 [![Frontend](https://img.shields.io/badge/frontend-React%20%7C%20Vite%20%7C%20Tailwind-61dafb?style=flat-square)](https://react.dev/)
 [![Backend](https://img.shields.io/badge/backend-Express%20%7C%20Prisma%20%7C%20Postgres-3178c6?style=flat-square)](https://expressjs.com/)
-[![AI Integration](https://img.shields.io/badge/AI-OpenAI%20%7C%20Anthropic-orange?style=flat-square)](https://openai.com/)
+[![AI Integration](https://img.shields.io/badge/AI-Gemini%20%7C%20Groq%20%7C%20OpenAI%20%7C%20Anthropic-orange?style=flat-square)](https://openai.com/)
 [![Last Commit](https://img.shields.io/github/last-commit/FrostByte-49/Wharf?style=flat-square&color=green)](https://github.com/FrostByte-49/Wharf/commits/main)
 [![Issues](https://img.shields.io/github/issues/FrostByte-49/Wharf?style=flat-square&color=red)](https://github.com/FrostByte-49/Wharf/issues)
 [![Pull Requests](https://img.shields.io/github/issues-pr/FrostByte-49/Wharf?style=flat-square&color=purple)](https://github.com/FrostByte-49/Wharf/pulls)
