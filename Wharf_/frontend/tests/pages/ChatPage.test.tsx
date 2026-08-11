@@ -5,12 +5,14 @@ import { MemoryRouter } from 'react-router-dom';
 import { ToastProvider } from '../../src/components/ui/ToastProvider';
 
 // Explicitly Mock AuthStore So API Handlers Don't Crash
-vi.mock('../../src/stores/authStore', () => ({
-  useAuthStore: vi.fn(() => ({
-    user: { username: 'testuser' },
-    token: 'fake-token'
-  })),
-}));
+vi.mock('../../src/stores/authStore', () => {
+  const storeState = { user: { username: 'testuser' }, token: 'fake-token' };
+  return {
+    useAuthStore: Object.assign(vi.fn(() => storeState), {
+      getState: () => storeState,
+    }),
+  };
+});
 
 describe('ChatPage', () => {
   beforeEach(() => {
