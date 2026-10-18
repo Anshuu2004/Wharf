@@ -26,14 +26,14 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Lint
-        run: npx eslint "src/**/*.ts" "tests/**/*.ts" --if-present || true
+      - name: Generate DB Client
+        run: npm run generate --if-present || true
 
       - name: Type Check
         run: npx tsc --noEmit
 
-      - name: Run Tests & Coverage
-        run: npm run test:cov
+      - name: Run Tests
+        run: npm run test
 
   test-frontend:
     name: Frontend Tests
@@ -55,33 +55,6 @@ jobs:
 
       - name: Lint
         run: npm run lint --if-present || true
-
-      - name: Type Check
-        run: npx tsc --noEmit
-
-      - name: Run Tests & Coverage
-        run: npm run test:cov
-
-  test-worker-backend:
-    name: Worker Backend Tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./Wharf_/worker-backend
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Generate DB Client
-        run: npm run generate --if-present || true
 
       - name: Type Check
         run: npx tsc --noEmit

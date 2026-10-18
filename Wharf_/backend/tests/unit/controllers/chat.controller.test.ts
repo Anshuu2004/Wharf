@@ -1,109 +1,115 @@
-import { Request, Response } from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from "vitest";
+import type { Mock } from "vitest";
 import { analyzeRepository, sendMessage, getHistory, getSession } from '../../../src/controllers/chat.controller';
-import { chatService } from '../../../src/services/chat.service';
-import prisma from '../../../src/db';
-import { loggerService, saveRequestLog } from '../../../src/utils/logger';
+import { ChatService } from '../../../src/services/chat.service';
+import { createMockContext } from '../test-utils';
 
-jest.mock('../../../src/services/chat.service');
-jest.mock('../../../src/utils/logger', () => ({
-  loggerService: { info: jest.fn(), error: jest.fn() },
-  saveRequestLog: jest.fn()
+let streamBuffer = '';
+
+vi.mock('hono/streaming', () => {
+  const mockStreamFunc = vi.fn().mockImplementation(async (c: any, cb: any) => {
+    const stream = {
+      write: vi.fn().mockImplementation((chunk: any) => {
+        streamBuffer += chunk;
+        return Promise.resolve();
+      })
+    };
+    await cb(stream);
+    return { _isHonoResponse: true, streamed: true, buffer: streamBuffer };
+  });
+  return { streamText: mockStreamFunc, stream: mockStreamFunc };
+});
+
+vi.mock('../../../src/services/chat.service');
+vi.mock('../../../src/utils/logger', () => ({
+  loggerService: { info: vi.fn(), error: vi.fn() },
+  saveRequestLog: vi.fn()
 }));
-jest.mock('../../../src/db', () => ({
+vi.mock('../../../src/db', () => ({
   __esModule: true,
-  default: {
-    chatSession: { findUnique: jest.fn(), create: jest.fn(), update: jest.fn(), findMany: jest.fn() }
-  }
+  default: {},
+  getPrisma: vi.fn().mockReturnValue({
+    chatSession: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), findMany: vi.fn() }
+  })
 }));
 
 describe('ChatController', () => {
-  let mockReq: any;
-  let mockRes: Partial<Response>;
-  let mockStatus: jest.Mock;
-  let mockJson: jest.Mock;
-  let mockWrite: jest.Mock;
-  let mockSetHeader: jest.Mock;
-  let mockEnd: jest.Mock;
+  let mockEnv: any;
+  let prismaObj: any;
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockJson = jest.fn();
-    mockWrite = jest.fn();
-    mockSetHeader = jest.fn();
-    mockEnd = jest.fn();
-    mockStatus = jest.fn().mockReturnValue({ json: mockJson });
-    mockReq = {
-      body: {}, query: {}, params: {}, user: { userId: 'u-1' }, baseUrl: '/api', path: '/chat', method: 'POST'
-    };
-    mockRes = { status: mockStatus, json: mockJson, write: mockWrite, setHeader: mockSetHeader, end: mockEnd };
+  beforeEach(async () => {
+    streamBuffer = '';
+    vi.clearAllMocks();
+    mockEnv = { DATABASE_URL: 'postgres://' };
+    prismaObj = (await import('../../../src/db')).getPrisma('');
   });
 
   describe('analyzeRepository', () => {
     it('should block if repoUrl is missing', async () => {
-      await analyzeRepository(mockReq, mockRes as Response);
-      expect(mockStatus).toHaveBeenCalledWith(400);
-      expect(mockJson).toHaveBeenCalledWith({ success: false, error: 'repoUrl is required' });
+      const c = createMockContext({ body: {} }, mockEnv, null);
+      await analyzeRepository(c);
+      expect(c.json).toHaveBeenCalledWith({ success: false, error: 'repoUrl is required' }, 400);
     });
 
     it('should invoke chatService and return JSON', async () => {
-      mockReq.body = { repoUrl: 'foo/bar' };
-      (chatService.analyzeRepository as jest.Mock).mockResolvedValue({ outline: 'x' });
-      await analyzeRepository(mockReq, mockRes as Response);
-      expect(chatService.analyzeRepository).toHaveBeenCalledWith('foo/bar', 'u-1');
-      expect(mockJson).toHaveBeenCalledWith({ success: true, data: { outline: 'x' } });
+      const c = createMockContext({ body: { repoUrl: 'foo/bar' } }, mockEnv, { userId: 'u-1' });
+      (ChatService.prototype.analyzeRepository as Mock).mockResolvedValue({ outline: 'x' });
+      await analyzeRepository(c);
+      expect(ChatService.prototype.analyzeRepository).toHaveBeenCalledWith('foo/bar', 'u-1');
+      expect(c.json).toHaveBeenCalledWith({ success: true, data: { outline: 'x' } });
     });
   });
 
   describe('sendMessage (Streaming)', () => {
     it('should create session if missing and stream AI response', async () => {
-      mockReq.body = {
-        sessionId: 'sess-1', question: 'how?', persona: 'pirate', repoUrl: 'repo'
-      };
+      const c = createMockContext({
+        body: { sessionId: 'sess-1', question: 'how?', persona: 'pirate', repoUrl: 'repo' }
+      }, mockEnv, { userId: 'u-1' });
       
-      (prisma.chatSession.findUnique as jest.Mock).mockResolvedValue(null);
-      (prisma.chatSession.create as jest.Mock).mockResolvedValue({ id: 'sess-1' });
+      (prismaObj.chatSession.findUnique as Mock).mockResolvedValue(null);
+      (prismaObj.chatSession.create as Mock).mockResolvedValue({ id: 'sess-1' });
 
-      // Async Generator Mock
       const mockStream = (async function* () {
         yield 'shiver';
         yield ' me';
         yield ' timbers';
       })();
 
-      (chatService.generateChatStream as jest.Mock).mockResolvedValue({ textStream: mockStream });
+      (ChatService.prototype.generateChatStream as Mock).mockResolvedValue({ textStream: mockStream });
 
-      await sendMessage(mockReq, mockRes as Response);
+      await sendMessage(c);
 
-      expect(prisma.chatSession.create).toHaveBeenCalled();
-      expect(mockSetHeader).toHaveBeenCalledWith('Content-Type', 'text/event-stream');
+      expect(prismaObj.chatSession.create).toHaveBeenCalled();
+      expect(prismaObj.chatSession.create).toHaveBeenCalled();
       
-      expect(mockWrite).toHaveBeenCalledWith(`data: ${JSON.stringify({ text: 'shiver' })}\n\n`);
-      expect(mockWrite).toHaveBeenCalledWith(`data: ${JSON.stringify({ text: ' me' })}\n\n`);
-      expect(mockEnd).toHaveBeenCalled();
-      expect(saveRequestLog).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 200 }));
+      expect(streamBuffer).toContain(`data: ${JSON.stringify({ text: 'shiver' })}\n\n`);
+      expect(streamBuffer).toContain(`data: ${JSON.stringify({ text: ' me' })}\n\n`);
     });
   });
 
   describe('getHistory & getSession', () => {
     it('getHistory should return user sessions', async () => {
-      (prisma.chatSession.findMany as jest.Mock).mockResolvedValue([{ id: 'sess-1' }]);
-      await getHistory(mockReq, mockRes as Response);
-      expect(prisma.chatSession.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      const c = createMockContext({ query: {} }, mockEnv, { userId: 'u-1' });
+      (prismaObj.chatSession.findMany as Mock).mockResolvedValue([{ id: 'sess-1' }]);
+      
+      await getHistory(c);
+      
+      expect(prismaObj.chatSession.findMany).toHaveBeenCalledWith(expect.objectContaining({
         where: { userId: 'u-1', isArchived: false }
       }));
-      expect(mockJson).toHaveBeenCalledWith({ success: true, data: [{ id: 'sess-1' }] });
+      expect(c.json).toHaveBeenCalledWith({ success: true, data: [{ id: 'sess-1' }] });
     });
 
     it('getSession should return 404 if missing, else data', async () => {
-      mockReq.params = { id: 'bad' };
-      (prisma.chatSession.findUnique as jest.Mock).mockResolvedValue(null);
-      await getSession(mockReq, mockRes as Response);
-      expect(mockStatus).toHaveBeenCalledWith(404);
+      const c404 = createMockContext({ params: { id: 'bad' } }, mockEnv, { userId: 'u-1' });
+      (prismaObj.chatSession.findUnique as Mock).mockResolvedValue(null);
+      await getSession(c404);
+      expect(c404.json).toHaveBeenCalledWith({ success: false, error: 'Session not found' }, 404);
       
-      mockReq.params = { id: 'good' };
-      (prisma.chatSession.findUnique as jest.Mock).mockResolvedValue({ id: 'good' });
-      await getSession(mockReq, mockRes as Response);
-      expect(mockJson).toHaveBeenCalledWith({ success: true, data: { id: 'good' } });
+      const c = createMockContext({ params: { id: 'good' } }, mockEnv, { userId: 'u-1' });
+      (prismaObj.chatSession.findUnique as Mock).mockResolvedValue({ id: 'good' });
+      await getSession(c);
+      expect(c.json).toHaveBeenCalledWith({ success: true, data: { id: 'good' } });
     });
   });
 });

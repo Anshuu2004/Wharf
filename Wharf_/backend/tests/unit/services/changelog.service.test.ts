@@ -1,23 +1,28 @@
+import type { Mock } from "vitest";
 import { ChangelogService } from '../../../src/services/changelog.service';
 import { GithubService } from '../../../src/services/github.service';
 import { AiService } from '../../../src/services/ai.service';
 import { cacheService } from '../../../src/services/cache.service';
 import prisma from '../../../src/db';
 
-jest.mock('../../../src/services/github.service');
-jest.mock('../../../src/services/ai.service');
-jest.mock('../../../src/services/cache.service');
-jest.mock('../../../src/db', () => ({
-  __esModule: true,
-  default: {
+vi.mock('../../../src/services/github.service');
+vi.mock('../../../src/services/ai.service');
+vi.mock('../../../src/services/cache.service');
+vi.mock('../../../src/db', () => {
+  const prismaObj = {
     changelog: {
-      findMany: jest.fn(),
-      delete: jest.fn(),
-      count: jest.fn(),
+      findMany: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
     },
-    $executeRaw: jest.fn(),
-  }
-}));
+    $executeRaw: vi.fn(),
+  };
+  return {
+    __esModule: true,
+    default: prismaObj,
+    getPrisma: vi.fn().mockReturnValue(prismaObj),
+  };
+});
 
 describe('ChangelogService', () => {
   let changelogService: ChangelogService;
@@ -25,10 +30,10 @@ describe('ChangelogService', () => {
   let mockAiService: AiService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockGithubService = new GithubService();
-    mockAiService = new AiService();
-    changelogService = new ChangelogService(mockGithubService, mockAiService);
+    mockAiService = new AiService('mock-db-url');
+    changelogService = new ChangelogService(mockGithubService, mockAiService, 'mock-db-url');
   });
 
   describe('extractOwnerRepo', () => {
@@ -45,7 +50,7 @@ describe('ChangelogService', () => {
   describe('getCommitStats', () => {
     it('should return cached stats if present', async () => {
       const mockStats = { totalCommits: 50 };
-      (cacheService.getChangelogStats as jest.Mock).mockResolvedValue(mockStats);
+      (cacheService.getChangelogStats as Mock).mockResolvedValue(mockStats);
       
       const res = await changelogService.getCommitStats('https://github.com/foo/bar');
       expect(res).toEqual(mockStats);
@@ -53,7 +58,7 @@ describe('ChangelogService', () => {
     });
 
     it('should fetch and generate stats correctly when cache misses', async () => {
-      (cacheService.getChangelogStats as jest.Mock).mockResolvedValue(null);
+      (cacheService.getChangelogStats as Mock).mockResolvedValue(null);
       
       const mockCommits = [
         { type: 'feat', author: { date: '2026-07-27T10:00:00Z' } },
@@ -61,9 +66,9 @@ describe('ChangelogService', () => {
         { type: 'fix', author: { date: '2026-07-29T10:00:00Z' } }
       ];
       
-      (mockGithubService.getCommits as jest.Mock).mockResolvedValue(mockCommits);
-      (mockGithubService.getContributors as jest.Mock).mockResolvedValue(['dev1', 'dev2']);
-      (mockGithubService.getTags as jest.Mock).mockResolvedValue(['v1.0.0']);
+      (mockGithubService.getCommits as Mock).mockResolvedValue(mockCommits);
+      (mockGithubService.getContributors as Mock).mockResolvedValue(['dev1', 'dev2']);
+      (mockGithubService.getTags as Mock).mockResolvedValue(['v1.0.0']);
 
       const res = await changelogService.getCommitStats('https://github.com/foo/bar');
       expect(res.totalCommits).toBe(3);
@@ -80,9 +85,9 @@ describe('ChangelogService', () => {
       const mockCommits = [
         { type: 'feat', sha: '123', message: 'Added a feature', subject: 'feat', author: {} }
       ];
-      (mockGithubService.getCommits as jest.Mock).mockResolvedValue(mockCommits);
-      (mockGithubService.getTags as jest.Mock).mockResolvedValue(['v1']);
-      (mockAiService.generateChangelogStream as jest.Mock).mockResolvedValue({ stream: 'stream-obj', provider: 'GEMINI' });
+      (mockGithubService.getCommits as Mock).mockResolvedValue(mockCommits);
+      (mockGithubService.getTags as Mock).mockResolvedValue(['v1']);
+      (mockAiService.generateChangelogStream as Mock).mockResolvedValue({ stream: 'stream-obj', provider: 'GEMINI' });
 
       const res = await changelogService.generateChangelog('https://github.com/f/b', { 
         includeTags: true, 
@@ -98,7 +103,7 @@ describe('ChangelogService', () => {
 
   describe('deleteChangelog', () => {
     it('should safely execute raw logic and delete', async () => {
-      (prisma.changelog.count as jest.Mock).mockResolvedValue(5);
+      (prisma.changelog.count as Mock).mockResolvedValue(5);
       await changelogService.deleteChangelog('c-1', 'u-1');
       expect(prisma.$executeRaw).toHaveBeenCalled();
       expect(prisma.changelog.delete).toHaveBeenCalledWith({ where: { id: 'c-1', userId: 'u-1' } });

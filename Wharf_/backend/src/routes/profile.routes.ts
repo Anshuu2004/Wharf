@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 import {
   getProfile,
   generate,
@@ -7,23 +7,13 @@ import {
   deleteProfileItem,
 } from '../controllers/profile.controller';
 import { auth, requireAuth } from '../middleware/auth.middleware';
-import { generationLimiter } from '../middleware/rateLimiter';
+import { Bindings } from '../index';
 
-const router = Router();
+type Variables = { user: any; contextStore: any };
+export const profileRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
-// GET /api/profile/history
-router.get('/history', auth, requireAuth, getHistory);
-
-// GET /api/profile/:username
-router.get('/:username', auth, getProfile);
-
-// POST /api/profile/generate
-router.post('/generate', generationLimiter, auth, generate);
-
-// GET /api/profile/stats
-router.get('/stats', auth, requireAuth, getStats);
-
-// DELETE /api/profile/:id
-router.delete('/:id', auth, requireAuth, deleteProfileItem);
-
-export default router;
+profileRoutes.get('/history', auth, requireAuth, getHistory);
+profileRoutes.get('/:username', auth, getProfile);
+profileRoutes.post('/generate', auth, generate);
+profileRoutes.get('/stats', auth, requireAuth, getStats);
+profileRoutes.delete('/:id', auth, requireAuth, deleteProfileItem);

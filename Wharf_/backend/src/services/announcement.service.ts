@@ -1,7 +1,12 @@
-import prisma from '../db';
+import { getPrisma } from '../db';
 import { AnnouncementType } from '@prisma/client';
 
 export class AnnouncementService {
+  private dbUrl: string;
+
+  constructor(dbUrl: string) {
+    this.dbUrl = dbUrl;
+  }
   // Admin Methods
   async createAnnouncement(data: {
     title: string;
@@ -11,6 +16,7 @@ export class AnnouncementService {
     isPublished?: boolean;
     isPinned?: boolean;
   }) {
+    const prisma = getPrisma(this.dbUrl);
     return prisma.announcement.create({
       data: {
         ...data,
@@ -20,6 +26,7 @@ export class AnnouncementService {
   }
 
   async updateAnnouncement(id: string, data: any) {
+    const prisma = getPrisma(this.dbUrl);
     return prisma.announcement.update({
       where: { id },
       data,
@@ -27,6 +34,7 @@ export class AnnouncementService {
   }
 
   async togglePublish(id: string, isPublished: boolean) {
+    const prisma = getPrisma(this.dbUrl);
     return prisma.announcement.update({
       where: { id },
       data: {
@@ -37,12 +45,14 @@ export class AnnouncementService {
   }
 
   async deleteAnnouncement(id: string) {
+    const prisma = getPrisma(this.dbUrl);
     return prisma.announcement.delete({
       where: { id },
     });
   }
 
   async getAllAdminAnnouncements() {
+    const prisma = getPrisma(this.dbUrl);
     return prisma.announcement.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
@@ -57,6 +67,7 @@ export class AnnouncementService {
   async getUserNotifications(userId: string, page = 1, limit = 50) {
     const skip = (page - 1) * limit;
     const now = new Date();
+    const prisma = getPrisma(this.dbUrl);
 
     const announcements = await prisma.announcement.findMany({
       where: {
@@ -84,6 +95,7 @@ export class AnnouncementService {
 
   async getUnreadCount(userId: string) {
     const now = new Date();
+    const prisma = getPrisma(this.dbUrl);
     return prisma.announcement.count({
       where: {
         isPublished: true,
@@ -96,6 +108,7 @@ export class AnnouncementService {
   }
 
   async markAsRead(userId: string, announcementId: string) {
+    const prisma = getPrisma(this.dbUrl);
     return prisma.announcementRead.upsert({
       where: {
         userId_announcementId: { userId, announcementId },
@@ -107,6 +120,7 @@ export class AnnouncementService {
 
   async markAllAsRead(userId: string) {
     const now = new Date();
+    const prisma = getPrisma(this.dbUrl);
     const unread = await prisma.announcement.findMany({
       where: {
         isPublished: true,
@@ -130,4 +144,4 @@ export class AnnouncementService {
   }
 }
 
-export const announcementService = new AnnouncementService();
+

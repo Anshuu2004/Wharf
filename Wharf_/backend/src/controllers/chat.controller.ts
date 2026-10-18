@@ -1,53 +1,61 @@
-import { Request, Response } from 'express';
-import { chatService, ChatService } from '../services/chat.service';
-import prisma from '../db';
+import { Context } from 'hono';
+import { stream } from 'hono/streaming';
+import { ChatService } from '../services/chat.service';
+import { getPrisma } from '../db';
 import { loggerService, saveRequestLog } from '../utils/logger';
+import { Bindings } from '../index';
 
-export const analyzeRepository = async (req: Request, res: Response) => {
+type AppContext = Context<{ Bindings: Bindings; Variables: { user: any; contextStore: any } }>;
+
+export const analyzeRepository = async (c: AppContext) => {
   try {
-    const { repoUrl } = req.body;
-    const userId = (req as any).user?.userId || (req as any).user?.id;
+    const body = await c.req.json().catch(() => ({}));
+    const { repoUrl } = body;
+    const user = c.get('user');
+    const userId = user?.userId || user?.id;
 
-    if (!repoUrl) return res.status(400).json({ success: false, error: 'repoUrl is required' });
+    if (!repoUrl) return c.json({ success: false, error: 'repoUrl is required' }, 400);
 
+    const chatService = new ChatService(c.env.DATABASE_URL);
     const data = await chatService.analyzeRepository(repoUrl, userId);
-    res.json({ success: true, data });
+    return c.json({ success: true, data });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    return c.json({ success: false, error: error.message }, 500);
   }
 };
 
-export const sendMessage = async (req: Request, res: Response) => {
+export const sendMessage = async (c: AppContext) => {
   const reqStart = Date.now();
-  const reqId = String((req as any).id);
   try {
-    const { sessionId, question, persona, repoUrl, history = [] } = req.body;
-
-    const userId = (req as any).user?.userId || (req as any).user?.id;
+    const body = await c.req.json().catch(() => ({}));
+    const { sessionId, question, persona, repoUrl, history = [], repoData } = body;
+    const user = c.get('user');
+    const userId = user?.userId || user?.id;
 
     if (!sessionId || !question || !repoUrl || !persona) {
-      return res.status(400).json({ success: false, error: 'Missing required parameters' });
+      return c.json({ success: false, error: 'Missing required parameters' }, 400);
     }
 
-    // Ensure Session Exists Or Create One
+    const prisma = getPrisma(c.env.DATABASE_URL);
     let session = await prisma.chatSession.findUnique({ where: { id: sessionId } });
     if (!session && userId) {
       session = await prisma.chatSession.create({
         data: {
           id: sessionId,
           userId,
-          title: req.body.repoData ? (() => { try { const d = typeof req.body.repoData === 'string' ? JSON.parse(req.body.repoData) : req.body.repoData; return d?.owner && d?.name ? `${d.owner}/${d.name}` : question.slice(0, 30); } catch { return question.slice(0, 30); } })() : question.slice(0, 30),
+          title: repoData ? `${repoData.owner}/${repoData.name}` : (question.slice(0, 30) + (question.length > 30 ? '...' : '')),
           repoUrl,
-          repoData: req.body.repoData || undefined,
+          repoData: repoData || undefined,
         },
       });
-    } else if (session && req.body.repoData && !session.repoData) {
+    } else if (session && repoData && !session.repoData) {
       session = await prisma.chatSession.update({
         where: { id: sessionId },
-        data: { repoData: req.body.repoData, repoUrl },
+        data: { repoData, repoUrl },
       });
     }
 
+    const chatService = new ChatService(c.env.DATABASE_URL);
     const result = await chatService.generateChatStream(
       repoUrl,
       question,
@@ -57,68 +65,70 @@ export const sendMessage = async (req: Request, res: Response) => {
       userId
     );
 
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-
-    try {
-      for await (const textPart of result.textStream) {
-        const escapedText = JSON.stringify({ text: textPart });
-        res.write(`data: ${escapedText}\n\n`);
+    c.header('Content-Type', 'text/event-stream');
+    c.header('Cache-Control', 'no-cache');
+    c.header('Connection', 'keep-alive');
+    return stream(c, async (streamStr) => {
+      try {
+        for await (const textPart of result.textStream) {
+          const escapedText = JSON.stringify({ text: textPart });
+          await streamStr.write(`data: ${escapedText}\n\n`);
+        }
+        await streamStr.write('data: "[DONE]"\n\n');
+      } catch (streamError: any) {
+        // Mid-Stream Error (e.g. Groq 403 Blocked By VPN)
+        const isVpn = ChatService.isVpnOrAccessError(streamError);
+        const errorMsg = isVpn
+          ? 'Connection Blocked By Groq. Please Turn Off Your VPN And Try Again.'
+          : (streamError?.message || 'Stream Failed Unexpectedly.');
+        await streamStr.write(`data: ${JSON.stringify({ error: errorMsg })}\n\n`);
+        await streamStr.write('data: "[DONE]"\n\n');
+        loggerService.error('chat.stream.error', 'Mid-stream error in chat', streamError);
       }
-      res.write('data: "[DONE]"\n\n');
-      res.end();
-    } catch (streamError: any) {
-      // Mid-Stream Error (e.g. Groq 403 Blocked By VPN)
-      const isVpn = ChatService.isVpnOrAccessError(streamError);
-      const errorMsg = isVpn
-        ? 'Connection Blocked By Groq. Please Turn Off Your VPN And Try Again.'
-        : (streamError?.message || 'Stream Failed Unexpectedly.');
-      res.write(`data: ${JSON.stringify({ error: errorMsg })}\n\n`);
-      res.write('data: "[DONE]"\n\n');
-      res.end();
-      loggerService.error('chat.stream.error', 'Mid-stream error in chat', streamError);
-    }
 
-    loggerService.info('chat.generation.completed', 'Chat generated successfully', {
-      repository: repoUrl,
-      durationMs: Date.now() - reqStart,
-    });
-    await saveRequestLog({
-      route: req.baseUrl + req.path,
-      method: req.method,
-      feature: 'CHAT',
-      statusCode: 200,
-      cacheHit: false,
-      totalDurationMs: Date.now() - reqStart,
+      loggerService.info('chat.generation.completed', 'Chat generated successfully', {
+        repository: repoUrl,
+        durationMs: Date.now() - reqStart,
+      });
+      await saveRequestLog({
+        route: c.req.path,
+        method: c.req.method,
+        feature: 'CHAT',
+        statusCode: 200,
+        cacheHit: false,
+        totalDurationMs: Date.now() - reqStart,
+      });
     });
   } catch (error: any) {
     loggerService.error('chat.generation.error', 'Chat generation error', error);
     await saveRequestLog({
-      route: req.baseUrl + req.path,
-      method: req.method,
+      route: c.req.path,
+      method: c.req.method,
       feature: 'CHAT',
       statusCode: 500,
       error: error.message,
       totalDurationMs: Date.now() - reqStart,
     });
-    if (!res.headersSent) {
-      res.status(500).json({ success: false, error: error.message });
-    } else {
-      res.end();
-    }
+    c.header('Content-Type', 'text/event-stream');
+    c.header('Cache-Control', 'no-cache');
+    c.header('Connection', 'keep-alive');
+    return stream(c, async (streamStr) => {
+      await streamStr.write(`data: ${JSON.stringify({ success: false, error: error.message })}\n\n`);
+    });
   }
 };
 
-export const getHistory = async (req: Request, res: Response) => {
+export const getHistory = async (c: AppContext) => {
   try {
-    const userId = (req as any).user?.userId || (req as any).user?.id;
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
+    const user = c.get('user');
+    const userId = user?.userId || user?.id;
+    const page = parseInt(c.req.query('page') || '1');
+    const limit = Math.min(parseInt(c.req.query('limit') || '50'), 200);
     const skip = (page - 1) * limit;
 
-    if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
+    if (!userId) return c.json({ success: false, error: 'Unauthorized' }, 401);
 
+    const prisma = getPrisma(c.env.DATABASE_URL);
     const sessions = await prisma.chatSession.findMany({
       where: { userId, isArchived: false },
       skip,
@@ -132,15 +142,16 @@ export const getHistory = async (req: Request, res: Response) => {
       },
     });
 
-    res.json({ success: true, data: sessions });
+    return c.json({ success: true, data: sessions });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    return c.json({ success: false, error: error.message }, 500);
   }
 };
 
-export const getSession = async (req: Request, res: Response) => {
+export const getSession = async (c: AppContext) => {
   try {
-    const { id } = req.params;
+    const id = c.req.param('id');
+    const prisma = getPrisma(c.env.DATABASE_URL);
     const session = await prisma.chatSession.findUnique({
       where: { id },
       include: {
@@ -150,9 +161,9 @@ export const getSession = async (req: Request, res: Response) => {
       },
     });
 
-    if (!session) return res.status(404).json({ success: false, error: 'Session not found' });
-    res.json({ success: true, data: session });
+    if (!session) return c.json({ success: false, error: 'Session not found' }, 404);
+    return c.json({ success: true, data: session });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
+    return c.json({ success: false, error: error.message }, 500);
   }
 };

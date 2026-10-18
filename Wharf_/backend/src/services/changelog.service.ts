@@ -7,7 +7,7 @@ import {
   CommitGroup,
   CommitInfo,
 } from '../utils/changelogPromptBuilder';
-import prisma from '../db';
+import { getPrisma } from '../db';
 
 export interface ChangelogStats {
   totalCommits: number;
@@ -22,7 +22,8 @@ export interface ChangelogStats {
 export class ChangelogService {
   constructor(
     private githubService: GithubService,
-    private aiService: AiService
+    private aiService: AiService,
+    private dbUrl: string
   ) {}
 
   async getCommitStats(repoUrl: string, githubToken?: string): Promise<ChangelogStats> {
@@ -101,6 +102,7 @@ export class ChangelogService {
   async getHistory(userId: string, page: number = 1, limit: number = 50) {
     limit = Math.min(limit, 200);
     const skip = (page - 1) * limit;
+    const prisma = getPrisma(this.dbUrl);
     return prisma.changelog.findMany({
       where: { userId },
       skip,
@@ -119,6 +121,7 @@ export class ChangelogService {
   }
 
   async deleteChangelog(id: string, userId: string): Promise<void> {
+    const prisma = getPrisma(this.dbUrl);
     // High-Water Mark Prerequisite Sync: Lock In Current Count
     const dynamicChangelogs = await prisma.changelog.count({ where: { userId } });
     await prisma.$executeRaw`UPDATE "User" SET "lifetimeChangelogs" = GREATEST("lifetimeChangelogs", ${dynamicChangelogs}) WHERE id = ${userId}`;

@@ -1,12 +1,12 @@
 export const aiMock = {
-  generateText: jest.fn(),
-  streamText: jest.fn(),
+  generateText: vi.fn(),
+  streamText: vi.fn(),
 };
 
 export const groqMock = {
   chat: {
     completions: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
   },
 };

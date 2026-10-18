@@ -1,20 +1,12 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 import { generateReadme, getHistory, getHistoryById, deleteHistoryItem } from '../controllers/generate.controller';
 import { auth, requireAuth } from '../middleware/auth.middleware';
-import { generationLimiter } from '../middleware/rateLimiter';
+import { Bindings } from '../index';
 
-const router = Router();
+type Variables = { user: any; contextStore: any };
+export const generateRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
-// POST /api/generate/readme
-router.post('/readme', generationLimiter, auth, generateReadme);
-
-// GET /api/generate/history
-router.get('/history', auth, requireAuth, getHistory);
-
-// GET /api/generate/history/:id
-router.get('/history/:id', auth, requireAuth, getHistoryById);
-
-// DELETE /api/generate/history/:id
-router.delete('/history/:id', auth, requireAuth, deleteHistoryItem);
-
-export default router;
+generateRoutes.post('/readme', auth, generateReadme as any);
+generateRoutes.get('/history', auth, requireAuth, getHistory as any);
+generateRoutes.get('/history/:id', auth, requireAuth, getHistoryById as any);
+generateRoutes.delete('/history/:id', auth, requireAuth, deleteHistoryItem as any);

@@ -47,9 +47,16 @@ coverage/
 *.lcov
 
 # Cache & Build Tools
+.vite/
+vite.config.ts.timestamp-*
+vite.config.js.timestamp-*
 .cache/
 .temp/
 *.tsbuildinfo
+
+# Tailwind / PostCSS / Build Tools
+.postcssrc
+.tailwind.config.js.timestamp-*
 
 # Misc
 *.pem

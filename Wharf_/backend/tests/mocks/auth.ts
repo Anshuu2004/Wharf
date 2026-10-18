@@ -1,16 +1,17 @@
-import { jest } from '@jest/globals';
-import { Request, Response, NextFunction } from 'express';
+import { vi } from 'vitest';
 
 // Comprehensive Mock For Authentication Middleware Components
-export const optionalAuth = jest.fn((req: Request, res: Response, next: NextFunction) => {
+export const optionalAuth = vi.fn(async (c: any, next: any) => {
   // By Default, Just Call Next In Tests Via This Mock
-  next();
+  await next();
 });
 
-export const requireAuth = jest.fn((req: Request, res: Response, next: NextFunction) => {
-  const customReq = req as any;
-  if (!customReq.user) {
-    customReq.user = { id: 'mock-user-cuid', username: 'testuser' };
+export const requireAuth = vi.fn(async (c: any, next: any) => {
+  if (c.get) {
+    const user = c.get('user');
+    if (!user) {
+      c.set('user', { id: 'mock-user-cuid', username: 'testuser' });
+    }
   }
-  next();
+  await next();
 });

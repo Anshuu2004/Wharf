@@ -1,49 +1,36 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Mock } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { requestIdMiddleware } from '../../../src/middleware/requestId.middleware';
 import { v4 as uuidv4 } from 'uuid';
+import { createMockContext } from '../test-utils';
 
-jest.mock('uuid', () => ({
-  v4: jest.fn()
+vi.mock('uuid', () => ({
+  v4: vi.fn()
 }));
 
 describe('RequestId Middleware', () => {
-  let mockReq: any;
-  let mockRes: Partial<Response>;
-  let mockNext: jest.Mock;
-  let mockSetHeader: jest.Mock;
+  let mockNext: Mock;
 
   beforeEach(() => {
-    mockSetHeader = jest.fn();
-    mockReq = { headers: {} };
-    mockRes = { setHeader: mockSetHeader };
-    mockNext = jest.fn();
-    (uuidv4 as jest.Mock).mockReturnValue('generated-uuid-v4');
+    mockNext = vi.fn();
+    (uuidv4 as Mock).mockReturnValue('generated-uuid-v4');
   });
 
-  it('should use existing header if provided', () => {
-    mockReq.headers['x-request-id'] = 'existing-id-123';
+  it('should use existing header if provided', async () => {
+    const c = createMockContext({ headers: { 'x-request-id': 'existing-id-123' } });
+    await requestIdMiddleware(c, mockNext);
     
-    requestIdMiddleware(mockReq as Request, mockRes as Response, mockNext);
-    
-    expect(mockReq.id).toBe('existing-id-123');
-    expect(mockSetHeader).toHaveBeenCalledWith('X-Request-Id', 'existing-id-123');
+    expect(c.set).toHaveBeenCalledWith('requestId', 'existing-id-123');
+    expect(c.header).toHaveBeenCalledWith('X-Request-Id', 'existing-id-123');
     expect(mockNext).toHaveBeenCalled();
   });
 
-  it('should extract first element if header is array', () => {
-    mockReq.headers['x-request-id'] = ['header1', 'header2'];
-    
-    requestIdMiddleware(mockReq as Request, mockRes as Response, mockNext);
-    
-    expect(mockReq.id).toBe('header1');
-    expect(mockSetHeader).toHaveBeenCalledWith('X-Request-Id', 'header1');
-  });
-
-  it('should fallback to generated uuid if not provided', () => {
-    requestIdMiddleware(mockReq as Request, mockRes as Response, mockNext);
+  it('should fallback to generated uuid if not provided', async () => {
+    const c = createMockContext({ headers: {} });
+    await requestIdMiddleware(c, mockNext);
     
     expect(uuidv4).toHaveBeenCalled();
-    expect(mockReq.id).toBe('generated-uuid-v4');
-    expect(mockSetHeader).toHaveBeenCalledWith('X-Request-Id', 'generated-uuid-v4');
+    expect(c.set).toHaveBeenCalledWith('requestId', 'generated-uuid-v4');
+    expect(c.header).toHaveBeenCalledWith('X-Request-Id', 'generated-uuid-v4');
   });
 });

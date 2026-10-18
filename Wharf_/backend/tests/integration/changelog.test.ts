@@ -1,89 +1,99 @@
-import request from 'supertest';
 import app from '../../src/index';
 
-jest.mock('../../src/middleware/auth.middleware', () => ({
-  requireAuth: (req: any, res: any, next: any) => {
-    req.user = { userId: 'u-1', githubAccessToken: 'enc-token' };
-    next();
+vi.mock('../../src/middleware/auth.middleware', () => ({
+  requireAuth: async (c: any, next: any) => {
+    c.set('user', { userId: 'u-1', githubAccessToken: 'enc-token' });
+    await next();
   },
-  auth: (req: any, res: any, next: any) => {
-    req.user = { userId: 'u-1', githubAccessToken: 'enc-token' };
-    next();
+  auth: async (c: any, next: any) => {
+    c.set('user', { userId: 'u-1', githubAccessToken: 'enc-token' });
+    await next();
   }
 }));
 
-jest.mock('../../src/services/changelog.service', () => ({
-  ChangelogService: jest.fn().mockImplementation(() => ({
-    getCommitStats: jest.fn().mockResolvedValue({ totalCommits: 5 }),
-    generateChangelog: jest.fn().mockResolvedValue({
+vi.mock('../../src/services/changelog.service', () => ({
+  ChangelogService: vi.fn().mockImplementation(function() { return {
+    getCommitStats: vi.fn().mockResolvedValue({ totalCommits: 5 }),
+    generateChangelog: vi.fn().mockResolvedValue({
       stream: (async function*() { yield 'mockchunk'; })(),
       provider: 'GEMINI'
     }),
-    getHistory: jest.fn().mockResolvedValue([]),
-    deleteChangelog: jest.fn().mockResolvedValue(undefined)
-  }))
+    getHistory: vi.fn().mockResolvedValue([]),
+    deleteChangelog: vi.fn().mockResolvedValue(undefined)
+  }; })
 }));
 
-jest.mock('../../src/services/github.service', () => ({
-  GithubService: jest.fn().mockImplementation(() => ({}))
+vi.mock('../../src/services/github.service', () => ({
+  GithubService: vi.fn().mockImplementation(function() { return {}; })
 }));
 
-jest.mock('../../src/services/cache.service', () => ({
+vi.mock('../../src/services/cache.service', () => ({
   cacheService: {
-    getChangelog: jest.fn().mockResolvedValue(null),
-    setChangelog: jest.fn().mockResolvedValue(undefined),
+    getChangelog: vi.fn().mockResolvedValue(null),
+    setChangelog: vi.fn().mockResolvedValue(undefined),
   }
 }));
 
-jest.mock('../../src/utils/encryption', () => ({
-  decrypt: jest.fn().mockReturnValue('dec-token')
+vi.mock('../../src/utils/encryption', () => ({
+  decrypt: vi.fn().mockReturnValue('dec-token')
 }));
 
-jest.mock('../../src/db', () => ({
-  __esModule: true,
-  default: {
+vi.mock('../../src/db', () => {
+  const dbMock = {
     changelog: {
-      create: jest.fn().mockResolvedValue({ id: 'cl-1' }),
-      findMany: jest.fn().mockResolvedValue([]),
-      findUnique: jest.fn().mockResolvedValue({ id: 'cl-1', userId: 'u-1' }),
-      delete: jest.fn().mockResolvedValue({}),
+      create: vi.fn().mockResolvedValue({ id: 'cl-1' }),
+      findMany: vi.fn().mockResolvedValue([]),
+      findUnique: vi.fn().mockResolvedValue({ id: 'cl-1', userId: 'u-1' }),
+      delete: vi.fn().mockResolvedValue({}),
     },
-    $executeRaw: jest.fn().mockResolvedValue(0),
-  }
-}));
+    $executeRaw: vi.fn().mockResolvedValue(0),
+  };
+  return {
+    __esModule: true,
+    default: dbMock,
+    getPrisma: vi.fn().mockReturnValue(dbMock)
+  };
+});
 
-jest.mock('../../src/utils/dailyStats', () => ({
-  recordDailyGeneration: jest.fn().mockResolvedValue(undefined)
+vi.mock('../../src/utils/dailyStats', () => ({
+  recordDailyGeneration: vi.fn().mockResolvedValue(undefined)
 }));
 
 describe('Changelog Routes Integration', () => {
   describe('POST /api/changelog/stats', () => {
     it('should calculate stats successfully', async () => {
-      const res = await request(app).post('/api/changelog/stats').send({ repoUrl: 'https://github.com/foo/bar' });
+      const res = await app.request('/api/changelog/stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repoUrl: 'https://github.com/foo/bar' })
+      });
       expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
+      const body = await res.json() as any;
+      expect(body.success).toBe(true);
     });
   });
 
   describe('GET /api/changelog/history', () => {
     it('should retrieve historical changelog gens', async () => {
-      const res = await request(app).get('/api/changelog/history');
+      const res = await app.request('/api/changelog/history');
       expect(res.status).toBe(200);
     });
   });
 
   describe('POST /api/changelog/generate', () => {
     it('should initiate changelog generation', async () => {
-      const res = await request(app)
-        .post('/api/changelog/generate')
-        .send({ repoUrl: 'https://github.com/foo/bar' });
+      const res = await app.request('/api/changelog/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repoUrl: 'https://github.com/foo/bar' })
+      });
       expect(res.status).toBe(200);
     });
   });
 
-  describe('DELETE /api/changelog/:id', () => {
+  describe('DELETE /api/changelog/history/:id', () => {
     it('should delete changelog item', async () => {
-      const res = await request(app).delete('/api/changelog/c-1');
+      const res = await app.request('/api/changelog/history/c-1', { method: 'DELETE' });
       expect(res.status).toBe(200);
     });
   });

@@ -1,105 +1,90 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import cookieParser from 'cookie-parser';
-import pinoHttp from 'pino-http';
-import dotenv from 'dotenv';
-import compression from 'compression';
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import { secureHeaders } from 'hono/secure-headers';
+import { logger } from 'hono/logger';
 
-import authRoutes from './routes/auth.routes';
-import repoRoutes from './routes/repo.routes';
-import userRoutes from './routes/user.routes';
-import generateRoutes from './routes/generate.routes';
-import profileRoutes from './routes/profile.routes';
-import chatRoutes from './routes/chat.routes';
-import healthRoutes from './routes/health.routes';
-import changelogRoutes from './routes/changelog.routes';
-import adminRoutes from './routes/admin.routes';
-import { initCronJobs } from './utils/cron';
-import { logger } from './utils/logger';
-import { requestIdMiddleware } from './middleware/requestId.middleware';
-import { contextMiddleware } from './middleware/context.middleware';
+// Type definition for environment bindings
+export type Bindings = {
+  DATABASE_URL: string;
+  UPSTASH_REDIS_REST_URL: string;
+  UPSTASH_REDIS_REST_TOKEN: string;
+  ADMIN_IDS?: string;
+  ENVIRONMENT?: string;
+  FRONTEND_URL?: string;
+  GITHUB_CLIENT_ID: string;
+  GITHUB_CLIENT_SECRET: string;
+  GITHUB_CALLBACK_URL?: string;
+  ENCRYPTION_SECRET: string;
+  JWT_SECRET: string;
+};
 
-// Load Environment Variables
-dotenv.config();
+const app = new Hono<{ Bindings: Bindings }>();
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+// Bi-directional env sync for Cloudflare / Node / Vitest
+app.use('*', async (c, next) => {
+  if (typeof process === 'undefined') {
+    (globalThis as any).process = { env: {} };
+  }
+  if (!process.env) {
+    process.env = {};
+  }
+  if (c.env) {
+    Object.assign(process.env, c.env);
+  } else {
+    c.env = process.env as any;
+  }
+  await next();
+});
 
-// Initialize Background Jobs
-if (process.env.NODE_ENV !== 'test') {
-  initCronJobs();
-}
+// Global Middleware
+app.use('*', logger());
+app.use('*', secureHeaders());
+app.use('*', async (c, next) => {
+  const allowedOrigins = ['http://localhost:5173', 'https://trywharf.vercel.app'];
+  if (c.env.FRONTEND_URL) allowedOrigins.push(c.env.FRONTEND_URL);
 
-// Middleware
-app.use(helmet());
-app.use(compression());
-app.use(cookieParser());
-app.use(requestIdMiddleware);
-app.use(contextMiddleware);
-app.use(
-  pinoHttp({
-    logger,
-    genReqId: (req: any) => req.id,
-    quietReqLogger: true,
-    serializers: {
-      req: (req) => ({
-        id: req.id,
-        method: req.method,
-        url: req.url,
-      }),
-      res: (res) => ({
-        statusCode: res.statusCode,
-      }),
-    },
-  })
-);
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow Localhost For Dev, Or Exactly Match The Production URL
-      const allowedOrigins = ['http://localhost:5173', 'https://trywharf.vercel.app'];
-      if (process.env.FRONTEND_URL) allowedOrigins.push(process.env.FRONTEND_URL);
-      
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+  const corsMiddleware = cors({
+    origin: allowedOrigins,
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  })
-);
-app.use(express.json());
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/repo', repoRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/generate', generateRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/health', healthRoutes);
-app.use('/api/changelog', changelogRoutes);
-app.use('/api/admin', adminRoutes);
-
-// Health Check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// Basic Route For API
-app.get('/', (req, res) => {
-  res.send('Wharf API is running...');
-});
-
-// Start Server
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    console.log(`Server ready at: http://localhost:${PORT}`);
+    allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
   });
-}
+  return corsMiddleware(c, next);
+});
+
+import { authRoutes } from './routes/auth.routes';
+import { healthRoutes } from './routes/health.routes';
+import { changelogRoutes } from './routes/changelog.routes';
+import { userRoutes } from './routes/user.routes';
+import { repoRoutes } from './routes/repo.routes';
+import { generateRoutes } from './routes/generate.routes';
+import { chatRoutes } from './routes/chat.routes';
+import { adminRoutes } from './routes/admin.routes';
+import { profileRoutes } from './routes/profile.routes';
+
+// Mount Controllers
+app.route('/api/auth', authRoutes);
+app.route('/api/health', healthRoutes);
+app.route('/api/changelog', changelogRoutes);
+app.route('/api/user', userRoutes);
+app.route('/api/repo', repoRoutes);
+app.route('/api/generate', generateRoutes);
+app.route('/api/chat', chatRoutes);
+app.route('/api/admin', adminRoutes);
+app.route('/api/profile', profileRoutes);
+
+app.onError((err, c) => {
+  console.error("APP ONERROR:", err.stack);
+  console.log("ONERROR ROUTE:", c.req.url);
+  return c.text('Internal Server Error', 500);
+});
+
+app.get('/health', (c) => {
+  return c.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/', (c) => {
+  return c.text('Wharf Cloudflare Worker API is running...');
+});
 
 export default app;

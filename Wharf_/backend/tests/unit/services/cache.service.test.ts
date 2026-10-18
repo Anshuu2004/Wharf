@@ -1,19 +1,20 @@
+import type { Mock } from "vitest";
 import { cacheService } from '../../../src/services/cache.service';
 import { cacheGet, cacheSet } from '../../../src/utils/redis';
 
-jest.mock('../../../src/utils/redis', () => ({
-  cacheGet: jest.fn(),
-  cacheSet: jest.fn(),
+vi.mock('../../../src/utils/redis', () => ({
+  cacheGet: vi.fn(),
+  cacheSet: vi.fn(),
 }));
 
 describe('CacheService', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Analysis Cache', () => {
     it('should return null if cache misses', async () => {
-      (cacheGet as jest.Mock).mockResolvedValue(null);
+      (cacheGet as Mock).mockResolvedValue(null);
       
       const result = await cacheService.getAnalysis('FrostByte-49', 'Wharf');
       expect(result).toBeNull();
@@ -21,14 +22,14 @@ describe('CacheService', () => {
     });
 
     it('should return parsed JSON if cache hits', async () => {
-      (cacheGet as jest.Mock).mockResolvedValue(JSON.stringify({ score: 100 }));
+      (cacheGet as Mock).mockResolvedValue(JSON.stringify({ score: 100 }));
       
       const result = await cacheService.getAnalysis('FrostByte-49', 'Wharf');
       expect(result).toEqual({ score: 100 });
     });
 
     it('should catch JSON parse errors and return null', async () => {
-      (cacheGet as jest.Mock).mockResolvedValue('invalid-json');
+      (cacheGet as Mock).mockResolvedValue('invalid-json');
       
       const result = await cacheService.getAnalysis('owner', 'repo');
       expect(result).toBeNull();
@@ -59,7 +60,7 @@ describe('CacheService', () => {
 
   describe('Profile Data Cache', () => {
     it('should retrieve correctly', async () => {
-      (cacheGet as jest.Mock).mockResolvedValue(JSON.stringify({ bio: 'hi' }));
+      (cacheGet as Mock).mockResolvedValue(JSON.stringify({ bio: 'hi' }));
       const result = await cacheService.getProfileData('User');
       expect(result).toEqual({ bio: 'hi' });
       expect(cacheGet).toHaveBeenCalledWith('profile:data:user');

@@ -1,0 +1,174 @@
+import { Request, Response } from 'express';
+import { healthScoreService } from '../services/healthScore.service';
+import { GithubService } from '../services/github.service';
+import prisma from '../db';
+import { parseGithubUrl } from '../utils/parseGithubUrl';
+import { decrypt } from '../utils/encryption';
+import { recordDailyGeneration } from '../utils/dailyStats';
+import { loggerService } from '../utils/logger';
+
+export class HealthController {
+  async analyzeReadmeHealth(req: Request, res: Response) {
+    const reqStart = Date.now();
+    const reqId = String((req as any).id);
+    const { repoUrl } = req.body;
+    if (!repoUrl) {
+      return res.status(400).json({ success: false, error: 'repoUrl is required' });
+    }
+
+    const parsed = parseGithubUrl(repoUrl);
+    if (!parsed) {
+      return res.status(400).json({ success: false, error: 'Invalid GitHub URL' });
+    }
+
+    try {
+      const user = (req as any).user;
+      const token = user?.githubAccessToken ? decrypt(user.githubAccessToken) : undefined;
+      const githubService = new GithubService(token ? { token } : undefined);
+      const readmeContent = await githubService.getReadmeContent(parsed.owner, parsed.repo);
+
+      const result = await healthScoreService.analyzeReadmeHealth(readmeContent);
+
+      const repoName = `${parsed.owner}/${parsed.repo}`;
+
+      // Save To Database
+      await (prisma as any).healthScore.upsert({
+        where: { repoUrl },
+        update: {
+          score: result.score,
+          breakdown: result.breakdown,
+          suggestions: result.suggestions,
+          checkedAt: new Date(),
+          userId: user?.userId ?? null,
+        },
+        create: {
+          repoUrl,
+          repoName,
+          score: result.score,
+          breakdown: result.breakdown,
+          suggestions: result.suggestions,
+          userId: user?.userId ?? null,
+        },
+      });
+
+      if (user?.userId) {
+        const uid = user.userId;
+        await Promise.all([
+          prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + 213, "lifetimeHealthChecks" = "lifetimeHealthChecks" + 1 WHERE id = ${uid}`,
+          // Record Today's Count In DailyStats So Heatmap/Trend Survive Deletions
+          recordDailyGeneration(uid)
+        ]);
+      }
+
+      res.json({ success: true, data: result });
+    } catch (error: any) {
+      loggerService.error('health.analysis.error', 'Health check failed', error, {
+        repository: req.body.repoUrl,
+      });
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  async analyzeContributionReadiness(req: Request, res: Response) {
+    const reqStart = Date.now();
+    const reqId = String((req as any).id);
+    const { repoUrl } = req.body;
+    if (!repoUrl) {
+      return res.status(400).json({ success: false, error: 'repoUrl is required' });
+    }
+
+    const parsed = parseGithubUrl(repoUrl);
+    if (!parsed) {
+      return res.status(400).json({ success: false, error: 'Invalid GitHub URL' });
+    }
+
+    try {
+      const user = (req as any).user;
+      const token = user?.githubAccessToken ? decrypt(user.githubAccessToken) : undefined;
+      const githubService = new GithubService(token ? { token } : undefined);
+
+      const [contributingFile, issueTemplates, prTemplates, hasCodeOfConduct, readmeContent] =
+        await Promise.all([
+          githubService.getContributingFile(parsed.owner, parsed.repo),
+          githubService.getIssueTemplates(parsed.owner, parsed.repo),
+          githubService.getPRTemplates(parsed.owner, parsed.repo),
+          githubService.checkFileExists(parsed.owner, parsed.repo, 'CODE_OF_CONDUCT.md'),
+          githubService.getReadmeContent(parsed.owner, parsed.repo),
+        ]);
+
+      const result = await healthScoreService.analyzeContributionReadiness(
+        !!contributingFile,
+        issueTemplates.length,
+        prTemplates.length,
+        hasCodeOfConduct,
+        readmeContent,
+        false
+      );
+
+      // Save Contribution Properties To DB
+      await (prisma as any).healthScore.updateMany({
+        where: { repoUrl },
+        data: {
+          contributionScore: result.score,
+          contributionBreakdown: result.breakdown,
+          contributionSuggestions: result.suggestions,
+        },
+      });
+
+      res.json({ success: true, data: result });
+    } catch (error: any) {
+      loggerService.error('health.contribution.error', 'Contribution analysis failed', error, {
+        repository: req.body.repoUrl,
+      });
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  async getHistory(req: Request, res: Response) {
+    const user = (req as any).user;
+    const userId = user?.userId;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
+    const skip = (page - 1) * limit;
+
+    if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
+
+    const history = await (prisma as any).healthScore.findMany({
+      where: { userId },
+      skip,
+      take: limit,
+      orderBy: { checkedAt: 'desc' },
+      select: {
+        id: true,
+        repoUrl: true,
+        repoName: true,
+        score: true,
+        checkedAt: true,
+      },
+    });
+    res.json({ success: true, data: history });
+  }
+
+  async deleteHistory(req: Request, res: Response) {
+    const { id } = req.params;
+    const user = (req as any).user;
+    const userId = user?.userId;
+    if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
+
+    try {
+      // High-Water Mark Prerequisite Sync
+      const dynamicHealth = await prisma.healthScore.count({ where: { userId } });
+      await prisma.$executeRaw`UPDATE "User" SET "lifetimeHealthChecks" = GREATEST("lifetimeHealthChecks", ${dynamicHealth}) WHERE id = ${userId}`;
+
+      await (prisma as any).healthScore.delete({
+        where: { id, userId },
+      });
+      res.json({ success: true });
+    } catch (err) {
+      loggerService.error('database.delete.error', 'Failed to delete health history', err, {
+        paramId: id,
+      });
+      res.status(400).json({ success: false, error: 'Record not found' });
+    }
+  }
+}

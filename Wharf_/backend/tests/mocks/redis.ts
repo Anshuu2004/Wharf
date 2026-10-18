@@ -1,14 +1,14 @@
 export const redisMock = {
-  connect: jest.fn(),
-  disconnect: jest.fn(),
-  get: jest.fn(),
-  set: jest.fn(),
-  setEx: jest.fn(),
-  del: jest.fn(),
-  incr: jest.fn(),
-  expire: jest.fn(),
-  quit: jest.fn(),
-  on: jest.fn(),
+  connect: vi.fn(),
+  disconnect: vi.fn(),
+  get: vi.fn(),
+  set: vi.fn(),
+  setEx: vi.fn(),
+  del: vi.fn(),
+  incr: vi.fn(),
+  expire: vi.fn(),
+  quit: vi.fn(),
+  on: vi.fn(),
 };
 
 export default redisMock;

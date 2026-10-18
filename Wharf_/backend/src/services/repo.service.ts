@@ -43,10 +43,8 @@ export class RepoService {
 
     const githubStart = loggerService.stepStart();
 
-    // 1 + 2. Fetch Metadata & Tree In Parallel
+    // 1 + 2. Fetch Metadata AND Tree In Parallel
     // GitHub Accepts 'HEAD' As Tree_Sha, So We Don't Need Meta First.
-    // We Still Need Meta For Repo Description/Stars/Language Etc., But Both
-    // Calls Are Completely Independent And Can Run Simultaneously.
     const [meta, tree] = await Promise.all([
       this.githubService.fetchRepoMeta(owner, repo),
       this.githubService.fetchRepoTree(owner, repo, 'HEAD'),

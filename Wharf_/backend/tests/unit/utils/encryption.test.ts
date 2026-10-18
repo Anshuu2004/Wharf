@@ -1,5 +1,5 @@
 import { encrypt, decrypt } from '../../../src/utils/encryption';
-import { describe, expect, test, beforeAll, afterAll } from '@jest/globals';
+import { describe, expect, test, beforeAll, afterAll } from 'vitest';
 
 describe('encryption Utility', () => {
   const originalEnv = process.env;

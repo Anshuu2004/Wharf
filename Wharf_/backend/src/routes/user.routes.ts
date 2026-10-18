@@ -1,33 +1,45 @@
-import { Router } from 'express';
-import { getUserRepos } from '../controllers/user.controller';
+import { Hono } from 'hono';
+import { 
+  getUserRepos, 
+  addApiKey, 
+  getApiKeys, 
+  revalidateApiKey, 
+  deleteApiKey, 
+  getProfile, 
+  updateProfile, 
+  getUsageStats, 
+  getPreferences, 
+  updatePreferences, 
+  clearUserData, 
+  exportUserData 
+} from '../controllers/user.controller';
 import { auth, requireAuth } from '../middleware/auth.middleware';
 import { UserNotificationController } from '../controllers/announcement.controller';
+import { Bindings } from '../index';
 
-const router = Router();
+type Variables = { user: any; contextStore: any };
+export const userRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 // GET /api/user/repos 
-router.get('/repos', auth, requireAuth, getUserRepos);
+userRoutes.get('/repos', auth, requireAuth, getUserRepos);
 
 // API Keys 
-import { addApiKey, getApiKeys, revalidateApiKey, deleteApiKey, getProfile, updateProfile, getUsageStats, getPreferences, updatePreferences, clearUserData, exportUserData } from '../controllers/user.controller';
-router.get('/apikeys', auth, requireAuth, getApiKeys);
-router.post('/apikey', auth, requireAuth, addApiKey);
-router.patch('/apikey', auth, requireAuth, revalidateApiKey);
-router.delete('/apikey/:keyId', auth, requireAuth, deleteApiKey);
+userRoutes.get('/apikeys', auth, requireAuth, getApiKeys);
+userRoutes.post('/apikey', auth, requireAuth, addApiKey);
+userRoutes.patch('/apikey', auth, requireAuth, revalidateApiKey);
+userRoutes.delete('/apikey/:keyId', auth, requireAuth, deleteApiKey);
 
 // Profile & Settings
-router.get('/profile', auth, requireAuth, getProfile);
-router.put('/profile', auth, requireAuth, updateProfile);
-router.get('/usage', auth, requireAuth, getUsageStats);
-router.get('/preferences', auth, requireAuth, getPreferences);
-router.put('/preferences', auth, requireAuth, updatePreferences);
-router.delete('/data', auth, requireAuth, clearUserData);
-router.get('/export', auth, requireAuth, exportUserData);
+userRoutes.get('/profile', auth, requireAuth, getProfile);
+userRoutes.put('/profile', auth, requireAuth, updateProfile);
+userRoutes.get('/usage', auth, requireAuth, getUsageStats);
+userRoutes.get('/preferences', auth, requireAuth, getPreferences);
+userRoutes.put('/preferences', auth, requireAuth, updatePreferences);
+userRoutes.delete('/data', auth, requireAuth, clearUserData);
+userRoutes.get('/export', auth, requireAuth, exportUserData);
 
 // Notifications
-router.get('/notifications', auth, requireAuth, UserNotificationController.getList);
-router.get('/notifications/unread-count', auth, requireAuth, UserNotificationController.getUnreadCount);
-router.post('/notifications/read-all', auth, requireAuth, UserNotificationController.markAllAsRead);
-router.post('/notifications/:id/read', auth, requireAuth, UserNotificationController.markAsRead);
-
-export default router;
+userRoutes.get('/notifications', auth, requireAuth, UserNotificationController.getList);
+userRoutes.get('/notifications/unread-count', auth, requireAuth, UserNotificationController.getUnreadCount);
+userRoutes.post('/notifications/read-all', auth, requireAuth, UserNotificationController.markAllAsRead);
+userRoutes.post('/notifications/:id/read', auth, requireAuth, UserNotificationController.markAsRead);

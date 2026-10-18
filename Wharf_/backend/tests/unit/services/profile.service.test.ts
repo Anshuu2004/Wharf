@@ -1,21 +1,22 @@
+import type { Mock } from "vitest";
 import { ProfileService } from '../../../src/services/profile.service';
 import { cacheService } from '../../../src/services/cache.service';
 import { GithubService } from '../../../src/services/github.service';
 
-jest.mock('../../../src/services/cache.service', () => ({
+vi.mock('../../../src/services/cache.service', () => ({
   cacheService: {
-    getProfileData: jest.fn(),
-    setProfileData: jest.fn(),
+    getProfileData: vi.fn(),
+    setProfileData: vi.fn(),
   },
 }));
 
-jest.mock('../../../src/services/github.service');
+vi.mock('../../../src/services/github.service');
 
 describe('ProfileService', () => {
   let profileService: ProfileService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     profileService = new ProfileService();
   });
 
@@ -24,7 +25,7 @@ describe('ProfileService', () => {
 
     it('should return cached data if available', async () => {
       const cachedData = { username: mockUsername, totalStars: 100 };
-      (cacheService.getProfileData as jest.Mock).mockResolvedValue(cachedData);
+      (cacheService.getProfileData as Mock).mockResolvedValue(cachedData);
 
       const result = await profileService.getProfileData(mockUsername);
 
@@ -34,7 +35,7 @@ describe('ProfileService', () => {
     });
 
     it('should fetch from GitHub and compute stats if not cached', async () => {
-      (cacheService.getProfileData as jest.Mock).mockResolvedValue(null);
+      (cacheService.getProfileData as Mock).mockResolvedValue(null);
 
       const mockUserProfile = {
         login: mockUsername,
@@ -50,8 +51,8 @@ describe('ProfileService', () => {
         { name: 'repo3', stargazers_count: 20, language: 'Python' }
       ];
 
-      (GithubService.prototype.getUserProfile as jest.Mock).mockResolvedValue(mockUserProfile);
-      (GithubService.prototype.getTopStarredRepos as jest.Mock).mockResolvedValue(mockRepos);
+      (GithubService.prototype.getUserProfile as Mock).mockResolvedValue(mockUserProfile);
+      (GithubService.prototype.getTopStarredRepos as Mock).mockResolvedValue(mockRepos);
 
       const result = await profileService.getProfileData(mockUsername);
 
@@ -71,9 +72,9 @@ describe('ProfileService', () => {
     });
     
     it('should throw an error if GitHub fetch fails', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-      (cacheService.getProfileData as jest.Mock).mockResolvedValue(null);
-      (GithubService.prototype.getUserProfile as jest.Mock).mockRejectedValue(new Error('Rate limit'));
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      (cacheService.getProfileData as Mock).mockResolvedValue(null);
+      (GithubService.prototype.getUserProfile as Mock).mockRejectedValue(new Error('Rate limit'));
       
       await expect(profileService.getProfileData(mockUsername)).rejects.toThrow('Failed to fetch profile data from GitHub');
       consoleSpy.mockRestore();
