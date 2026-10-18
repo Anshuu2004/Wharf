@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+*/node_modules/
+*/*/node_modules/
+*/*/*/node_modules/
+yarn.lock
+pnpm-lock.yaml
+
+# Build Outputs
+dist/
+build/
+out/
+.wrangler/
+coverage/
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+.dev.vars
+!.dev.vars.example
+
+# IDE & Editor Settings
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Logs & Debugging
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Cache & Temporary Files
+.cache/
+.temp/
+*.tsbuildinfo
+
+# Keys & Certificates
+*.pem
+*.crt
+*.key
