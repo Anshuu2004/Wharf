@@ -1,21 +1,27 @@
-import { Request, Response } from 'express';
-import { announcementService } from '../services/announcement.service';
+import { Context } from 'hono';
+import { AnnouncementService } from '../services/announcement.service';
+import { Bindings } from '../index';
+
+type AppContext = Context<{ Bindings: Bindings; Variables: { user: any; contextStore: any } }>;
+
+const svc = (c: AppContext) => new AnnouncementService(c.env.DATABASE_URL);
 
 export const AdminAnnouncementController = {
-  async getAll(req: Request, res: Response) {
+  async getAll(c: AppContext) {
     try {
-      const announcements = await announcementService.getAllAdminAnnouncements();
-      res.json(announcements);
+      const announcements = await svc(c).getAllAdminAnnouncements();
+      return c.json(announcements);
     } catch (error) {
       console.error('[AdminAnnouncementController.getAll] Error:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+      return c.json({ error: 'Internal Server Error' }, 500);
     }
   },
 
-  async create(req: Request, res: Response) {
+  async create(c: AppContext) {
     try {
-      const { title, message, type, expiresAt, isPublished, isPinned } = req.body;
-      const announcement = await announcementService.createAnnouncement({
+      const body = await c.req.json().catch(() => ({}));
+      const { title, message, type, expiresAt, isPublished, isPinned } = body;
+      const announcement = await svc(c).createAnnouncement({
         title,
         message,
         type,
@@ -23,107 +29,113 @@ export const AdminAnnouncementController = {
         isPublished,
         isPinned,
       });
-      res.status(201).json(announcement);
+      return c.json(announcement, 201);
     } catch (error) {
       console.error('[AdminAnnouncementController.create] Error:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+      return c.json({ error: 'Internal Server Error' }, 500);
     }
   },
 
-  async update(req: Request, res: Response) {
+  async update(c: AppContext) {
     try {
-      const { id } = req.params;
-      const { title, message, type, expiresAt, isPinned } = req.body;
+      const id = c.req.param('id');
+      const body = await c.req.json().catch(() => ({}));
+      const { title, message, type, expiresAt, isPinned } = body;
       const data: any = { title, message, type, isPinned };
       if (expiresAt !== undefined) {
         data.expiresAt = expiresAt ? new Date(expiresAt) : null;
       }
-      const announcement = await announcementService.updateAnnouncement(id, data);
-      res.json(announcement);
+      const announcement = await svc(c).updateAnnouncement(String(id), data);
+      return c.json(announcement);
     } catch (error) {
       console.error('[AdminAnnouncementController.update] Error:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+      return c.json({ error: 'Internal Server Error' }, 500);
     }
   },
 
-  async togglePublish(req: Request, res: Response) {
+  async togglePublish(c: AppContext) {
     try {
-      const { id } = req.params;
-      const { isPublished } = req.body;
-      const announcement = await announcementService.togglePublish(id, isPublished);
-      res.json(announcement);
+      const id = c.req.param('id');
+      const body = await c.req.json().catch(() => ({}));
+      const { isPublished } = body;
+      const announcement = await svc(c).togglePublish(String(id), isPublished);
+      return c.json(announcement);
     } catch (error) {
       console.error('[AdminAnnouncementController.togglePublish] Error:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+      return c.json({ error: 'Internal Server Error' }, 500);
     }
   },
 
-  async delete(req: Request, res: Response) {
+  async delete(c: AppContext) {
     try {
-      const { id } = req.params;
-      await announcementService.deleteAnnouncement(id);
-      res.status(204).send();
+      const id = c.req.param('id');
+      await svc(c).deleteAnnouncement(String(id));
+      return new Response(null, { status: 204 });
     } catch (error) {
       console.error('[AdminAnnouncementController.delete] Error:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+      return c.json({ error: 'Internal Server Error' }, 500);
     }
   },
 };
 
 export const UserNotificationController = {
-  async getList(req: Request, res: Response) {
+  async getList(c: AppContext) {
     try {
-      const userId = (req as any).user?.userId || (req as any).user?.id;
-      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      const user = c.get('user');
+      const userId = user?.userId || user?.id;
+      if (!userId) return c.json({ error: 'Unauthorized' }, 401);
 
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 50;
+      const page = parseInt(c.req.query('page') || '1');
+      const limit = parseInt(c.req.query('limit') || '50');
 
-      const notifications = await announcementService.getUserNotifications(userId, page, limit);
-      res.json(notifications);
+      const notifications = await svc(c).getUserNotifications(userId, page, limit);
+      return c.json(notifications);
     } catch (error) {
       console.error('[UserNotificationController.getList] Error:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+      return c.json({ error: 'Internal Server Error' }, 500);
     }
   },
 
-  async getUnreadCount(req: Request, res: Response) {
+  async getUnreadCount(c: AppContext) {
     try {
-      const userId = (req as any).user?.userId || (req as any).user?.id;
-      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      const user = c.get('user');
+      const userId = user?.userId || user?.id;
+      if (!userId) return c.json({ error: 'Unauthorized' }, 401);
 
-      const count = await announcementService.getUnreadCount(userId);
-      res.json({ count });
+      const count = await svc(c).getUnreadCount(userId);
+      return c.json({ count });
     } catch (error) {
       console.error('[UserNotificationController.getUnreadCount] Error:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+      return c.json({ error: 'Internal Server Error' }, 500);
     }
   },
 
-  async markAsRead(req: Request, res: Response) {
+  async markAsRead(c: AppContext) {
     try {
-      const userId = (req as any).user?.userId || (req as any).user?.id;
-      const { id: announcementId } = req.params;
-      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      const user = c.get('user');
+      const userId = user?.userId || user?.id;
+      const announcementId = c.req.param('id');
+      if (!userId) return c.json({ error: 'Unauthorized' }, 401);
 
-      await announcementService.markAsRead(userId, announcementId);
-      res.status(204).send();
+      await svc(c).markAsRead(String(userId), announcementId!);
+      return new Response(null, { status: 204 });
     } catch (error) {
       console.error('[UserNotificationController.markAsRead] Error:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+      return c.json({ error: 'Internal Server Error' }, 500);
     }
   },
 
-  async markAllAsRead(req: Request, res: Response) {
+  async markAllAsRead(c: AppContext) {
     try {
-      const userId = (req as any).user?.userId || (req as any).user?.id;
-      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      const user = c.get('user');
+      const userId = user?.userId || user?.id;
+      if (!userId) return c.json({ error: 'Unauthorized' }, 401);
 
-      const result = await announcementService.markAllAsRead(userId);
-      res.json(result);
+      const result = await svc(c).markAllAsRead(userId);
+      return c.json(result);
     } catch (error) {
       console.error('[UserNotificationController.markAllAsRead] Error:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+      return c.json({ error: 'Internal Server Error' }, 500);
     }
   },
 };

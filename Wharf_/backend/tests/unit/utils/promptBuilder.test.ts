@@ -1,5 +1,5 @@
 import { buildReadmePrompt } from '../../../src/utils/promptBuilder';
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test } from 'vitest';
 
 describe('promptBuilder Utility', () => {
   const mockContext: any = {

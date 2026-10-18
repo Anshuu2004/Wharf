@@ -1,5 +1,5 @@
 import { buildProfilePrompt, ProfileData, ProfileOptions } from '../../../src/utils/profilePromptBuilder';
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test } from 'vitest';
 
 describe('profilePromptBuilder Utility', () => {
   const mockProfile: ProfileData = {

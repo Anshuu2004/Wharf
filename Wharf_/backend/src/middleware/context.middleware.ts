@@ -1,14 +1,9 @@
-import { Request, Response, NextFunction } from 'express';
-import { requestContext } from '../utils/asyncContext';
+import { Next } from 'hono';
 
-export const contextMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const contextMiddleware = async (c: any, next: Next) => {
   const store = {
-    requestId: (req as any).id || 'system',
+    requestId: c.get('requestId') || 'system',
   };
-
-  (req as any).contextStore = store;
-
-  requestContext.run(store, () => {
-    next();
-  });
+  c.set('contextStore', store);
+  await next();
 };

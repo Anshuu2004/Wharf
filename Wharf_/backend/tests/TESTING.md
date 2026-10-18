@@ -1,17 +1,19 @@
-# Backend Testing
+# Worker Backend Testing
 
-**Framework**: Jest, Supertest
-**Location**: `Wharf_/backend/tests/`
+**Framework**: Vitest, Hono Testing, Miniflare (Cloudflare Workers)
+**Location**: `Wharf_/worker-backend/tests/`
 
-The backend utilizes **Integration-style Unit Tests**. Instead of merely testing pure functions in isolation, we spin up the Express application and fire actual HTTP requests using `supertest`.
+The worker-backend testing suite is built around Hono's integrated testing patterns coupled with Vitest for robust execution in the V8 isolate environment.
+
+### Approach
+*   **Environment**: We test code designed for Cloudflare Workers by leveraging the V8 isolate environment so tests closely mirror the production edge environment.
+*   **Context Mocking**: The suite utilizes a robust Hono Context mocking utility to test controllers efficiently without heavy Node.js dependencies.
+*   **Authentication**: Mocking Hono JWT and auth middleware validation robustly to prevent test flakiness.
 
 ### Key Areas Tested
-*   **Authentication**: Registration, Login, Token generation, and Protected Route middlewares.
-*   **Generators**: Verifying that the Markdown generation services return properly formulated READMEs, Changelogs, and Architecture documents.
-*   **User Routes**: Fetching and manipulating user profile data.
-*   **Factories**: Leveraging `/tests/factories` to spin up mock Users and Payloads for safe database mocking.
+*   **Controllers**: Application logic (streaming, db interactions, authentication) is tested using edge-compatible tooling.
+*   **Integration**: Testing the Hono router configurations directly.
 
 ### Important Commands
-*   `npm run test` (Runs all Backend test suites)
-*   `npx jest tests/auth.test.ts` (Run tests for specific files)
-*   `npm run test:watch` (Automatically re-run tests on file change)
+*   `npm run test` (Runs all worker tests via Vitest)
+*   `npm run test <file_path>` (Runs tests for a specific file)

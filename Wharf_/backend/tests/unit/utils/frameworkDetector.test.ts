@@ -1,5 +1,5 @@
 import { detectFrameworks, getCommands } from '../../../src/utils/frameworkDetector';
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test } from 'vitest';
 
 describe('frameworkDetector Utility', () => {
   describe('detectFrameworks', () => {

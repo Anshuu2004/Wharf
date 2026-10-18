@@ -1,4 +1,4 @@
-import prisma from '../db';
+import { getPrisma } from '../db';
 import { encrypt, decrypt } from '../utils/encryption';
 
 export interface APIKeyInput {
@@ -168,6 +168,12 @@ const verifyDeepSeekKey = async (apiKey: string): Promise<{ valid: boolean; erro
 };
 
 export class APIKeyService {
+  private dbUrl: string;
+
+  constructor(dbUrl: string) {
+    this.dbUrl = dbUrl;
+  }
+
   async addKey(userId: string, input: APIKeyInput) {
     // 1. Verify The Key First
     const verification = await this.verifyKey(input.key, input.provider);
@@ -183,6 +189,7 @@ export class APIKeyService {
     const normalizedProvider = input.provider.toUpperCase();
 
     // 4. Store The Key With Verification Status (Upsert So Re-adding Replaces)
+    const prisma = getPrisma(this.dbUrl);
     return await prisma.userApiKey.upsert({
       where: {
         userId_provider_label: {
@@ -234,6 +241,7 @@ export class APIKeyService {
   }
 
   async getValidKey(userId: string, provider: string): Promise<string | null> {
+    const prisma = getPrisma(this.dbUrl);
     const apiKey = await prisma.userApiKey.findFirst({
       where: {
         userId,
@@ -263,6 +271,7 @@ export class APIKeyService {
   }
 
   async revalidateKey(keyId: string): Promise<boolean> {
+    const prisma = getPrisma(this.dbUrl);
     const apiKey = await prisma.userApiKey.findUnique({
       where: { id: keyId },
     });
@@ -286,6 +295,7 @@ export class APIKeyService {
   }
 
   async getKeysWithVerificationStatus(userId: string) {
+    const prisma = getPrisma(this.dbUrl);
     const keys = await prisma.userApiKey.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },

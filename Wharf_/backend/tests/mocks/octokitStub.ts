@@ -1,18 +1,18 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
-export const mockGet = jest.fn<any>();
-export const mockGitTree = jest.fn<any>();
-export const mockGetContent = jest.fn<any>();
-export const mockListCommits = jest.fn<any>();
-export const mockListForAuthUser = jest.fn<any>();
-export const mockListForUser = jest.fn<any>();
-export const mockGetByUsername = jest.fn<any>();
-export const mockGetAuthenticated = jest.fn<any>();
-export const mockListLanguages = jest.fn<any>();
-export const mockGetReadme = jest.fn<any>();
-export const mockListContributors = jest.fn<any>();
-export const mockListTags = jest.fn<any>();
-export const mockWrap = jest.fn<any>();
+export const mockGet = vi.fn<any>();
+export const mockGitTree = vi.fn<any>();
+export const mockGetContent = vi.fn<any>();
+export const mockListCommits = vi.fn<any>();
+export const mockListForAuthUser = vi.fn<any>();
+export const mockListForUser = vi.fn<any>();
+export const mockGetByUsername = vi.fn<any>();
+export const mockGetAuthenticated = vi.fn<any>();
+export const mockListLanguages = vi.fn<any>();
+export const mockGetReadme = vi.fn<any>();
+export const mockListContributors = vi.fn<any>();
+export const mockListTags = vi.fn<any>();
+export const mockWrap = vi.fn<any>();
 
 export class Octokit {
   constructor() {}
@@ -43,4 +43,4 @@ export class Octokit {
   };
 }
 
-export const createAppAuth = jest.fn();
+export const createAppAuth = vi.fn();

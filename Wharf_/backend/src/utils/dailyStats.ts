@@ -1,4 +1,4 @@
-import prisma from '../db';
+import { getPrisma } from '../db';
 
 /**
  * recordDailyGeneration
@@ -15,7 +15,7 @@ import prisma from '../db';
 // Reset On Each Server Restart — Acceptable For Approximate Trend Data.
 const dailyUserSets = new Map<string, Set<string>>();
 
-export async function recordDailyGeneration(userId?: string | null): Promise<void> {
+export async function recordDailyGeneration(dbUrl: string, userId?: string | null): Promise<void> {
   try {
     // Today's Date At Midnight UTC → "YYYY-MM-DD"
     const now = new Date();
@@ -38,6 +38,7 @@ export async function recordDailyGeneration(userId?: string | null): Promise<voi
 
     // Raw SQL Upsert — DailyStats.date Is @unique, So We Can ON CONFLICT Increment.
     // We Use $executeRaw To Avoid Stale Prisma Client Type Issues.
+    const prisma = getPrisma(dbUrl);
     await prisma.$executeRaw`
       INSERT INTO "DailyStats" (id, date, "totalGenerations", "totalUsers", "activeUsers", "successRate", "avgResponseTime", "cacheHitRate", "totalTokens", errors, "newUsers")
       VALUES (gen_random_uuid(), ${dayStart}, 1, 0, ${activeUsers}, 0, 0, 0, 0, 0, 0)

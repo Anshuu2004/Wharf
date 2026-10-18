@@ -1,9 +1,14 @@
-import { Request, Response } from 'express';
-import { aiService, ChangelogService, GithubService, cacheService } from '../services';
-import prisma from '../db';
+import { Context } from 'hono';
+import { stream } from 'hono/streaming';
+import { ChangelogService, GithubService, cacheService } from '../services';
+import { AiService } from '../services/ai.service';
+import { getPrisma } from '../db';
 import { decrypt } from '../utils/encryption';
 import { recordDailyGeneration } from '../utils/dailyStats';
 import { loggerService, saveRequestLog } from '../utils/logger';
+import { Bindings } from '../index';
+
+type AppContext = Context<{ Bindings: Bindings; Variables: { user: any; contextStore: any } }>;
 
 function extractRepoName(repoUrl: string): string {
   try {
@@ -20,193 +25,208 @@ function extractRepoName(repoUrl: string): string {
 }
 
 export class ChangelogController {
-  private changelogService: ChangelogService;
 
-  constructor() {
-    const githubService = new GithubService();
-    this.changelogService = new ChangelogService(githubService, aiService);
-  }
-
-  async getStats(req: Request, res: Response) {
+  async getStats(c: AppContext) {
     const reqStart = Date.now();
-    const reqId = String((req as any).id);
-    const { repoUrl } = req.body;
+    
+    const body = await c.req.json().catch(() => ({}));
+    const repoUrl = body.repoUrl;
+    
     if (!repoUrl) {
-      return res.status(400).json({ success: false, error: 'repoUrl is required' });
+      return c.json({ success: false, error: 'repoUrl is required' }, 400);
     }
 
     try {
-      const user = (req as any).user;
+      const user = c.get('user');
       let githubToken;
       if (user?.githubAccessToken) {
-        githubToken = decrypt(user.githubAccessToken);
+        githubToken = decrypt(user.githubAccessToken, c.env.ENCRYPTION_SECRET);
       }
 
-      const stats = await this.changelogService.getCommitStats(repoUrl, githubToken);
-      res.json({ success: true, data: stats });
+      const stats = await new ChangelogService(new GithubService(), new AiService(c.env.DATABASE_URL), c.env.DATABASE_URL).getCommitStats(repoUrl, githubToken);
+      return c.json({ success: true, data: stats });
     } catch (error: any) {
       loggerService.error('github.fetch.error', 'Changelog getStats error', error, {
         repository: repoUrl,
       });
-      res.status(500).json({ success: false, error: error.message });
+      return c.json({ success: false, error: error.message }, 500);
     }
   }
 
-  async generate(req: Request, res: Response) {
+  async generate(c: AppContext) {
     const reqStart = Date.now();
-    const reqId = String((req as any).id);
-    const { repoUrl, options } = req.body;
+    const body = await c.req.json().catch(() => ({}));
+    const { repoUrl, options = {} } = body;
+    
     if (!repoUrl) {
-      return res.status(400).json({ success: false, error: 'repoUrl is required' });
+      return c.json({ success: false, error: 'repoUrl is required' }, 400);
     }
 
     try {
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-
-      const user = (req as any).user;
+      const user = c.get('user');
       let githubToken;
       if (user?.githubAccessToken) {
-        githubToken = decrypt(user.githubAccessToken);
+        githubToken = decrypt(user.githubAccessToken, c.env.ENCRYPTION_SECRET);
       }
 
       const cached = await cacheService.getChangelog(repoUrl, options);
       if (cached) {
         loggerService.cacheHit(repoUrl);
-
         await saveRequestLog({
-          route: req.baseUrl + req.path,
-          method: req.method,
+          route: c.req.path,
+          method: c.req.method,
           feature: 'CHANGELOG',
           statusCode: 200,
           cacheHit: true,
           totalDurationMs: Date.now() - reqStart,
         });
 
-        // Stream It Block By Block Or All At Once
-        res.write(`data: ${JSON.stringify({ text: cached })}\n\n`);
-        res.write('data: [DONE]\n\n');
-        res.end();
-        return;
+        c.header('Content-Type', 'text/event-stream');
+        c.header('Cache-Control', 'no-cache');
+        c.header('Connection', 'keep-alive');
+        return stream(c, async (streamStr) => {
+          await streamStr.write(`data: ${JSON.stringify({ text: cached })}\n\n`);
+          await streamStr.write('data: [DONE]\n\n');
+        });
       }
 
-      const { stream, provider } = await this.changelogService.generateChangelog(
+      const { stream: aiStream, provider } = await new ChangelogService(new GithubService(), new AiService(c.env.DATABASE_URL), c.env.DATABASE_URL).generateChangelog(
         repoUrl,
         options,
         githubToken
       );
-      let fullContent = '';
 
-      for await (const chunk of stream) {
-        fullContent += chunk;
-        res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
-      }
+      c.header('Content-Type', 'text/event-stream');
+      c.header('Cache-Control', 'no-cache');
+      c.header('Connection', 'keep-alive');
+      return stream(c, async (streamStr) => {
+        let fullContent = '';
 
-      // Save To Cache
-      await cacheService.setChangelog(repoUrl, options, fullContent);
-
-      const userId = (req as any).user?.id || (req as any).user?.userId;
-      if (userId) {
-        try {
-          const wordCount = fullContent.split(/\s+/).filter(Boolean).length;
-          const dbStart = loggerService.stepStart();
-          const changelogRecord = await prisma.changelog.create({
-            data: {
-              repoUrl,
-              repoName: extractRepoName(repoUrl),
-              content: fullContent,
-              wordCount,
-              format: options.format || 'keep-a-changelog',
-              commitCount: Number(options.commitCount) || 100,
-              includeTags: options.includeTags ?? true,
-              includeContributors: options.includeContributors ?? true,
-              groupByType: options.groupByType ?? true,
-              userId,
-            },
-          });
-          loggerService.stepEnd('database.save.completed', 'DB Save Completed', dbStart, {
-            table: 'Changelog',
-            recordId: changelogRecord.id,
-          });
-          // Permanently Bank These Tokens
-          const tokensGenerated = Math.round(wordCount * 1.37);
-          await Promise.all([
-            prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeChangelogs" = "lifetimeChangelogs" + 1 WHERE id = ${userId}`,
-            recordDailyGeneration(userId)
-          ]);
-        } catch (dbError) {
-          loggerService.error('database.save.error', 'Changelog DB Save Error', dbError);
+        for await (const chunk of aiStream) {
+          fullContent += chunk;
+          await streamStr.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
         }
-      }
 
-      loggerService.info('generation.completed', 'Changelog generated successfully', {
-        repository: repoUrl,
-        durationMs: Date.now() - reqStart,
-      });
-      await saveRequestLog({
-        route: req.baseUrl + req.path,
-        method: req.method,
-        feature: 'CHANGELOG',
-        statusCode: 200,
-        cacheHit: false,
-        finalProvider: provider,
-        targetRepo: extractRepoName(repoUrl),
-        totalDurationMs: Date.now() - reqStart,
-      });
+        const bgTask = async () => {
+          await cacheService.setChangelog(repoUrl, options, fullContent);
+          const userId = c.get('user')?.id || c.get('user')?.userId;
+          if (userId) {
+            try {
+              const wordCount = fullContent.split(/\s+/).filter(Boolean).length;
+              const dbStart = loggerService.stepStart();
+              const prisma = getPrisma(c.env.DATABASE_URL);
+              
+              const changelogRecord = await prisma.changelog.create({
+                data: {
+                  repoUrl,
+                  repoName: extractRepoName(repoUrl),
+                  content: fullContent,
+                  wordCount,
+                  format: options.format || 'keep-a-changelog',
+                  commitCount: Number(options.commitCount) || 100,
+                  includeTags: options.includeTags ?? true,
+                  includeContributors: options.includeContributors ?? true,
+                  groupByType: options.groupByType ?? true,
+                  userId,
+                },
+              });
+              loggerService.stepEnd('database.save.completed', 'DB Save Completed', dbStart, {
+                table: 'Changelog',
+                recordId: changelogRecord.id,
+              });
+              const tokensGenerated = Math.round(wordCount * 1.37);
+              await Promise.all([
+                prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeChangelogs" = "lifetimeChangelogs" + 1 WHERE id = ${userId}`,
+                recordDailyGeneration(c.env.DATABASE_URL, userId)
+              ]);
+            } catch (dbError) {
+              loggerService.error('database.save.error', 'Changelog DB Save Error', dbError);
+            }
+          }
+        };
 
-      res.write('data: [DONE]\n\n');
-      res.end();
+        try {
+          c.executionCtx.waitUntil(bgTask());
+        } catch {
+          if (process.env.NODE_ENV !== 'test') {
+            bgTask().catch(console.error);
+          }
+        }
+
+        loggerService.info('generation.completed', 'Changelog generated successfully', {
+          repository: repoUrl,
+          durationMs: Date.now() - reqStart,
+        });
+        await saveRequestLog({
+          route: c.req.path,
+          method: c.req.method,
+          feature: 'CHANGELOG',
+          statusCode: 200,
+          cacheHit: false,
+          finalProvider: provider,
+          targetRepo: extractRepoName(repoUrl),
+          totalDurationMs: Date.now() - reqStart,
+        });
+
+        await streamStr.write('data: [DONE]\n\n');
+      });
     } catch (error: any) {
       loggerService.error('generation.error', 'Changelog generation error', error, {
         repository: repoUrl,
       });
       await saveRequestLog({
-        route: req.baseUrl + req.path,
-        method: req.method,
+        route: c.req.path,
+        method: c.req.method,
         feature: 'CHANGELOG',
         statusCode: 500,
         error: error.message,
         totalDurationMs: Date.now() - reqStart,
       });
 
-      res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
-      res.end();
+      // Stream Error Response
+      c.header('Content-Type', 'text/event-stream');
+      c.header('Cache-Control', 'no-cache');
+      c.header('Connection', 'keep-alive');
+      return stream(c, async (streamStr) => {
+        await streamStr.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+      });
     }
   }
 
-  async getHistory(req: Request, res: Response) {
+  async getHistory(c: AppContext) {
     try {
-      const userId = (req as any).user?.id || (req as any).user?.userId;
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 100;
+      const user = c.get('user');
+      const userId = user?.id || user?.userId;
+      const page = parseInt(c.req.query('page') || '1');
+      const limit = parseInt(c.req.query('limit') || '100');
 
       if (!userId) {
-        return res.status(401).json({ success: false, error: 'Unauthorized' });
+        return c.json({ success: false, error: 'Unauthorized' }, 401);
       }
-      const history = await this.changelogService.getHistory(userId, page, limit);
-      res.json({ success: true, data: history });
+      const history = await new ChangelogService(new GithubService(), new AiService(c.env.DATABASE_URL), c.env.DATABASE_URL).getHistory(userId, page, limit);
+      return c.json({ success: true, data: history });
     } catch (error: any) {
       loggerService.error('database.fetch.error', 'Changelog getHistory error', error);
-      res.status(500).json({ success: false, error: error.message });
+      return c.json({ success: false, error: error.message }, 500);
     }
   }
 
-  async deleteChangelog(req: Request, res: Response) {
-    const { id } = req.params;
+  async deleteChangelog(c: AppContext) {
+    const id = c.req.param('id');
     try {
-      const userId = (req as any).user?.id || (req as any).user?.userId;
+      const user = c.get('user');
+      const userId = user?.id || user?.userId;
       if (!userId) {
-        return res.status(401).json({ success: false, error: 'Unauthorized' });
+        return c.json({ success: false, error: 'Unauthorized' }, 401);
       }
 
-      await this.changelogService.deleteChangelog(id, userId);
-      res.json({ success: true });
+      await new ChangelogService(new GithubService(), new AiService(c.env.DATABASE_URL), c.env.DATABASE_URL).deleteChangelog(id!, String(userId));
+      return c.json({ success: true });
     } catch (error: any) {
       loggerService.error('database.delete.error', 'Changelog delete error', error, {
         paramId: id,
       });
-      res.status(500).json({ success: false, error: error.message });
+      return c.json({ success: false, error: error.message }, 500);
     }
   }
 }

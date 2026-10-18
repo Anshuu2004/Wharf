@@ -1,84 +1,82 @@
-import { Request, Response, NextFunction } from 'express';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { Mock } from "vitest";
 import { auth, requireAuth } from '../../../src/middleware/auth.middleware';
-import jwt from 'jsonwebtoken';
-import prisma from '../../../src/db';
+import * as honoJwt from 'hono/jwt';
+import { createMockContext } from '../test-utils';
 
-jest.mock('jsonwebtoken');
-jest.mock('../../../src/db', () => ({
+vi.mock('hono/jwt', () => ({
+  verify: vi.fn()
+}));
+
+vi.mock('../../../src/db', () => ({
   __esModule: true,
-  default: {
-    user: { findUnique: jest.fn() }
-  }
+  default: {},
+  getPrisma: vi.fn().mockReturnValue({
+    user: { findUnique: vi.fn() }
+  })
 }));
 
 describe('Auth Middleware', () => {
-  let mockReq: any;
-  let mockRes: Partial<Response>;
-  let mockNext: jest.Mock;
-  let mockJson: jest.Mock;
-  let mockStatus: jest.Mock;
+  let mockEnv: any;
+  let mockNext: Mock;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockJson = jest.fn();
-    mockNext = jest.fn();
-    mockStatus = jest.fn().mockReturnValue({ json: mockJson });
-    mockReq = {
-      headers: {}, cookies: {}
-    };
-    mockRes = { status: mockStatus, json: mockJson };
-    process.env.JWT_SECRET = 'test-secret';
+    vi.clearAllMocks();
+    mockNext = vi.fn();
+    mockEnv = { JWT_SECRET: 'test-secret' };
   });
 
   describe('auth', () => {
     it('should call next if no token is found', async () => {
-      await auth(mockReq as Request, mockRes as Response, mockNext);
+      const c = createMockContext({ headers: {} }, mockEnv);
+      await auth(c, mockNext);
       expect(mockNext).toHaveBeenCalled();
-      expect(mockReq.user).toBeUndefined();
+      expect(c.get('user')).toBeUndefined();
     });
 
     it('should call next and set user context if token is valid', async () => {
-      mockReq.headers.authorization = 'Bearer test-token';
+      const c = createMockContext({ headers: { authorization: 'Bearer test-token' } }, mockEnv);
+      c.set('contextStore', {});
+      
       const decodedUser = { userId: 'u-1', username: 'testuser' };
-      (jwt.verify as jest.Mock).mockReturnValue(decodedUser);
-      (prisma.user.findUnique as jest.Mock).mockResolvedValue({ githubAccessToken: 'enc', installationId: 'inst' });
+      (honoJwt.verify as Mock).mockResolvedValue(decodedUser);
       
-      mockReq.contextStore = {};
-
-      await auth(mockReq as Request, mockRes as Response, mockNext);
+      const prismaObj = (await import('../../../src/db')).getPrisma('');
+      (prismaObj.user.findUnique as Mock).mockResolvedValue({ githubAccessToken: 'enc', installationId: 'inst' });
       
-      expect(jwt.verify).toHaveBeenCalledWith('test-token', 'test-secret');
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({ where: { id: 'u-1' }, select: expect.any(Object) });
-      expect(mockReq.user).toEqual({ ...decodedUser, githubAccessToken: 'enc', installationId: 'inst' });
-      expect(mockReq.contextStore.userId).toBe('u-1');
+      await auth(c, mockNext);
+      
+      expect(honoJwt.verify).toHaveBeenCalledWith('test-token', 'test-secret', 'HS256');
+      expect(prismaObj.user.findUnique).toHaveBeenCalledWith({ where: { id: 'u-1' }, select: expect.any(Object) });
+      expect(c.get('user')).toEqual({ ...decodedUser, githubAccessToken: 'enc', installationId: 'inst' });
+      expect(c.get('contextStore').userId).toBe('u-1');
       expect(mockNext).toHaveBeenCalled();
     });
 
     it('should catch errors and silently ignore bad tokens calling next safely', async () => {
-      mockReq.cookies = { token: 'bad-token' };
-      (jwt.verify as jest.Mock).mockImplementation(() => { throw new Error('Bad JWT'); });
+      const c = createMockContext({ headers: { cookie: 'token=bad-token' } }, mockEnv);
+      (honoJwt.verify as Mock).mockRejectedValue(new Error('Bad JWT'));
 
-      await auth(mockReq as Request, mockRes as Response, mockNext);
+      await auth(c, mockNext);
       
-      expect(jwt.verify).toHaveBeenCalled();
-      expect(mockReq.user).toBeUndefined();
+      expect(honoJwt.verify).toHaveBeenCalled();
+      expect(c.get('user')).toBeUndefined();
       expect(mockNext).toHaveBeenCalled();
     });
   });
 
   describe('requireAuth', () => {
-    it('should block unauthenticated requests', () => {
-      requireAuth(mockReq as Request, mockRes as Response, mockNext);
-      expect(mockStatus).toHaveBeenCalledWith(401);
-      expect(mockJson).toHaveBeenCalledWith({ success: false, error: 'Authentication required' });
+    it('should block unauthenticated requests', async () => {
+      const c = createMockContext({}, mockEnv, null);
+      await requireAuth(c, mockNext);
+      expect(c.json).toHaveBeenCalledWith({ success: false, error: 'Authentication required' }, 401);
       expect(mockNext).not.toHaveBeenCalled();
     });
 
-    it('should allow authenticated requests', () => {
-      mockReq.user = { userId: '123' };
-      requireAuth(mockReq as Request, mockRes as Response, mockNext);
+    it('should allow authenticated requests', async () => {
+      const c = createMockContext({}, mockEnv, { userId: '123' });
+      await requireAuth(c, mockNext);
       expect(mockNext).toHaveBeenCalled();
-      expect(mockStatus).not.toHaveBeenCalled();
     });
   });
 });

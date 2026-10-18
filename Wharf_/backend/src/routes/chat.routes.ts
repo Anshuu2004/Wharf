@@ -1,20 +1,12 @@
-import { Router } from 'express';
-import {
-  analyzeRepository,
-  sendMessage,
-  getHistory,
-  getSession,
-} from '../controllers/chat.controller';
+import { Hono } from 'hono';
+import { analyzeRepository, sendMessage, getHistory, getSession } from '../controllers/chat.controller';
 import { auth, requireAuth } from '../middleware/auth.middleware';
+import { Bindings } from '../index';
 
-const router = Router();
+type Variables = { user: any; contextStore: any };
+export const chatRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
-// Define Routes
-router.post('/analyze', auth, analyzeRepository);
-
-// Require Auth For Chat Interaction
-router.post('/message', auth, requireAuth, sendMessage);
-router.get('/history', auth, requireAuth, getHistory);
-router.get('/session/:id', auth, requireAuth, getSession);
-
-export default router;
+chatRoutes.post('/analyze', auth, requireAuth, analyzeRepository);
+chatRoutes.post('/message', auth, requireAuth, sendMessage);
+chatRoutes.get('/history', auth, requireAuth, getHistory);
+chatRoutes.get('/session/:id', auth, requireAuth, getSession);

@@ -1,11 +1,11 @@
 export const loggerMock = {
-  info: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-  debug: jest.fn(),
-  fatal: jest.fn(),
-  trace: jest.fn(),
-  child: jest.fn().mockReturnThis(),
+  info: vi.fn(),
+  error: vi.fn(),
+  warn: vi.fn(),
+  debug: vi.fn(),
+  fatal: vi.fn(),
+  trace: vi.fn(),
+  child: vi.fn().mockReturnThis(),
 };
 
 export default loggerMock;

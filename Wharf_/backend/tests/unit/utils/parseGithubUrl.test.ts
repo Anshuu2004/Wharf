@@ -1,5 +1,5 @@
 import { parseGithubUrl } from '../../../src/utils/parseGithubUrl';
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test } from 'vitest';
 
 describe('parseGithubUrl Utility', () => {
   test('should parse a standard HTTPS github url', () => {

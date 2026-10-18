@@ -1,12 +1,19 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import prisma from '../db';
+import { createMiddleware } from 'hono/factory';
+import { verify } from 'hono/jwt';
+import { getCookie } from 'hono/cookie';
+import { getPrisma } from '../db';
+import { Bindings } from '../index';
 
-export const auth = async (req: Request, res: Response, next: NextFunction) => {
-  const JWT_SECRET = process.env.JWT_SECRET || 'secret';
-  const authHeader = req.headers.authorization;
+type Variables = {
+  user: any;
+  contextStore: any;
+};
+
+export const auth = createMiddleware<{ Bindings: Bindings; Variables: Variables }>(async (c, next) => {
+  const JWT_SECRET = c.env.JWT_SECRET || 'secret';
+  const authHeader = c.req.header('authorization');
   
-  let token = req.cookies?.token;
+  let token = getCookie(c, 'token');
 
   if (!token && authHeader && authHeader.startsWith('Bearer ')) {
     token = authHeader.split(' ')[1];
@@ -17,36 +24,39 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
   }
 
   try {
-    const decoded: any = jwt.verify(token, JWT_SECRET);
+    const decoded: any = await verify(token, JWT_SECRET, 'HS256');
 
-    // Fetch Secure Tokens From Database
+    // Fetch Secure Tokens From Database using Edge Prisma
+    const prisma = getPrisma(c.env.DATABASE_URL);
     const dbUser = await prisma.user.findUnique({
       where: { id: decoded.userId },
       select: { githubAccessToken: true, installationId: true },
     });
 
-    (req as any).user = {
+    c.set('user', {
       ...decoded,
       githubAccessToken: dbUser?.githubAccessToken,
       installationId: dbUser?.installationId,
-    };
+    });
 
-    if ((req as any).contextStore) {
-      (req as any).contextStore.userId = decoded.userId || decoded.id;
-      (req as any).contextStore.username = decoded.username || decoded.githubUsername;
-    }
+    // Initialize contextStore if needed
+    let contextStore = c.get('contextStore') || {};
+    contextStore.userId = decoded.userId || decoded.id;
+    contextStore.username = decoded.username || decoded.githubUsername;
+    c.set('contextStore', contextStore);
 
-    next();
+    await next();
   } catch (error: any) {
-    next();
+    // Invalid Token, Just Proceed Unauthenticated
+    await next();
   }
-};
+});
 
-// Middleware To Require Authentication For Specific Routes.
-export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-  const user = (req as any).user;
+// Middleware To Require Authentication For Specific Routes
+export const requireAuth = createMiddleware<{ Bindings: Bindings; Variables: Variables }>(async (c, next) => {
+  const user = c.get('user');
   if (!user) {
-    return res.status(401).json({ success: false, error: 'Authentication required' });
+    return c.json({ success: false, error: 'Authentication required' }, 401);
   }
-  next();
-};
+  await next();
+});

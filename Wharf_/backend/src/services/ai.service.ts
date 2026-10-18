@@ -20,8 +20,8 @@ function truncateForGroq(prompt: string): string {
 export class AiService {
   private keyRouter: KeyRouterService;
 
-  constructor() {
-    this.keyRouter = new KeyRouterService();
+  constructor(dbUrl: string) {
+    this.keyRouter = new KeyRouterService(dbUrl);
   }
 
   // 1. README Generation
@@ -178,7 +178,11 @@ export class AiService {
     onChunk?: (text: string) => void
   ): Promise<{ text: string; provider: string }> {
     
-    const keyInfo = await this.keyRouter.getBestAvailableKey(userId, ['GROQ', 'PROXY_OPENAI', 'GEMINI', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK']);
+    // Fetch key AND build prompt in parallel — both are independent
+    const [keyInfo, prompt] = await Promise.all([
+      this.keyRouter.getBestAvailableKey(userId, ['GROQ', 'PROXY_OPENAI', 'GEMINI', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK']),
+      Promise.resolve(buildProfilePrompt(profileData, options)),
+    ]);
 
     if (!keyInfo) {
       throw new Error(
@@ -187,7 +191,6 @@ export class AiService {
     }
 
     loggerService.providerSelected(keyInfo.provider.toUpperCase(), { keyType: keyInfo.isSystem ? 'system' : 'user', feature: 'PROFILE' });
-    const prompt = buildProfilePrompt(profileData, options);
     let fullText = '';
     const aiStart = loggerService.stepStart();
 
@@ -347,7 +350,7 @@ export class AiService {
   // 3. Changelog Generation
   async generateChangelogStream(prompt: string, userId?: string): Promise<{ stream: AsyncGenerator<string>; provider: string }> {
     
-    const keyInfo = await this.keyRouter.getBestAvailableKey(userId, ['GEMINI', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK', 'PROXY_OPENAI']);
+    const keyInfo = await this.keyRouter.getBestAvailableKey(userId, ['GEMINI', 'PROXY_OPENAI', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK']);
 
     if (!keyInfo) {
       throw new Error('No API Keys Available. Please Add Your Own API Key In Settings To Continue.');
@@ -370,6 +373,23 @@ export class AiService {
           generator = (async function* () {
             for await (const chunk of result) {
               yield chunk.text || '';
+            }
+          })();
+          break;
+        }
+
+        case 'GROQ': {
+          const groq = new Groq({ apiKey: keyInfo.key });
+          const stream = await groq.chat.completions.create({
+            model: 'llama-3.3-70b-versatile',
+            messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: truncateForGroq(prompt) }],
+            stream: true,
+            max_tokens: 4000,
+            temperature: 0.7,
+          });
+          generator = (async function* () {
+            for await (const chunk of stream) {
+              yield chunk.choices[0]?.delta?.content || '';
             }
           })();
           break;
@@ -480,5 +500,3 @@ export class AiService {
     }
   }
 }
-
-export const aiService = new AiService();
