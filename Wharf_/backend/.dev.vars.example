@@ -1,0 +1,29 @@
+# Supabase Database URL
+PORT=8787
+DIRECT_URL="postgresql://postgres:postgres@localhost:5432/wharf_db"
+DATABASE_URL="postgresql://postgres:postgres@localhost:6543/wharf_db?pgbouncer=true"
+JWT_SECRET="your_development_jwt_secret_min_32_characters_long"
+FRONTEND_URL="http://localhost:5173"
+
+# GitHub OAuth
+GITHUB_CLIENT_ID="your_github_oauth_client_id"
+GITHUB_CLIENT_SECRET="your_github_oauth_client_secret"
+GITHUB_CALLBACK_URL="http://127.0.0.1:8787/api/auth/github/callback"
+ENCRYPTION_SECRET="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
+# GitHub App Credentials (Optional for local dev)
+GITHUB_APP_ID="your_github_app_id"
+GITHUB_APP_CLIENT_ID="your_github_app_client_id"
+GITHUB_APP_CLIENT_SECRET="your_github_app_client_secret"
+GITHUB_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
+
+# System API Key Pool Seeding (Optional default providers)
+SEED_GEMINI_KEY="AIzaSy..."
+SEED_GEMINI_KEY_1="AIzaSy..."
+SEED_GROQ_KEY_1="gsk_..."
+SEED_GROQ_KEY_2="gsk_..."
+SEED_PROXY_OPENAI_KEY_1="sk-..."
+SEED_PROXY_OPENAI_KEY_2="sk-..."
+
+# Admin User IDs (comma-separated if multiple)
+ADMIN_IDS=""
