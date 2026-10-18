@@ -1,9 +1,9 @@
-# Worker Backend Testing
+# Backend Testing
 
 **Framework**: Vitest, Hono Testing, Miniflare (Cloudflare Workers)
-**Location**: `Wharf_/worker-backend/tests/`
+**Location**: `Wharf_/backend/tests/`
 
-The worker-backend testing suite is built around Hono's integrated testing patterns coupled with Vitest for robust execution in the V8 isolate environment.
+The backend testing suite is built around Hono's integrated testing patterns coupled with Vitest for robust execution in the Cloudflare Workers V8 isolate environment.
 
 ### Approach
 *   **Environment**: We test code designed for Cloudflare Workers by leveraging the V8 isolate environment so tests closely mirror the production edge environment.
