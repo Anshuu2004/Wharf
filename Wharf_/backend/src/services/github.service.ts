@@ -95,7 +95,6 @@ export class GithubService {
       const url = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
       const response = await fetch(url, {
         headers: {
-          // Pass Token If Available For Private Repos
           ...(process.env.GITHUB_TOKEN ? { Authorization: `token ${process.env.GITHUB_TOKEN}` } : {}),
         },
       });
@@ -106,8 +105,7 @@ export class GithubService {
     }
   }
 
-  // Bulk-Fetches Multiple Files in a Single Parallel Round — No Sequential Batching Needed
-  // raw.githubusercontent.com Is CDN-Backed & Doesn't Enforce Per-File REST Rate Limits
+  // Bulk-Fetches Multiple Files In A Single Parallel Round — No Sequential Batching Needed
   async bulkFetchFileContents(
     owner: string,
     repo: string,

@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12;
@@ -6,8 +6,8 @@ const AUTH_TAG_LENGTH = 16;
 
 // Encrypts A String Using AES-256-GCM
 // Format: iv:authTag:encryptedContent
-export function encrypt(text: string): string {
-  const secret = process.env.ENCRYPTION_SECRET;
+export function encrypt(text: string, secretOverride?: string): string {
+  const secret = secretOverride || process.env.ENCRYPTION_SECRET;
   if (!secret) {
     throw new Error('ENCRYPTION_SECRET is not defined in environment variables');
   }
@@ -26,8 +26,8 @@ export function encrypt(text: string): string {
 }
 
 // Decrypts A String Encrypted With AES-256-GCM
-export function decrypt(hash: string): string {
-  const secret = process.env.ENCRYPTION_SECRET;
+export function decrypt(hash: string, secretOverride?: string): string {
+  const secret = secretOverride || process.env.ENCRYPTION_SECRET;
   if (!secret) {
     throw new Error('ENCRYPTION_SECRET is not defined in environment variables');
   }

@@ -1,4 +1,4 @@
-import prisma from '../db';
+import { getPrisma } from '../db';
 import { decrypt } from '../utils/encryption';
 
 export interface KeyInfo {
@@ -9,10 +9,16 @@ export interface KeyInfo {
 }
 
 export class KeyRouterService {
+  private dbUrl: string;
+
+  constructor(dbUrl: string) {
+    this.dbUrl = dbUrl;
+  }
   /* Check Only User BYOK Keys */
   async getUserKey(provider: string, userId: string): Promise<KeyInfo | null> {
     const normalizedProvider = provider.toUpperCase();
     try {
+      const prisma = getPrisma(this.dbUrl);
       const userKey = await prisma.userApiKey.findFirst({
         where: {
           userId,
@@ -26,7 +32,7 @@ export class KeyRouterService {
 
       if (userKey) {
         console.log(
-          `[KeyRouter] 🔑 BYOK hit — User Key For ${normalizedProvider} (userId=${userId})`
+          `[KeyRouter] BYOK hit — User Key For ${normalizedProvider} (userId=${userId})`
         );
         await prisma.userApiKey.update({
           where: { id: userKey.id },
@@ -48,6 +54,7 @@ export class KeyRouterService {
   /* Check Only System Key Pool */
   async getSystemKey(provider: string): Promise<KeyInfo | null> {
     const normalizedProvider = provider.toUpperCase();
+    const prisma = getPrisma(this.dbUrl);
     const systemKey = await prisma.systemKey.findFirst({
       where: { provider: normalizedProvider, isExhausted: false },
       orderBy: { lastUsed: 'asc' },
@@ -70,15 +77,17 @@ export class KeyRouterService {
 
   /* Optimized: Find Best Available Key In 1-2 DB Queries Across All Providers */
   async getBestAvailableKey(userId?: string, preferredOrder?: string[]): Promise<KeyInfo | null> {
-    // Provider priority — first match wins. Caller can override order per feature.
+    const prisma = getPrisma(this.dbUrl);
+    
     const providerOrder = preferredOrder?.map((p) => p.toUpperCase()) ?? ['GEMINI', 'GROQ', 'OPENAI', 'ANTHROPIC', 'DEEPSEEK', 'GROK', 'PROXY_OPENAI'];
 
-    // 1. Try user BYOK keys first — single query, sort by priority in memory
+    // 1. Try User BYOK Keys First — Single Query, Sort By Priority In Memory
     if (userId) {
       const userKeys = await prisma.userApiKey.findMany({
         where: { userId, isExhausted: false, isVerified: true, isActive: true },
       });
-      const bestUserKey = userKeys.sort(
+      const validUserKeys = userKeys.filter(k => providerOrder.includes(k.provider.toUpperCase()));
+      const bestUserKey = validUserKeys.sort(
         (a, b) => providerOrder.indexOf(a.provider.toUpperCase()) - providerOrder.indexOf(b.provider.toUpperCase())
       )[0];
 
@@ -91,11 +100,12 @@ export class KeyRouterService {
       }
     }
 
-    // 2. Fall back to system key pool — single query, sort by priority in memory
+    // 2. Fallback To System Key Pool — Single Query, Sort By Priority In Memory
     const systemKeys = await prisma.systemKey.findMany({
       where: { isExhausted: false },
     });
-    const bestSystemKey = systemKeys.sort(
+    const validSystemKeys = systemKeys.filter(k => providerOrder.includes(k.provider.toUpperCase()));
+    const bestSystemKey = validSystemKeys.sort(
       (a, b) => providerOrder.indexOf(a.provider.toUpperCase()) - providerOrder.indexOf(b.provider.toUpperCase())
     )[0];
 
@@ -110,7 +120,7 @@ export class KeyRouterService {
     return null;
   }
 
-  /* Legacy: User Key First, Then System Fallback (Fept For Backward Compat) */
+  /* Legacy: User Key First, Then System Fallback (Kept For Backward Compat) */
   async getAvailableKey(provider: string, userId?: string): Promise<KeyInfo | null> {
     if (userId) {
       const userKey = await this.getUserKey(provider, userId);
@@ -120,6 +130,7 @@ export class KeyRouterService {
   }
 
   async markAsExhausted(keyId: string, isSystem: boolean): Promise<void> {
+    const prisma = getPrisma(this.dbUrl);
     if (isSystem) {
       await prisma.systemKey.update({
         where: { id: keyId },
@@ -134,6 +145,7 @@ export class KeyRouterService {
   }
 
   async resetAllExhaustedKeys(): Promise<void> {
+    const prisma = getPrisma(this.dbUrl);
     await prisma.systemKey.updateMany({
       where: { isExhausted: true },
       data: { isExhausted: false },

@@ -62,3 +62,7 @@ vite.config.js.timestamp-*
 *.key
 *.pid
 *.seed
+
+.dev.vars
+.wrangler
+.cache

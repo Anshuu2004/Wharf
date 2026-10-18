@@ -1,243 +1,197 @@
-import { Request, Response } from 'express';
+import { Context } from 'hono';
+import { stream } from 'hono/streaming';
 import { ProfileService } from '../services/profile.service';
-import { aiService } from '../services/ai.service';
+import { AiService } from '../services/ai.service';
 import { cacheService } from '../services/cache.service';
-import prisma from '../db';
+import { getPrisma } from '../db';
 import { decrypt } from '../utils/encryption';
-import crypto from 'crypto';
 import { recordDailyGeneration } from '../utils/dailyStats';
 import { loggerService, saveRequestLog } from '../utils/logger';
-import { getContextData } from '../utils/asyncContext';
+import { Bindings } from '../index';
 
-export const getProfile = async (req: Request, res: Response) => {
-  const reqStart = Date.now();
-  const reqId = String((req as any).id);
-  const { username } = req.params;
-  const userId = (req as any).user?.userId;
+type AppContext = Context<{ Bindings: Bindings; Variables: { user: any; contextStore: any } }>;
+
+export const getProfile = async (c: AppContext) => {
+  const username = c.req.param('username');
+  const userContext = c.get('user');
+  const userId = userContext?.userId;
 
   try {
     let token: string | undefined;
     let installationId: string | undefined;
 
     if (userId) {
+      const prisma = getPrisma(c.env.DATABASE_URL);
       const user = await prisma.user.findUnique({
         where: { id: userId },
         select: { githubAccessToken: true, installationId: true } as any,
       });
 
       if ((user as any)?.githubAccessToken) {
-        token = decrypt((user as any).githubAccessToken as string);
+        token = decrypt((user as any).githubAccessToken as string, c.env.ENCRYPTION_SECRET);
       }
       if ((user as any)?.installationId) {
         installationId = (user as any).installationId;
       }
     }
 
-    const profileService = new ProfileService({ token, installationId });
-    const profileData = await profileService.getProfileData(username);
+    const opts: any = { installationId };
+    if (token) opts.token = token;
+    const profileService = new ProfileService(opts);
+    const profileData = await profileService.getProfileData(username!);
 
-    res.json({ success: true, data: profileData });
+    return c.json({ success: true, data: profileData });
   } catch (error: any) {
-    loggerService.error('github.fetch.error', 'getProfile error', error, { username });
-    res.status(500).json({ success: false, error: error.message || 'Failed to get profile' });
+    return c.json({ success: false, error: error.message || 'Failed to get profile' }, 500);
   }
 };
 
-export const generate = async (req: Request, res: Response) => {
+export const generate = async (c: AppContext) => {
   const reqStart = Date.now();
-  const reqId = String((req as any).id);
-  const { profileData, options } = req.body;
-  const userId = (req as any).user?.userId;
+  const body = await c.req.json().catch(() => ({}));
+  const { profileData, options } = body;
+  const user = c.get('user');
+  const userId = user?.userId;
 
   if (!profileData || !profileData.username || !options) {
-    return res.status(400).json({ success: false, error: 'profileData and options are required' });
+    return c.json({ success: false, error: 'profileData and options are required' }, 400);
   }
 
   const { username } = profileData;
   const { template, theme } = options;
 
   try {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.flushHeaders();
-
-    const hash = crypto
-      .createHash('md5')
-      .update(JSON.stringify({ profileData, options }))
-      .digest('hex');
+    const encoder = new TextEncoder();
+    const data = encoder.encode(JSON.stringify(options));
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
     const cachedReadme = await cacheService.getProfileReadme(username, template, theme, hash);
     if (cachedReadme) {
       loggerService.cacheHit('profile:' + username);
 
       await saveRequestLog({
-        route: req.baseUrl + req.path,
-        method: req.method,
+        route: c.req.path,
+        method: c.req.method,
         feature: 'PROFILE',
         statusCode: 200,
         cacheHit: true,
         totalDurationMs: Date.now() - reqStart,
       });
 
-      const chunkSize = 100;
-      for (let i = 0; i < cachedReadme.length; i += chunkSize) {
-        const chunk = cachedReadme.slice(i, i + chunkSize);
-        res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      }
-      res.write('data: [DONE]\n\n');
-      return res.end();
-    }
-
-    let generatedMarkdown;
-    let fallbackProviderStr;
-    if (template === 'terminal') {
-      const { generateTerminalReadmeDocs } = require('../utils/terminalTemplate');
-      generatedMarkdown = generateTerminalReadmeDocs(
-        username,
-        options.birthday,
-        options.terminalConfig,
-        profileData.avatarUrl
-      );
-      fallbackProviderStr = 'terminal-static';
-      const chunkSize = 100;
-      for (let i = 0; i < generatedMarkdown.length; i += chunkSize) {
-        const chunk = generatedMarkdown.slice(i, i + chunkSize);
-        res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
-        await new Promise((resolve) => setTimeout(resolve, 5));
-      }
-    } else {
-      const result = await aiService.generateProfileStream(
-        profileData,
-        options,
-        userId,
-        (chunk) => {
-          res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+      c.header('Content-Type', 'text/event-stream');
+      c.header('Cache-Control', 'no-cache');
+      c.header('Connection', 'keep-alive');
+      return stream(c, async (streamStr) => {
+        const chunkSize = 100;
+        for (let i = 0; i < cachedReadme.length; i += chunkSize) {
+          const chunk = cachedReadme.slice(i, i + chunkSize);
+          await streamStr.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+          await new Promise((resolve) => setTimeout(resolve, 10));
         }
-      );
-      generatedMarkdown = result.text;
-      fallbackProviderStr = result.provider;
+        await streamStr.write('data: [DONE]\n\n');
+      });
     }
 
-    const mdProcStart = loggerService.stepStart();
-    await cacheService.setProfileReadme(username, template, theme, hash, generatedMarkdown);
+    let generatedMarkdown: string;
+    let fallbackProviderStr: string;
+    const prisma = getPrisma(c.env.DATABASE_URL);
 
-    // Save success metric before possible DB error
-    await saveRequestLog({
-      route: req.baseUrl + req.path,
-      method: req.method,
-      statusCode: 200,
-      cacheHit: false,
-      feature: 'PROFILE',
-      finalProvider: fallbackProviderStr,
-      targetUsername: username,
-      totalDurationMs: Date.now() - reqStart,
-    });
-    loggerService.stepEnd(
-      'markdown.processing.completed',
-      'Markdown Processing Completed',
-      mdProcStart
-    );
-
-    const serialStart = loggerService.stepStart();
-    loggerService.info('generation.completed', 'Generated Profile successfully', {
-      username,
-      durationMs: Date.now() - reqStart,
-    });
-
-    if (userId) {
-      try {
-        const wordCount = generatedMarkdown.split(/\s+/).filter(Boolean).length;
-        const dbStart = loggerService.stepStart();
-        const { username: appUsername } = getContextData();
-        const record = await prisma.profileReadme.create({
-          data: {
-            userId,
-            appUsername,
-            username,
-            content: generatedMarkdown,
-            wordCount,
-            template,
-            theme,
-            badges: options.githubBadges || [],
-            showStats: options.showStats ?? true,
-            showTopLanguages: options.showTopLanguages ?? true,
-            showContributions: options.showContributions ?? true,
-          },
-        });
-        loggerService.stepEnd('database.save.completed', 'DB Save Completed', dbStart, {
-          table: 'ProfileReadme',
-          recordId: record.id,
-        });
-
-        // Permanently Bank These Tokens — Raw SQL Bypasses Stale Prisma Client Types
-        const tokensGenerated = Math.round(wordCount * 1.37);
-        await Promise.all([
-          prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeProfiles" = "lifetimeProfiles" + 1 WHERE id = ${userId}`,
-          recordDailyGeneration(userId),
-          (async () => {
-            // Update Stats
-            const stats = await prisma.profileStats.findFirst();
-            if (stats) {
-              await prisma.profileStats.update({
-                where: { id: stats.id },
-                data: {
-                  totalProfiles: { increment: 1 },
-                  totalReadmes: { increment: 1 },
-                },
-              });
-            } else {
-              await prisma.profileStats.create({
-                data: { totalProfiles: 1, totalReadmes: 1 },
-              });
-            }
-          })()
-        ]);
-      } catch (dbError: any) {
-        loggerService.error(
-          'database.save.error',
-          '[CRITICAL DB ERROR] Failed to save profile generation to DB',
-          dbError
+    c.header('Content-Type', 'text/event-stream');
+    c.header('Cache-Control', 'no-cache');
+    c.header('Connection', 'keep-alive');
+    return stream(c, async (streamStr) => {
+      if (template === 'terminal') {
+        const { generateTerminalReadmeDocs } = require('../utils/terminalTemplate');
+        generatedMarkdown = generateTerminalReadmeDocs(
+          username,
+          options.birthday,
+          options.terminalConfig,
+          profileData.avatarUrl
         );
+        fallbackProviderStr = 'terminal-static';
+        const chunkSize = 100;
+        for (let i = 0; i < generatedMarkdown.length; i += chunkSize) {
+          const chunk = generatedMarkdown.slice(i, i + chunkSize);
+          await streamStr.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+          await new Promise((resolve) => setTimeout(resolve, 5));
+        }
+      } else {
+        const aiService = new AiService(c.env.DATABASE_URL);
+        const result = await aiService.generateProfileStream(
+          profileData,
+          options,
+          userId,
+          async (chunk) => {
+            await streamStr.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+          }
+        );
+        generatedMarkdown = result.text;
+        fallbackProviderStr = result.provider;
       }
-    }
 
-    res.write('data: [DONE]\n\n');
-    res.end();
-    loggerService.stepEnd(
-      'response.serialization.completed',
-      'Response Serialization Completed',
-      serialStart
-    );
-  } catch (error: any) {
-    loggerService.error('generation.error', 'Profile README generation error', error, { username });
-    await saveRequestLog({
-      route: req.baseUrl + req.path,
-      method: req.method,
-      feature: 'PROFILE',
-      statusCode: 500,
-      error: error.message,
-      totalDurationMs: Date.now() - reqStart,
+      const bgTask = async () => {
+        await cacheService.setProfileReadme(username, template, theme, hash, generatedMarkdown);
+
+        if (userId) {
+          try {
+            const wordCount = generatedMarkdown.split(/\s+/).filter(Boolean).length;
+            const record = await prisma.profileReadme.create({
+              data: {
+                userId,
+                appUsername: c.get('contextStore')?.username || 'unknown',
+                username,
+                content: generatedMarkdown,
+                wordCount,
+                template,
+                theme,
+                badges: options.githubBadges || [],
+                showStats: options.showStats ?? true,
+                showTopLanguages: options.showTopLanguages ?? true,
+                showContributions: options.showContributions ?? true,
+              },
+            });
+
+            const tokensGenerated = Math.round(wordCount * 1.37);
+            await Promise.all([
+              prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeProfiles" = "lifetimeProfiles" + 1 WHERE id = ${userId}`,
+              recordDailyGeneration(c.env.DATABASE_URL, userId),
+            ]);
+          } catch (dbError: any) {
+            loggerService.error('database.save.error', '[CRITICAL DB ERROR] Failed to save profile generation to DB', dbError);
+          }
+        }
+      };
+
+      try {
+        c.executionCtx.waitUntil(bgTask());
+      } catch {
+        if (process.env.NODE_ENV !== 'test') {
+          bgTask().catch(console.error);
+        }
+      }
+
+      await streamStr.write('data: [DONE]\n\n');
     });
-    res.write(
-      `data: ${JSON.stringify({ error: error.message || 'Failed to generate Profile README' })}\n\n`
-    );
-    res.end();
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message || 'Failed to generate Profile README' }, 500);
   }
 };
 
-export const getHistory = async (req: Request, res: Response) => {
-  const userId = (req as any).user?.userId;
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
+export const getHistory = async (c: AppContext) => {
+  const user = c.get('user');
+  const userId = user?.userId;
+  const page = parseInt(c.req.query('page') || '1');
+  const limit = Math.min(parseInt(c.req.query('limit') || '50'), 200);
   const skip = (page - 1) * limit;
 
   if (!userId) {
-    return res.status(401).json({ success: false, error: 'Authentication required' });
+    return c.json({ success: false, error: 'Authentication required' }, 401);
   }
 
   try {
+    const prisma = getPrisma(c.env.DATABASE_URL);
     const history = await prisma.profileReadme.findMany({
       where: { userId },
       skip,
@@ -245,28 +199,27 @@ export const getHistory = async (req: Request, res: Response) => {
       orderBy: { generatedAt: 'desc' },
     });
 
-    res.json({ success: true, data: history });
+    return c.json({ success: true, data: history });
   } catch (error: any) {
-    loggerService.error('database.fetch.error', 'Failed to fetch profile history', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch history' });
+    return c.json({ success: false, error: 'Failed to fetch history' }, 500);
   }
 };
 
-export const getStats = async (req: Request, res: Response) => {
-  const userId = (req as any).user?.userId;
+export const getStats = async (c: AppContext) => {
+  const user = c.get('user');
+  const userId = user?.userId;
 
-  if (!userId) {
-    return res.status(401).json({ success: false, error: 'Authentication required' });
-  }
+  if (!userId) return c.json({ success: false, error: 'Authentication required' }, 401);
 
   try {
+    const prisma = getPrisma(c.env.DATABASE_URL);
     const history = await prisma.profileReadme.findMany({
       where: { userId },
       select: { username: true, template: true, generatedAt: true },
     });
 
     if (!history || history.length === 0) {
-      return res.json({
+      return c.json({
         success: true,
         data: {
           totalProfiles: 0,
@@ -293,48 +246,38 @@ export const getStats = async (req: Request, res: Response) => {
     const sortedDates = history.map((h) => new Date(h.generatedAt).getTime()).sort((a, b) => b - a);
     const lastGenerated = new Date(sortedDates[0]).toLocaleDateString();
 
-    res.json({
+    return c.json({
       success: true,
-      data: {
-        totalProfiles: uniqueProfiles,
-        readmesGenerated,
-        totalStars: 0,
-        templatesUsed,
-        topTemplate,
-        lastGenerated,
-      },
+      data: { totalProfiles: uniqueProfiles, readmesGenerated, totalStars: 0, templatesUsed, topTemplate, lastGenerated },
     });
   } catch (error: any) {
-    loggerService.error('database.fetch.error', 'Failed to fetch stats', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch stats' });
+    return c.json({ success: false, error: 'Failed to fetch stats' }, 500);
   }
 };
 
-export const deleteProfileItem = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const userId = (req as any).user?.userId;
+export const deleteProfileItem = async (c: AppContext) => {
+  const id = c.req.param('id');
+  const user = c.get('user');
+  const userId = user?.userId;
 
-  if (!userId) return res.status(401).json({ success: false, error: 'Authentication required' });
+  if (!userId) return c.json({ success: false, error: 'Authentication required' }, 401);
 
   try {
+    const prisma = getPrisma(c.env.DATABASE_URL);
     const record = await prisma.profileReadme.findUnique({
       where: { id },
     });
 
     if (!record || record.userId !== userId) {
-      return res.status(404).json({ success: false, error: 'Record not found' });
+      return c.json({ success: false, error: 'Record not found' }, 404);
     }
 
-    // High-Water Mark Prerequisite Sync
     const dynamicProfiles = await prisma.profileReadme.count({ where: { userId } });
     await prisma.$executeRaw`UPDATE "User" SET "lifetimeProfiles" = GREATEST("lifetimeProfiles", ${dynamicProfiles}) WHERE id = ${userId}`;
 
     await prisma.profileReadme.delete({ where: { id } });
-    res.json({ success: true, message: 'Deleted successfully' });
+    return c.json({ success: true, message: 'Deleted successfully' });
   } catch (error: any) {
-    loggerService.error('database.delete.error', 'Failed to delete profile history', error, {
-      paramId: id,
-    });
-    res.status(500).json({ success: false, error: 'Failed to delete record' });
+    return c.json({ success: false, error: 'Failed to delete record' }, 500);
   }
 };

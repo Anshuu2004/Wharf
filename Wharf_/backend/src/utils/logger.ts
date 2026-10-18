@@ -1,37 +1,15 @@
-import pino from 'pino';
-import pinoHttp from 'pino-http';
-import prisma from '../db';
-import { randomUUID } from 'crypto';
+// Edge-compatible logger — replaces pino/pino-http which requires Node.js streams
 
-const isDev = process.env.NODE_ENV !== 'production';
+let _prisma: any = null;
 
-export const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
-  redact: {
-    paths: [
-      'req.headers.authorization',
-      'req.headers.cookie',
-      'res.headers["set-cookie"]',
-      'password',
-      'token',
-      'githubAccessToken',
-      'installationId',
-    ],
-    censor: '[REDACTED]',
-  },
-  ...(isDev && {
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: 'SYS:standard',
-        ignore: 'pid,hostname',
-      },
-    },
-  }),
-});
-
-import { getContextData } from './asyncContext';
+async function getDbPrisma() {
+  if (!_prisma) {
+    const { getPrisma } = await import('../db');
+    const url = process.env.DATABASE_URL;
+    if (url) _prisma = getPrisma(url);
+  }
+  return _prisma;
+}
 
 export const saveRequestLog = async (logData: {
   route: string;
@@ -47,42 +25,25 @@ export const saveRequestLog = async (logData: {
   targetRepo?: string;
 }) => {
   try {
-    const ctx = getContextData();
-    await (prisma as any).requestLog.create({
-      data: {
-        ...logData,
-        requestId: ctx.requestId,
-        userId: ctx.userId,
-        appUsername: ctx.username,
-      },
-    });
-  } catch (err) {
-    logger.error({ err }, 'Failed to persist request log to DB');
+    const prisma = await getDbPrisma();
+    if (!prisma) return;
+    await (prisma as any).requestLog.create({ data: logData });
+  } catch (_err) {
+    // Silently swallow log DB errors to never disrupt request flow
   }
 };
 
 class LoggerService {
-  private formatLog(event: string, data?: any) {
-    const ctx = getContextData();
-    return {
-      event,
-      requestId: ctx.requestId,
-      userId: ctx.userId,
-      username: ctx.username,
-      ...data,
-    };
-  }
-
   info(event: string, msg: string, data?: any) {
-    logger.info(this.formatLog(event, data), msg);
+    console.log(`[INFO] [${event}] ${msg}`, data ?? '');
   }
 
   warn(event: string, msg: string, data?: any) {
-    logger.warn(this.formatLog(event, data), msg);
+    console.warn(`[WARN] [${event}] ${msg}`, data ?? '');
   }
 
   error(event: string, msg: string, err: any, data?: any) {
-    logger.error(this.formatLog(event, { err, ...data }), msg);
+    console.error(`[ERROR] [${event}] ${msg}`, err, data ?? '');
   }
 
   cacheHit(repo: string, metadata?: any) {
@@ -98,11 +59,7 @@ class LoggerService {
   }
 
   githubFetchCompleted(repo: string, durationMs: number, metadata?: any) {
-    this.info('github.fetch.completed', 'GitHub Fetch Completed', {
-      repository: repo,
-      durationMs,
-      ...metadata,
-    });
+    this.info('github.fetch.completed', 'GitHub Fetch Completed', { repository: repo, durationMs, ...metadata });
   }
 
   githubFetchError(repo: string, err: any, metadata?: any) {
@@ -114,34 +71,19 @@ class LoggerService {
   }
 
   providerStarted(provider: string, metadata?: any) {
-    this.info('provider.started', `Provider Generation Started: ${provider}`, {
-      provider,
-      ...metadata,
-    });
+    this.info('provider.started', `Provider Generation Started: ${provider}`, { provider, ...metadata });
   }
 
   providerCompleted(provider: string, durationMs: number, metadata?: any) {
-    this.info('provider.completed', `Provider Generation Completed: ${provider}`, {
-      provider,
-      durationMs,
-      ...metadata,
-    });
+    this.info('provider.completed', `Provider Generation Completed: ${provider}`, { provider, durationMs, ...metadata });
   }
 
   providerFailed(provider: string, err: any, metadata?: any) {
-    this.error('provider.failed', `Provider Generation Failed: ${provider}`, err, {
-      provider,
-      ...metadata,
-    });
+    this.error('provider.failed', `Provider Generation Failed: ${provider}`, err, { provider, ...metadata });
   }
 
   providerFallback(failedProvider: string, nextProvider: string, err: any, metadata?: any) {
-    this.warn('provider.fallback', `Fallback from ${failedProvider} to ${nextProvider}`, {
-      failedProvider,
-      nextProvider,
-      err,
-      ...metadata,
-    });
+    this.warn('provider.fallback', `Fallback from ${failedProvider} to ${nextProvider}`, { failedProvider, nextProvider, err, ...metadata });
   }
 
   databaseSave(durationMs: number, metadata?: any) {
@@ -153,12 +95,7 @@ class LoggerService {
   }
 
   cronCompleted(job: string, durationMs: number, processedCount: number, metadata?: any) {
-    this.info('cron.completed', `Cron Job completed: ${job}`, {
-      job,
-      durationMs,
-      processedCount,
-      ...metadata,
-    });
+    this.info('cron.completed', `Cron Job completed: ${job}`, { job, durationMs, processedCount, ...metadata });
   }
 
   /** Returns A Timestamp To Be Passed To stepEnd() */

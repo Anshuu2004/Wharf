@@ -113,7 +113,7 @@ export function buildChangelogPrompt(
   const contributors = [...new Set(allCommits.map((c) => c.author.login || c.author.name).filter(Boolean))];
   const contributorStr = contributors.length > 0 ? contributors.map((c) => c.startsWith('@') ? c : `@${c}`).join(', ') : 'Unknown';
 
-  return `You are an elite technical writer generating an industry-grade, professional CHANGELOG.md for the repository "${repoName}". Follow the Keep a Changelog 1.0.0 specification with the highest possible quality and extreme verbosity. Every section MUST be deeply detailed, descriptive, and comprehensive — never abbreviate or truncate. You must provide rich quality content that explains the "why" and "how" behind every change, ensuring the final document is suitable for enterprise-level release notes.
+  return `You are an elite technical writer generating an industry-grade, professional CHANGELOG.md for the repository "${repoName}". Follow the Keep a Changelog 1.0.0 specification with the highest possible quality and extreme verbosity. Every section MUST be deeply detailed, descriptive, and comprehensive. DO NOT just summarize the commits; you MUST list ALL major and minor (important) changes individually. Never abbreviate, group un-related items, or truncate. You must extract specific details from the commits to provide rich quality content that explains the "why" and "how" behind every change, ensuring the final document is suitable for enterprise-level release notes.
 
 ## REPOSITORY METADATA
 - Repository: ${repoName}
@@ -180,15 +180,16 @@ Examples of BAD entries (DO NOT generate these):
 - Refactor code ← must explain what was refactored and the benefit
 
 ## QUALITY REQUIREMENTS
+- DO NOT just summarize the commits. You MUST explicitly list ALL major and important minor changes. Ensure specific details from the commits are fetched and included.
 - Every entry must have a **bold title**, a thorough and descriptive explanation, and a commit SHA link
 - Descriptions must be highly detailed and span 2-4 full sentences explaining the technical context, impact, and reasoning — never use one word or vague phrases
-- Group closely related commits into a single cohesive, rich entry if they address the same feature or fix
+- Group closely related commits ONLY if they belong to the exact same feature or fix, otherwise represent them as distinct entries to maintain granularity.
 - Include BREAKING CHANGE: prefix in bold for any breaking commits
 - NEVER omit feat or fix commits — these are always user-visible
-- Include chore/refactor/style commits ONLY if they have meaningful user-visible impact (e.g. "Migrate to Vite 6 — build times reduced by 40%")
+- Include chore/refactor/style commits if they represent important minor changes or have meaningful user-visible impact (e.g. "Migrate to Vite 6 — build times reduced by 40%")
 - Entries should be ordered: most impactful first within each subsection
 - Use past tense action verbs: Added, Fixed, Removed, Updated, Migrated, Replaced, Enabled, Disabled
-- The overall document MUST feel extremely premium, comprehensive, and tailored for professional industry use.
+- The overall document MUST feel extremely premium, comprehensive, detailed, and tailored for professional industry use.
 
 ## RAW COMMIT DATA (your source of truth — use exact SHAs and dates):
 

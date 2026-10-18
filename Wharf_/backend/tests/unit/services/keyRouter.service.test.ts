@@ -1,47 +1,52 @@
+import type { Mock } from "vitest";
 import { KeyRouterService } from '../../../src/services/keyRouter.service';
 import prisma from '../../../src/db';
 import { decrypt } from '../../../src/utils/encryption';
 
-jest.mock('../../../src/db', () => ({
-  __esModule: true,
-  default: {
+vi.mock('../../../src/db', () => {
+  const prismaObj = {
     userApiKey: {
-      findFirst: jest.fn(),
-      update: jest.fn(),
-      updateMany: jest.fn(),
+      findFirst: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
     },
     systemKey: {
-      findFirst: jest.fn(),
-      update: jest.fn(),
-      updateMany: jest.fn(),
+      findFirst: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
     }
-  }
+  };
+  return {
+    __esModule: true,
+    default: prismaObj,
+    getPrisma: vi.fn().mockReturnValue(prismaObj),
+  };
+});
+
+vi.mock('../../../src/utils/encryption', () => ({
+  decrypt: vi.fn()
 }));
 
-jest.mock('../../../src/utils/encryption', () => ({
-  decrypt: jest.fn()
-}));
-
-const mockDecrypt = decrypt as jest.Mock;
+const mockDecrypt = decrypt as Mock;
 
 describe('KeyRouterService', () => {
   let keyRouter: KeyRouterService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    keyRouter = new KeyRouterService();
+    vi.clearAllMocks();
+    keyRouter = new KeyRouterService('mock-db-url');
   });
 
   describe('getUserKey', () => {
     it('should return null if user has no valid key', async () => {
-      (prisma.userApiKey.findFirst as jest.Mock).mockResolvedValue(null);
+      (prisma.userApiKey.findFirst as Mock).mockResolvedValue(null);
       const res = await keyRouter.getUserKey('GEMINI', 'u-1');
       expect(res).toBeNull();
     });
 
     it('should return decrypted key and increment usage for valid userkey', async () => {
       const mockDbKey = { id: 'k-1', key: 'encrypted', provider: 'GEMINI' };
-      (prisma.userApiKey.findFirst as jest.Mock).mockResolvedValue(mockDbKey);
+      (prisma.userApiKey.findFirst as Mock).mockResolvedValue(mockDbKey);
       mockDecrypt.mockReturnValue('decrypted-real-key');
 
       const res = await keyRouter.getUserKey('GEMINI', 'u-1');
@@ -60,7 +65,7 @@ describe('KeyRouterService', () => {
   describe('getSystemKey', () => {
     it('should fallback to system key successfully', async () => {
       const mockSysKey = { id: 's-1', key: 'sys-enc', provider: 'ANTHROPIC' };
-      (prisma.systemKey.findFirst as jest.Mock).mockResolvedValue(mockSysKey);
+      (prisma.systemKey.findFirst as Mock).mockResolvedValue(mockSysKey);
       mockDecrypt.mockReturnValue('sys-clear');
 
       const res = await keyRouter.getSystemKey('ANTHROPIC');
@@ -71,8 +76,8 @@ describe('KeyRouterService', () => {
   describe('getAvailableKey', () => {
     it('should use system key if userId is undefined', async () => {
       const sysKey = { id: 's-1', key: 'sys', provider: 'G', isSystem: true };
-      jest.spyOn(keyRouter, 'getSystemKey').mockResolvedValue(sysKey);
-      jest.spyOn(keyRouter, 'getUserKey');
+      vi.spyOn(keyRouter, 'getSystemKey').mockResolvedValue(sysKey);
+      vi.spyOn(keyRouter, 'getUserKey');
 
       const res = await keyRouter.getAvailableKey('GEMINI');
       expect(res).toBe(sysKey);
@@ -81,8 +86,8 @@ describe('KeyRouterService', () => {
 
     it('should use user key if available, skipping system key fallback', async () => {
       const uKey = { id: 'u-1', key: 'uu', provider: 'G', isSystem: false };
-      jest.spyOn(keyRouter, 'getUserKey').mockResolvedValue(uKey);
-      jest.spyOn(keyRouter, 'getSystemKey').mockResolvedValue(null);
+      vi.spyOn(keyRouter, 'getUserKey').mockResolvedValue(uKey);
+      vi.spyOn(keyRouter, 'getSystemKey').mockResolvedValue(null);
 
       const res = await keyRouter.getAvailableKey('GEMINI', 'user-123');
       expect(res).toBe(uKey);

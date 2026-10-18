@@ -1,97 +1,90 @@
-import { Request, Response } from 'express';
+import { Context } from 'hono';
+import { stream } from 'hono/streaming';
 import { RepoService } from '../services/repo.service';
-import { aiService } from '../services/ai.service';
+import { AiService } from '../services/ai.service';
 import { cacheService } from '../services/cache.service';
 import { parseGithubUrl } from '../utils/parseGithubUrl';
 import { decrypt } from '../utils/encryption';
-import prisma from '../db';
+import { getPrisma } from '../db';
 import { recordDailyGeneration } from '../utils/dailyStats';
 import { loggerService, saveRequestLog } from '../utils/logger';
+import { Bindings } from '../index';
 
-export const generateReadme = async (req: Request, res: Response) => {
+type AppContext = Context<{ Bindings: Bindings; Variables: { user: any; contextStore: any } }>;
+
+export const generateReadme = async (c: AppContext) => {
   const reqStart = Date.now();
-  const reqId = String((req as any).id);
-  const { repoUrl, tone, sections } = req.body;
-  const userId = (req as any).user?.userId;
+  const body = await c.req.json().catch(() => ({}));
+  const { repoUrl, tone, sections } = body;
+  const user = c.get('user');
+  const userId = user?.userId;
 
   if (!repoUrl || !tone || !sections || !Array.isArray(sections)) {
-    return res
-      .status(400)
-      .json({ success: false, error: 'repoUrl, tone, and sections are required fields' });
+    return c.json({ success: false, error: 'repoUrl, tone, and sections are required fields' }, 400);
   }
 
   const parsed = parseGithubUrl(repoUrl);
   if (!parsed) {
-    return res.status(400).json({ success: false, error: 'Invalid GitHub URL' });
+    return c.json({ success: false, error: 'Invalid GitHub URL' }, 400);
   }
 
   const { owner, repo } = parsed;
 
   try {
-    // Set SSE Headers
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.flushHeaders();
-
-    // Check Redis Cache First
     const cacheStart = loggerService.stepStart();
     const cachedReadme = await cacheService.getReadme(owner, repo, tone, sections);
     loggerService.stepEnd('cache.lookup.completed', 'Cache Lookup Completed', cacheStart, {
       repository: `${owner}/${repo}`,
     });
+
     if (cachedReadme) {
       loggerService.cacheHit(`${owner}/${repo}`);
       await saveRequestLog({
-        route: req.baseUrl + req.path,
-        method: req.method,
+        route: c.req.path,
+        method: c.req.method,
         feature: 'README',
         statusCode: 200,
         cacheHit: true,
         totalDurationMs: Date.now() - reqStart,
       });
-      const chunkSize = 100;
-      for (let i = 0; i < cachedReadme.length; i += chunkSize) {
-        const chunk = cachedReadme.slice(i, i + chunkSize);
-        res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
-        await new Promise((resolve) => setTimeout(resolve, 10)); // Short Delay For Smooth UI Stream
-      }
-      res.write('data: [DONE]\n\n');
-      return res.end();
+
+      c.header('Content-Type', 'text/event-stream');
+      c.header('Cache-Control', 'no-cache');
+      c.header('Connection', 'keep-alive');
+      return stream(c, async (streamStr) => {
+        const chunkSize = 100;
+        for (let i = 0; i < cachedReadme.length; i += chunkSize) {
+          const chunk = cachedReadme.slice(i, i + chunkSize);
+          await streamStr.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+          await new Promise((resolve) => setTimeout(resolve, 10)); 
+        }
+          await streamStr.write('data: [DONE]\n\n');
+      });
     }
 
-    // Cache Miss: Proceed With Fetching Repository Analysis
     let token: string | undefined;
     let installationId: string | undefined;
+    let encryptedToken = user?.githubAccessToken;
 
-    let encryptedToken = (req as any).user?.githubAccessToken;
-
+    const prisma = getPrisma(c.env.DATABASE_URL);
     if (userId) {
       if (encryptedToken) {
-        token = decrypt(encryptedToken);
+        token = decrypt(encryptedToken, c.env.ENCRYPTION_SECRET);
       } else {
         try {
-          const user = await prisma.user.findUnique({
+          const userDb = await prisma.user.findUnique({
             where: { id: userId },
-            select: {
-              githubAccessToken: true,
-              installationId: true,
-            },
+            select: { githubAccessToken: true, installationId: true } as any,
           });
 
-          if (typeof user?.githubAccessToken === 'string') {
-            token = decrypt(user.githubAccessToken);
+          if (typeof userDb?.githubAccessToken === 'string') {
+            token = decrypt(userDb.githubAccessToken as string, c.env.ENCRYPTION_SECRET);
           }
-
-          if (user?.installationId) {
-            installationId = user.installationId;
+          if (userDb?.installationId) {
+            installationId = userDb.installationId as unknown as string;
           }
         } catch (dbErr: any) {
-          loggerService.warn(
-            'database.read.error',
-            'Failed to read user from DB in generate.controller',
-            dbErr
-          );
+          loggerService.warn('database.read.error', 'Failed to read user from DB in generate.controller', dbErr);
         }
       }
     }
@@ -99,140 +92,142 @@ export const generateReadme = async (req: Request, res: Response) => {
     const repoService = new RepoService({ token, installationId });
     const githubStart = loggerService.stepStart();
     const repoContext = await repoService.analyzeRepo(repoUrl);
-    loggerService.stepEnd('github.fetch.completed', 'GitHub Fetch Completed', githubStart, {
-      repository: `${owner}/${repo}`,
-    });
+    loggerService.stepEnd('github.fetch.completed', 'GitHub Fetch Completed', githubStart, { repository: `${owner}/${repo}` });
 
-    // Call AIService & Stream Back To User
-    const aiStart = loggerService.stepStart();
-    const { text: generatedMarkdown, provider } = await aiService.generateReadmeStream(
-      repoContext,
-      tone,
-      sections,
-      userId,
-      (chunk) => {
-        res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
-      }
-    );
-    loggerService.stepEnd('generation.ai.completed', 'AI Generation Completed', aiStart, {
-      repository: `${owner}/${repo}`,
-      provider,
-    });
+    c.header('Content-Type', 'text/event-stream');
+    c.header('Cache-Control', 'no-cache');
+    c.header('Connection', 'keep-alive');
+    return stream(c, async (streamStr) => {
+      const aiStart = loggerService.stepStart();
+      const aiService = new AiService(c.env.DATABASE_URL);
+      const { text: generatedMarkdown, provider } = await aiService.generateReadmeStream(
+        repoContext,
+        tone,
+        sections,
+        userId,
+        async (chunk) => {
+          await streamStr.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+        }
+      );
+      loggerService.stepEnd('generation.ai.completed', 'AI Generation Completed', aiStart, {
+        repository: `${owner}/${repo}`,
+        provider,
+      });
 
-    const mdProcStart = loggerService.stepStart();
-    // Store In Cache - Pass Sections As Array
-    await cacheService.setReadme(owner, repo, tone, sections, generatedMarkdown);
+      // Background non-blocking tasks
+      const bgTask = async () => {
+        const mdProcStart = loggerService.stepStart();
+        await cacheService.setReadme(owner, repo, tone, sections, generatedMarkdown);
 
-    // Save To Database Repository List If User Is Logged In
-    if (userId) {
-      const dbStart = loggerService.stepStart();
+        if (userId) {
+          const dbStart = loggerService.stepStart();
+          try {
+            const repository = await prisma.repository.upsert({
+              where: { owner_name_userId: { owner, name: repo, userId } },
+              update: {
+                description: repoContext.meta.description,
+                stars: repoContext.meta.stars,
+                language: repoContext.meta.language,
+              },
+              create: {
+                owner,
+                name: repo,
+                userId,
+                url: repoUrl,
+                description: repoContext.meta.description,
+                stars: repoContext.meta.stars,
+                language: repoContext.meta.language,
+              },
+            });
+
+            const wordCount = generatedMarkdown.split(/\s+/).filter(Boolean).length;
+            const tokensGenerated = Math.round(wordCount * 1.37);
+
+            const genRecord = await prisma.generation.create({
+              data: {
+                type: 'README',
+                content: generatedMarkdown,
+                wordCount,
+                options: { tone, sections },
+                repoId: repository.id,
+              },
+            });
+            loggerService.stepEnd('database.save.completed', 'DB Save Completed', dbStart, {
+              table: 'Generation',
+              recordId: genRecord.id,
+            });
+
+            await Promise.all([
+              prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeReadmes" = "lifetimeReadmes" + 1 WHERE id = ${userId}`,
+              recordDailyGeneration(c.env.DATABASE_URL, userId)
+            ]);
+          } catch (dbError) {
+            loggerService.error('database.save.error', 'Failed to save generation to DB', dbError);
+          }
+        }
+        loggerService.stepEnd('markdown.processing.completed', 'Markdown Processing Completed', mdProcStart);
+      };
+
       try {
-        const repository = await prisma.repository.upsert({
-          where: { owner_name_userId: { owner, name: repo, userId } },
-          update: {
-            description: repoContext.meta.description,
-            stars: repoContext.meta.stars,
-            language: repoContext.meta.language,
-          },
-          create: {
-            owner,
-            name: repo,
-            userId,
-            url: repoUrl,
-            description: repoContext.meta.description,
-            stars: repoContext.meta.stars,
-            language: repoContext.meta.language,
-          },
-        });
-
-        const wordCount = generatedMarkdown.split(/\s+/).filter(Boolean).length;
-        const tokensGenerated = Math.round(wordCount * 1.37);
-
-        const genRecord = await prisma.generation.create({
-          data: {
-            type: 'README',
-            content: generatedMarkdown,
-            wordCount,
-            options: { tone, sections },
-            repoId: repository.id,
-          },
-        });
-        loggerService.stepEnd('database.save.completed', 'DB Save Completed', dbStart, {
-          table: 'Generation',
-          recordId: genRecord.id,
-        });
-
-        // Permanently Bank These Tokens — Raw SQL Bypasses Stale Prisma Client Types
-        await Promise.all([
-          prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${tokensGenerated}, "lifetimeReadmes" = "lifetimeReadmes" + 1 WHERE id = ${userId}`,
-          // Record today's count in DailyStats so heatmap/trend survive deletions
-          recordDailyGeneration(userId)
-        ]);
-      } catch (dbError) {
-        loggerService.error('database.save.error', 'Failed to save generation to DB', dbError);
+        c.executionCtx.waitUntil(bgTask());
+      } catch {
+        if (process.env.NODE_ENV !== 'test') {
+          bgTask().catch(console.error);
+        }
       }
-    }
 
-    loggerService.stepEnd(
-      'markdown.processing.completed',
-      'Markdown Processing Completed',
-      mdProcStart
-    );
+      loggerService.info('generation.completed', 'README generated successfully', {
+        repository: `${owner}/${repo}`,
+        cache: 'MISS',
+        durationMs: Date.now() - reqStart,
+      });
+      await saveRequestLog({
+        route: c.req.path,
+        method: c.req.method,
+        feature: 'README',
+        statusCode: 200,
+        cacheHit: false,
+        finalProvider: provider,
+        targetRepo: `${owner}/${repo}`,
+        totalDurationMs: Date.now() - reqStart,
+      });
 
-    const serialStart = loggerService.stepStart();
-    loggerService.info('generation.completed', 'README generated successfully', {
-      repository: `${owner}/${repo}`,
-      cache: 'MISS',
-      durationMs: Date.now() - reqStart,
+      await streamStr.write('data: [DONE]\n\n');
     });
-    await saveRequestLog({
-      route: req.baseUrl + req.path,
-      method: req.method,
-      feature: 'README',
-      statusCode: 200,
-      cacheHit: false,
-      finalProvider: provider,
-      targetRepo: `${owner}/${repo}`,
-      totalDurationMs: Date.now() - reqStart,
-    });
-
-    res.write('data: [DONE]\n\n');
-    res.end();
-    loggerService.stepEnd(
-      'response.serialization.completed',
-      'Response Serialization Completed',
-      serialStart
-    );
   } catch (error: any) {
     loggerService.error('generation.error', 'README generation error', error, {
       repository: `${owner}/${repo}`,
     });
     await saveRequestLog({
-      route: req.baseUrl + req.path,
-      method: req.method,
+      route: c.req.path,
+      method: c.req.method,
       feature: 'README',
       statusCode: 500,
       error: error.message,
       totalDurationMs: Date.now() - reqStart,
     });
-    res.write(
-      `data: ${JSON.stringify({ error: error.message || 'Failed to generate README' })}\n\n`
-    );
-    res.end();
+    c.header('Content-Type', 'text/event-stream');
+    c.header('Cache-Control', 'no-cache');
+    c.header('Connection', 'keep-alive');
+    return stream(c, async (streamStr) => {
+      await streamStr.write(`data: ${JSON.stringify({ error: error.message || 'Failed to generate README' })}\n\n`);
+    });
   }
 };
 
-export const getHistory = async (req: Request, res: Response) => {
-  const userId = (req as any).user?.userId;
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
+export const getHistory = async (c: AppContext) => {
+  const user = c.get('user');
+  const userId = user?.userId;
+  const page = parseInt(c.req.query('page') || '1');
+  const limit = Math.min(parseInt(c.req.query('limit') || '50'), 200);
   const skip = (page - 1) * limit;
 
   if (!userId) {
-    return res.status(401).json({ success: false, error: 'Authentication required' });
+    return c.json({ success: false, error: 'Authentication required' }, 401);
   }
 
   try {
+    const prisma = getPrisma(c.env.DATABASE_URL);
     const history = await prisma.generation.findMany({
       where: {
         repository: {
@@ -247,34 +242,28 @@ export const getHistory = async (req: Request, res: Response) => {
         wordCount: true,
         createdAt: true,
         repository: {
-          select: {
-            owner: true,
-            name: true,
-            url: true,
-            language: true,
-            stars: true,
-          },
+          select: { owner: true, name: true, url: true, language: true, stars: true },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { createdAt: 'desc' },
     });
 
-    res.json({ success: true, data: history });
+    return c.json({ success: true, data: history });
   } catch (error: any) {
     loggerService.error('database.fetch.error', 'Failed to fetch generation history', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch generation history' });
+    return c.json({ success: false, error: 'Failed to fetch generation history' }, 500);
   }
 };
 
-export const getHistoryById = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const userId = (req as any).user?.userId;
+export const getHistoryById = async (c: AppContext) => {
+  const id = c.req.param('id');
+  const user = c.get('user');
+  const userId = user?.userId;
 
-  if (!userId) return res.status(401).json({ success: false, error: 'Authentication required' });
+  if (!userId) return c.json({ success: false, error: 'Authentication required' }, 401);
 
   try {
+    const prisma = getPrisma(c.env.DATABASE_URL);
     const record = await prisma.generation.findUnique({
       where: { id },
       include: {
@@ -283,46 +272,43 @@ export const getHistoryById = async (req: Request, res: Response) => {
     });
 
     if (!record || record.repository.userId !== userId) {
-      return res.status(404).json({ success: false, error: 'Record not found' });
+      return c.json({ success: false, error: 'Record not found' }, 404);
     }
 
-    res.json({ success: true, data: record });
+    return c.json({ success: true, data: record });
   } catch (error: any) {
-    loggerService.error('database.fetch.error', 'Failed to fetch generation by ID', error, {
-      paramId: id,
-    });
-    res.status(500).json({ success: false, error: 'Failed to fetch generation' });
+    loggerService.error('database.fetch.error', 'Failed to fetch generation by ID', error, { paramId: id });
+    return c.json({ success: false, error: 'Failed to fetch generation' }, 500);
   }
 };
 
-export const deleteHistoryItem = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const userId = (req as any).user?.userId;
+export const deleteHistoryItem = async (c: AppContext) => {
+  const id = c.req.param('id');
+  const user = c.get('user');
+  const userId = user?.userId;
 
-  if (!userId) return res.status(401).json({ success: false, error: 'Authentication required' });
+  if (!userId) return c.json({ success: false, error: 'Authentication required' }, 401);
 
   try {
+    const prisma = getPrisma(c.env.DATABASE_URL);
     const record = await prisma.generation.findUnique({
       where: { id },
       include: { repository: true },
     });
 
     if (!record || record.repository.userId !== userId) {
-      return res.status(404).json({ success: false, error: 'Record not found' });
+      return c.json({ success: false, error: 'Record not found' }, 404);
     }
 
-    // High-Water Mark Prerequisite Sync: Before Deleting, Ensure Lifetime Counter
     const userDynamicReadmes = await prisma.generation.count({
       where: { repository: { userId }, type: 'README' },
     });
     await prisma.$executeRaw`UPDATE "User" SET "lifetimeReadmes" = GREATEST("lifetimeReadmes", ${userDynamicReadmes}) WHERE id = ${userId}`;
 
     await prisma.generation.delete({ where: { id } });
-    res.json({ success: true, message: 'Deleted successfully' });
+    return c.json({ success: true, message: 'Deleted successfully' });
   } catch (error: any) {
-    loggerService.error('database.delete.error', 'Failed to delete generation', error, {
-      paramId: id,
-    });
-    res.status(500).json({ success: false, error: 'Failed to delete record' });
+    loggerService.error('database.delete.error', 'Failed to delete generation', error, { paramId: id });
+    return c.json({ success: false, error: 'Failed to delete record' }, 500);
   }
 };

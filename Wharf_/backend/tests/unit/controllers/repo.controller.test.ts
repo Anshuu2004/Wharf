@@ -1,85 +1,70 @@
-import { Request, Response } from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from "vitest";
+import type { Mock } from "vitest";
 import { analyzeRepo } from '../../../src/controllers/repo.controller';
 import { RepoService } from '../../../src/services/repo.service';
 import { decrypt } from '../../../src/utils/encryption';
-import prisma from '../../../src/db';
+import { createMockContext } from '../test-utils';
 
-jest.mock('../../../src/services/repo.service');
-jest.mock('../../../src/utils/encryption');
-jest.mock('../../../src/db', () => ({
+vi.mock('../../../src/services/repo.service');
+vi.mock('../../../src/utils/encryption');
+vi.mock('../../../src/db', () => ({
   __esModule: true,
-  default: {
-    user: {
-      findUnique: jest.fn(),
-    }
-  }
+  default: {},
+  getPrisma: vi.fn().mockReturnValue({
+    user: { findUnique: vi.fn() },
+  })
 }));
 
 describe('RepoController', () => {
-  let mockReq: any;
-  let mockRes: Partial<Response>;
-  let mockStatus: jest.Mock;
-  let mockJson: jest.Mock;
+  let mockEnv: any;
+  let prismaObj: any;
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockJson = jest.fn();
-    mockStatus = jest.fn().mockReturnValue({ json: mockJson });
-    mockReq = {
-      body: {},
-      user: {} as any
-    };
-    mockRes = {
-      status: mockStatus,
-      json: mockJson,
-    };
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    mockEnv = { ENCRYPTION_SECRET: 'secret', DATABASE_URL: 'post://' };
+    prismaObj = (await import('../../../src/db')).getPrisma('');
   });
 
   describe('analyzeRepo', () => {
     it('should return 400 if repoUrl is missing', async () => {
-      mockReq.body = {};
-      await analyzeRepo(mockReq as Request, mockRes as Response);
+      const c = createMockContext({ body: {} }, mockEnv);
+      const res = await analyzeRepo(c);
 
-      expect(mockStatus).toHaveBeenCalledWith(400);
-      expect(mockJson).toHaveBeenCalledWith({ success: false, error: 'Repository URL is required' });
+      expect(c.json).toHaveBeenCalledWith({ success: false, error: 'Repository URL is required' }, 400);
     });
 
     it('should inject DB user tokens and return 200 on successful analysis', async () => {
-      mockReq.body = { repoUrl: 'https://github.com/a/b' };
-      (mockReq as any).user = { userId: 'u-1' }; // No Token In JWT
+      const c = createMockContext({ body: { repoUrl: 'https://github.com/a/b' } }, mockEnv, { userId: 'u-1' });
 
-      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+      (prismaObj.user.findUnique as Mock).mockResolvedValue({
         githubAccessToken: 'encrypted-token',
         installationId: 'inst-id'
       });
-      (decrypt as jest.Mock).mockReturnValue('clear-token');
+      (decrypt as Mock).mockReturnValue('clear-token');
 
       const mockAnalysisResult = { meta: { name: 'b' } };
-      (RepoService.prototype.analyzeRepo as jest.Mock).mockResolvedValue(mockAnalysisResult);
+      (RepoService.prototype.analyzeRepo as Mock).mockResolvedValue(mockAnalysisResult);
 
-      await analyzeRepo(mockReq as Request, mockRes as Response);
+      await analyzeRepo(c);
 
-      // Verified Decrypt & DB Query Logic
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({ where: { id: 'u-1' }, select: { githubAccessToken: true, installationId: true } });
-      expect(decrypt).toHaveBeenCalledWith('encrypted-token');
+      expect(prismaObj.user.findUnique).toHaveBeenCalledWith({ where: { id: 'u-1' }, select: { githubAccessToken: true, installationId: true } });
+      expect(decrypt).toHaveBeenCalledWith('encrypted-token', 'secret');
       expect(RepoService).toHaveBeenCalledWith({ token: 'clear-token', installationId: 'inst-id' });
 
-      expect(mockJson).toHaveBeenCalledWith({
+      expect(c.json).toHaveBeenCalledWith({
         success: true,
         data: mockAnalysisResult
       });
     });
 
     it('should handle service errors normally', async () => {
-      mockReq.body = { repoUrl: 'https://github.com/a/b' };
+      const c = createMockContext({ body: { repoUrl: 'https://github.com/a/b' } }, mockEnv);
       const err = new Error('Not found') as any;
       err.status = 404;
-      (RepoService.prototype.analyzeRepo as jest.Mock).mockRejectedValue(err);
+      (RepoService.prototype.analyzeRepo as Mock).mockRejectedValue(err);
 
-      await analyzeRepo(mockReq as Request, mockRes as Response);
-
-      expect(mockStatus).toHaveBeenCalledWith(404);
-      expect(mockJson).toHaveBeenCalledWith({ success: false, error: 'Not found' });
+      await analyzeRepo(c);
+      expect(c.json).toHaveBeenCalledWith({ success: false, error: 'Not found' }, 404);
     });
   });
 });

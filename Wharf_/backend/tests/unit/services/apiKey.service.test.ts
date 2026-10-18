@@ -1,32 +1,37 @@
+import type { Mock } from "vitest";
 import { APIKeyService } from '../../../src/services/apiKey.service';
 import prisma from '../../../src/db';
 
-jest.mock('../../../src/db', () => ({
-  __esModule: true,
-  default: {
+vi.mock('../../../src/db', () => {
+  const prismaObj = {
     userApiKey: {
-      upsert: jest.fn(),
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      findMany: jest.fn(),
+      upsert: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      findMany: vi.fn(),
     },
-  },
+  };
+  return {
+    __esModule: true,
+    default: prismaObj,
+    getPrisma: vi.fn().mockReturnValue(prismaObj),
+  };
+});
+
+vi.mock('../../../src/utils/encryption', () => ({
+  encrypt: vi.fn((key) => `encrypted_${key}`),
+  decrypt: vi.fn((key) => key.replace('encrypted_', '')),
 }));
 
-jest.mock('../../../src/utils/encryption', () => ({
-  encrypt: jest.fn((key) => `encrypted_${key}`),
-  decrypt: jest.fn((key) => key.replace('encrypted_', '')),
-}));
-
-global.fetch = jest.fn() as jest.Mock;
+global.fetch = vi.fn() as Mock;
 
 describe('APIKeyService', () => {
   let apiKeyService: APIKeyService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    apiKeyService = new APIKeyService();
+    vi.clearAllMocks();
+    apiKeyService = new APIKeyService('mock-db-url');
   });
 
   describe('addKey', () => {
@@ -35,9 +40,9 @@ describe('APIKeyService', () => {
       const mockUserId = 'user-1';
 
       // Mock Valid Verification
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as Mock).mockResolvedValue({
         status: 200,
-        json: jest.fn().mockResolvedValue({}),
+        json: vi.fn().mockResolvedValue({}),
       });
 
       const expectedEntity = {
@@ -47,7 +52,7 @@ describe('APIKeyService', () => {
         provider: 'OPENAI',
       };
 
-      (prisma.userApiKey.upsert as jest.Mock).mockResolvedValue(expectedEntity);
+      (prisma.userApiKey.upsert as Mock).mockResolvedValue(expectedEntity);
 
       const result = await apiKeyService.addKey(mockUserId, {
         key: mockKey,
@@ -62,7 +67,7 @@ describe('APIKeyService', () => {
     });
 
     it('should reject invalid keys', async () => {
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as Mock).mockResolvedValue({
         status: 401,
       });
 
@@ -77,7 +82,7 @@ describe('APIKeyService', () => {
 
   describe('getValidKey', () => {
     it('should return null if no key is available', async () => {
-      (prisma.userApiKey.findFirst as jest.Mock).mockResolvedValue(null);
+      (prisma.userApiKey.findFirst as Mock).mockResolvedValue(null);
 
       const result = await apiKeyService.getValidKey('user-1', 'OPENAI');
       expect(result).toBeNull();
@@ -89,7 +94,7 @@ describe('APIKeyService', () => {
         key: 'encrypted_sk-123',
       };
 
-      (prisma.userApiKey.findFirst as jest.Mock).mockResolvedValue(mockEntity);
+      (prisma.userApiKey.findFirst as Mock).mockResolvedValue(mockEntity);
 
       const result = await apiKeyService.getValidKey('user-1', 'OPENAI');
       

@@ -1,97 +1,102 @@
-import { Request, Response } from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from "vitest";
+import type { Mock } from "vitest";
 import { AdminAnnouncementController, UserNotificationController } from '../../../src/controllers/announcement.controller';
-import { announcementService } from '../../../src/services/announcement.service';
+import { AnnouncementService } from '../../../src/services/announcement.service';
+import { createMockContext } from '../test-utils';
 
-jest.mock('../../../src/services/announcement.service');
+vi.mock('../../../src/services/announcement.service');
+vi.mock('../../../src/db', () => ({
+  __esModule: true,
+  default: {},
+  getPrisma: vi.fn()
+}));
 
 describe('Announcement Controllers', () => {
-  let mockReq: any;
-  let mockRes: Partial<Response>;
-  let mockStatus: jest.Mock;
-  let mockJson: jest.Mock;
-  let mockSend: jest.Mock;
+  let mockEnv: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockJson = jest.fn();
-    mockSend = jest.fn();
-    mockStatus = jest.fn().mockReturnValue({ json: mockJson, send: mockSend });
-    mockReq = {
-      body: {}, query: {}, params: {}, user: { userId: 'u-1' }
-    };
-    mockRes = { status: mockStatus, json: mockJson, send: mockSend };
+    vi.clearAllMocks();
+    mockEnv = {};
   });
 
   describe('AdminAnnouncementController', () => {
     it('getAll should return all announcements', async () => {
-      (announcementService.getAllAdminAnnouncements as jest.Mock).mockResolvedValue([{ id: 1 }]);
-      await AdminAnnouncementController.getAll(mockReq, mockRes as Response);
-      expect(mockJson).toHaveBeenCalledWith([{ id: 1 }]);
+      const c = createMockContext({}, mockEnv);
+      (AnnouncementService.prototype.getAllAdminAnnouncements as Mock).mockResolvedValue([{ id: 1 }]);
+      await AdminAnnouncementController.getAll(c);
+      expect(c.json).toHaveBeenCalledWith([{ id: 1 }]);
     });
 
     it('create should invoke service and return 201', async () => {
-      mockReq.body = { title: 'Test', type: 'INFO' };
-      (announcementService.createAnnouncement as jest.Mock).mockResolvedValue({ id: 2, title: 'Test' });
-      await AdminAnnouncementController.create(mockReq, mockRes as Response);
-      expect(mockStatus).toHaveBeenCalledWith(201);
-      expect(mockJson).toHaveBeenCalledWith({ id: 2, title: 'Test' });
+      const c = createMockContext({ body: { title: 'Test', type: 'INFO' } }, mockEnv);
+      (AnnouncementService.prototype.createAnnouncement as Mock).mockResolvedValue({ id: 2, title: 'Test' });
+      await AdminAnnouncementController.create(c);
+      expect(c.json).toHaveBeenCalledWith({ id: 2, title: 'Test' }, 201);
     });
 
     it('update should format dates and hit service', async () => {
-      mockReq.params = { id: 'a-1' };
-      mockReq.body = { expiresAt: '2026-08-01T00:00:00.000Z' };
-      (announcementService.updateAnnouncement as jest.Mock).mockResolvedValue({ id: 'a-1' });
+      const c = createMockContext({ 
+        params: { id: 'a-1' }, 
+        body: { expiresAt: '2026-08-01T00:00:00.000Z' } 
+      }, mockEnv);
       
-      await AdminAnnouncementController.update(mockReq, mockRes as Response);
+      (AnnouncementService.prototype.updateAnnouncement as Mock).mockResolvedValue({ id: 'a-1' });
       
-      expect(announcementService.updateAnnouncement).toHaveBeenCalledWith('a-1', expect.objectContaining({
+      await AdminAnnouncementController.update(c);
+      
+      expect(AnnouncementService.prototype.updateAnnouncement).toHaveBeenCalledWith('a-1', expect.objectContaining({
         expiresAt: new Date('2026-08-01T00:00:00.000Z')
       }));
     });
 
     it('togglePublish should return updated status', async () => {
-      mockReq.params = { id: 'a-1' };
-      mockReq.body = { isPublished: true };
+      const c = createMockContext({ 
+        params: { id: 'a-1' }, 
+        body: { isPublished: true } 
+      }, mockEnv);
       
-      await AdminAnnouncementController.togglePublish(mockReq, mockRes as Response);
-      expect(announcementService.togglePublish).toHaveBeenCalledWith('a-1', true);
+      await AdminAnnouncementController.togglePublish(c);
+      expect(AnnouncementService.prototype.togglePublish).toHaveBeenCalledWith('a-1', true);
     });
 
     it('delete should return 204', async () => {
-      mockReq.params = { id: 'a-1' };
-      await AdminAnnouncementController.delete(mockReq, mockRes as Response);
-      expect(announcementService.deleteAnnouncement).toHaveBeenCalledWith('a-1');
-      expect(mockStatus).toHaveBeenCalledWith(204);
+      const c = createMockContext({ params: { id: 'a-1' } }, mockEnv);
+      const res = await AdminAnnouncementController.delete(c);
+      expect(AnnouncementService.prototype.deleteAnnouncement).toHaveBeenCalledWith('a-1');
+      expect(res.status).toBe(204);
     });
   });
 
   describe('UserNotificationController', () => {
     it('getList should fetch paginated notifications for user', async () => {
-      mockReq.query = { page: '2', limit: '10' };
-      (announcementService.getUserNotifications as jest.Mock).mockResolvedValue([{ id: 3 }]);
+      const c = createMockContext({ query: { page: '2', limit: '10' } }, mockEnv, { userId: 'u-1' });
+      (AnnouncementService.prototype.getUserNotifications as Mock).mockResolvedValue([{ id: 3 }]);
       
-      await UserNotificationController.getList(mockReq, mockRes as Response);
-      expect(announcementService.getUserNotifications).toHaveBeenCalledWith('u-1', 2, 10);
-      expect(mockJson).toHaveBeenCalledWith([{ id: 3 }]);
+      await UserNotificationController.getList(c);
+      expect(AnnouncementService.prototype.getUserNotifications).toHaveBeenCalledWith('u-1', 2, 10);
+      expect(c.json).toHaveBeenCalledWith([{ id: 3 }]);
     });
 
     it('getUnreadCount should return numeric count', async () => {
-      (announcementService.getUnreadCount as jest.Mock).mockResolvedValue(5);
-      await UserNotificationController.getUnreadCount(mockReq, mockRes as Response);
-      expect(announcementService.getUnreadCount).toHaveBeenCalledWith('u-1');
-      expect(mockJson).toHaveBeenCalledWith({ count: 5 });
+      const c = createMockContext({}, mockEnv, { userId: 'u-1' });
+      (AnnouncementService.prototype.getUnreadCount as Mock).mockResolvedValue(5);
+      
+      await UserNotificationController.getUnreadCount(c);
+      expect(AnnouncementService.prototype.getUnreadCount).toHaveBeenCalledWith('u-1');
+      expect(c.json).toHaveBeenCalledWith({ count: 5 });
     });
 
     it('markAsRead should return 204 no content', async () => {
-      mockReq.params = { id: 'n-1' };
-      await UserNotificationController.markAsRead(mockReq, mockRes as Response);
-      expect(announcementService.markAsRead).toHaveBeenCalledWith('u-1', 'n-1');
-      expect(mockStatus).toHaveBeenCalledWith(204);
+      const c = createMockContext({ params: { id: 'n-1' } }, mockEnv, { userId: 'u-1' });
+      const res = await UserNotificationController.markAsRead(c);
+      expect(AnnouncementService.prototype.markAsRead).toHaveBeenCalledWith('u-1', 'n-1');
+      expect(res.status).toBe(204);
     });
 
     it('markAllAsRead should invoke service', async () => {
-      await UserNotificationController.markAllAsRead(mockReq, mockRes as Response);
-      expect(announcementService.markAllAsRead).toHaveBeenCalledWith('u-1');
+      const c = createMockContext({}, mockEnv, { userId: 'u-1' });
+      await UserNotificationController.markAllAsRead(c);
+      expect(AnnouncementService.prototype.markAllAsRead).toHaveBeenCalledWith('u-1');
     });
   });
 });

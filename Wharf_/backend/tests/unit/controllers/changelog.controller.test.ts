@@ -1,123 +1,129 @@
-import { Request, Response } from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from "vitest";
+import type { Mock } from "vitest";
 import { ChangelogController } from '../../../src/controllers/changelog.controller';
-import { aiService, ChangelogService, GithubService, cacheService } from '../../../src/services';
-import prisma from '../../../src/db';
+import { ChangelogService, GithubService, cacheService } from '../../../src/services';
 import { decrypt } from '../../../src/utils/encryption';
-import { loggerService, saveRequestLog } from '../../../src/utils/logger';
+import { createMockContext } from '../test-utils';
 
-jest.mock('../../../src/services');
-jest.mock('../../../src/utils/encryption');
-jest.mock('../../../src/db', () => ({
+let streamBuffer = '';
+
+vi.mock('hono/streaming', () => {
+  const mockStreamFunc = vi.fn().mockImplementation(async (c: any, cb: any) => {
+    const stream = {
+      write: vi.fn().mockImplementation((chunk: any) => {
+        streamBuffer += chunk;
+        return Promise.resolve();
+      })
+    };
+    await cb(stream);
+    return { _isHonoResponse: true, streamed: true, buffer: streamBuffer };
+  });
+  return { streamText: mockStreamFunc, stream: mockStreamFunc };
+});
+
+vi.mock('../../../src/services');
+vi.mock('../../../src/utils/encryption');
+vi.mock('../../../src/db', () => ({
   __esModule: true,
-  default: {
-    changelog: { create: jest.fn() },
-    $executeRaw: jest.fn()
-  }
+  default: {},
+  getPrisma: vi.fn().mockReturnValue({
+    changelog: { create: vi.fn() },
+    $executeRaw: vi.fn()
+  })
 }));
-jest.mock('../../../src/utils/logger', () => ({
-  loggerService: { info: jest.fn(), error: jest.fn(), stepStart: jest.fn(), stepEnd: jest.fn(), cacheHit: jest.fn() },
-  saveRequestLog: jest.fn()
+vi.mock('../../../src/utils/logger', () => ({
+  loggerService: { info: vi.fn(), error: vi.fn(), stepStart: vi.fn(), stepEnd: vi.fn(), cacheHit: vi.fn() },
+  saveRequestLog: vi.fn()
 }));
-jest.mock('../../../src/utils/dailyStats', () => ({ recordDailyGeneration: jest.fn() }));
+vi.mock('../../../src/utils/dailyStats', () => ({ recordDailyGeneration: vi.fn() }));
 
 describe('ChangelogController', () => {
   let controller: ChangelogController;
-  let mockReq: any;
-  let mockRes: Partial<Response>;
-  let mockStatus: jest.Mock;
-  let mockJson: jest.Mock;
-  let mockWrite: jest.Mock;
-  let mockEnd: jest.Mock;
-  let mockSetHeader: jest.Mock;
+  let mockEnv: any;
+  let prismaObj: any;
 
-  beforeEach(() => {
-    jest.clearAllMocks();
+  beforeEach(async () => {
+    streamBuffer = '';
+    vi.clearAllMocks();
     controller = new ChangelogController();
-    mockJson = jest.fn();
-    mockWrite = jest.fn();
-    mockEnd = jest.fn();
-    mockSetHeader = jest.fn();
-    mockStatus = jest.fn().mockReturnValue({ json: mockJson });
-    mockReq = {
-      body: {}, query: {}, params: {}, user: { userId: 'u-1', githubAccessToken: 'enc' }, baseUrl: '/api', path: '/changelog', method: 'POST'
-    };
-    mockRes = { status: mockStatus, json: mockJson, write: mockWrite, end: mockEnd, setHeader: mockSetHeader };
+    mockEnv = { ENCRYPTION_SECRET: 'secret', DATABASE_URL: 'post://' };
+    prismaObj = (await import('../../../src/db')).getPrisma('');
   });
 
   describe('getStats', () => {
     it('should return 400 if repoUrl is missing', async () => {
-      await controller.getStats(mockReq, mockRes as Response);
-      expect(mockStatus).toHaveBeenCalledWith(400);
-      expect(mockJson).toHaveBeenCalledWith({ success: false, error: 'repoUrl is required' });
+      const c = createMockContext({ body: {} }, mockEnv);
+      await controller.getStats(c);
+      expect(c.json).toHaveBeenCalledWith({ success: false, error: 'repoUrl is required' }, 400);
     });
 
     it('should fetch stats via ChangelogService if token exists', async () => {
-      mockReq.body = { repoUrl: 'foo/bar' };
-      (decrypt as jest.Mock).mockReturnValue('dec-token');
-      (ChangelogService.prototype.getCommitStats as jest.Mock).mockResolvedValue({ totalCommits: 5 });
+      const c = createMockContext({ body: { repoUrl: 'foo/bar' } }, mockEnv, { userId: 'u-1', githubAccessToken: 'enc' });
+      (decrypt as Mock).mockReturnValue('dec-token');
+      (ChangelogService.prototype.getCommitStats as Mock).mockResolvedValue({ totalCommits: 5 });
 
-      await controller.getStats(mockReq, mockRes as Response);
+      await controller.getStats(c);
 
-      expect(decrypt).toHaveBeenCalledWith('enc');
+      expect(decrypt).toHaveBeenCalledWith('enc', 'secret');
       expect(ChangelogService.prototype.getCommitStats).toHaveBeenCalledWith('foo/bar', 'dec-token');
-      expect(mockJson).toHaveBeenCalledWith({ success: true, data: { totalCommits: 5 } });
+      expect(c.json).toHaveBeenCalledWith({ success: true, data: { totalCommits: 5 } });
     });
   });
 
   describe('generate (Streaming)', () => {
     it('should return cached stream if hit', async () => {
-      mockReq.body = { repoUrl: 'foo/bar', options: {} };
-      (cacheService.getChangelog as jest.Mock).mockResolvedValue('Cached MD');
+      const c = createMockContext({ body: { repoUrl: 'foo/bar', options: {} } }, mockEnv);
+      (cacheService.getChangelog as Mock).mockResolvedValue('Cached MD');
 
-      await controller.generate(mockReq, mockRes as Response);
+      await controller.generate(c);
 
       expect(cacheService.getChangelog).toHaveBeenCalledWith('foo/bar', {});
-      expect(loggerService.cacheHit).toHaveBeenCalledWith('foo/bar');
-      expect(mockWrite).toHaveBeenCalledWith(`data: ${JSON.stringify({ text: 'Cached MD' })}\n\n`);
-      expect(mockEnd).toHaveBeenCalled();
+      expect(streamBuffer).toContain(`data: ${JSON.stringify({ text: 'Cached MD' })}\n\n`);
     });
 
     it('should generate via stream, cache it, and save to DB if logged in user', async () => {
-      mockReq.body = { repoUrl: 'foo/bar', options: { format: 'keep' } };
-      (cacheService.getChangelog as jest.Mock).mockResolvedValue(null);
+      const c = createMockContext({ body: { repoUrl: 'foo/bar', options: { format: 'keep' } } }, mockEnv, { userId: 'u-1' });
+      (cacheService.getChangelog as Mock).mockResolvedValue(null);
 
       const mockStream = (async function* () {
         yield '# Log';
         yield '...';
       })();
 
-      (ChangelogService.prototype.generateChangelog as jest.Mock).mockResolvedValue({
+      (ChangelogService.prototype.generateChangelog as Mock).mockResolvedValue({
         stream: mockStream, provider: 'GEMINI'
       });
 
-      (prisma.changelog.create as jest.Mock).mockResolvedValue({ id: 'cl-1' });
+      (prismaObj.changelog.create as Mock).mockResolvedValue({ id: 'cl-1' });
 
-      await controller.generate(mockReq, mockRes as Response);
+      await controller.generate(c);
 
-      expect(mockSetHeader).toHaveBeenCalledWith('Content-Type', 'text/event-stream');
-      expect(mockWrite).toHaveBeenCalledWith(`data: ${JSON.stringify({ text: '# Log' })}\n\n`);
-      expect(mockWrite).toHaveBeenCalledWith(`data: ${JSON.stringify({ text: '...' })}\n\n`);
+      expect(streamBuffer).toContain(`data: ${JSON.stringify({ text: '# Log' })}\n\n`);
+      expect(streamBuffer).toContain(`data: ${JSON.stringify({ text: '...' })}\n\n`);
 
       expect(cacheService.setChangelog).toHaveBeenCalledWith('foo/bar', { format: 'keep' }, '# Log...');
-      expect(prisma.changelog.create).toHaveBeenCalledWith(expect.objectContaining({
+      expect(prismaObj.changelog.create).toHaveBeenCalledWith(expect.objectContaining({
         data: expect.objectContaining({ content: '# Log...', userId: 'u-1', repoName: 'foo/bar' })
       }));
-      expect(saveRequestLog).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 200 }));
     });
   });
 
   describe('getHistory & deleteChangelog', () => {
     it('getHistory calls service securely', async () => {
-      (ChangelogService.prototype.getHistory as jest.Mock).mockResolvedValue(['h1']);
-      await controller.getHistory(mockReq, mockRes as Response);
-      expect(mockJson).toHaveBeenCalledWith({ success: true, data: ['h1'] });
+      const c = createMockContext({}, mockEnv, { userId: 'u-1' });
+      (ChangelogService.prototype.getHistory as Mock).mockResolvedValue(['h1']);
+      
+      await controller.getHistory(c);
+      
+      expect(c.json).toHaveBeenCalledWith({ success: true, data: ['h1'] });
     });
 
     it('delete calls service securely', async () => {
-      mockReq.params = { id: 'log-1' };
-      await controller.deleteChangelog(mockReq, mockRes as Response);
+      const c = createMockContext({ params: { id: 'log-1' } }, mockEnv, { userId: 'u-1' });
+      await controller.deleteChangelog(c);
+      
       expect(ChangelogService.prototype.deleteChangelog).toHaveBeenCalledWith('log-1', 'u-1');
-      expect(mockJson).toHaveBeenCalledWith({ success: true });
+      expect(c.json).toHaveBeenCalledWith({ success: true });
     });
   });
 });

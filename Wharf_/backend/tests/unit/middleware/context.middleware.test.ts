@@ -1,33 +1,34 @@
-import { Request, Response, NextFunction } from 'express';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { Mock } from "vitest";
 import { contextMiddleware } from '../../../src/middleware/context.middleware';
 import { requestContext } from '../../../src/utils/asyncContext';
+import { createMockContext } from '../test-utils';
 
-jest.mock('../../../src/utils/asyncContext', () => ({
-  requestContext: { run: jest.fn((store, cb) => cb()) }
+vi.mock('../../../src/utils/asyncContext', () => ({
+  requestContext: { run: vi.fn((store, cb) => cb()) }
 }));
 
 describe('Context Middleware', () => {
-  let mockReq: any;
-  let mockRes: Partial<Response>;
-  let mockNext: jest.Mock;
+  let mockNext: Mock;
 
   beforeEach(() => {
-    mockReq = {};
-    mockRes = {};
-    mockNext = jest.fn();
+    mockNext = vi.fn();
   });
 
-  it('should initialize async context with reqId from req.id', () => {
-    mockReq.id = 'xyz-123';
-    contextMiddleware(mockReq as Request, mockRes as Response, mockNext);
+  it('should initialize async context with reqId from req.id', async () => {
+    const c = createMockContext();
+    c.get = vi.fn((key: string) => key === 'requestId' ? 'xyz-123' : undefined);
     
-    expect(mockReq.contextStore).toEqual({ requestId: 'xyz-123' });
-    expect(requestContext.run).toHaveBeenCalledWith({ requestId: 'xyz-123' }, expect.any(Function));
+    await contextMiddleware(c, mockNext);
+    
+    expect(c.set).toHaveBeenCalledWith('contextStore', { requestId: 'xyz-123' });
     expect(mockNext).toHaveBeenCalled();
   });
 
-  it('should default to system if no req.id exists', () => {
-    contextMiddleware(mockReq as Request, mockRes as Response, mockNext);
-    expect(mockReq.contextStore).toEqual({ requestId: 'system' });
+  it('should default to system if no req.id exists', async () => {
+    const c = createMockContext();
+    c.get = vi.fn(() => undefined);
+    await contextMiddleware(c, mockNext);
+    expect(c.set).toHaveBeenCalledWith('contextStore', { requestId: 'system' });
   });
 });

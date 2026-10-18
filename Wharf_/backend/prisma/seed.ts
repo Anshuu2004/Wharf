@@ -1,8 +1,14 @@
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
+import fs from 'fs';
 import dotenv from 'dotenv';
 
-dotenv.config();
+// Use .dev.vars If It Exists (Cloudflare Workers Standard)
+if (fs.existsSync('.dev.vars')) {
+  dotenv.config({ path: '.dev.vars' });
+} else {
+  dotenv.config();
+}
 
 const prisma = new PrismaClient();
 const ENCRYPTION_SECRET = process.env.ENCRYPTION_SECRET;
@@ -26,7 +32,7 @@ async function main() {
 
   for (const provider of providers) {
     const keys: { key: string, name: string }[] = [];
-
+    
     // Check For Single Key
     if (process.env[`SEED_${provider}_KEY`]) {
       keys.push({ key: process.env[`SEED_${provider}_KEY`]!, name: `SEED_${provider}_KEY` });
@@ -46,7 +52,7 @@ async function main() {
 
     for (const keyObj of keys) {
       const encryptedKey = encrypt(keyObj.key);
-
+      
       await (prisma as any).systemKey.create({
         data: {
           name: keyObj.name,
@@ -54,7 +60,7 @@ async function main() {
           key: encryptedKey,
         },
       });
-
+      
       console.log(`Successfully added a ${provider} key (${keyObj.name}) to system pool.`);
     }
   }

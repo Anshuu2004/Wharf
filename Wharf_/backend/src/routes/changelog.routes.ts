@@ -1,17 +1,15 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 import { ChangelogController } from '../controllers/changelog.controller';
 import { auth, requireAuth } from '../middleware/auth.middleware';
-import { anonymousAnalysisLimiter } from '../middleware/rateLimiter';
+import { rateLimit } from '../middleware/rateLimiter';
+import { Bindings } from '../index';
 
-const router = Router();
-const controller = new ChangelogController();
+type Variables = { user: any; contextStore: any };
+export const changelogRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
-// Using Basic Public Routes
-router.post('/stats', auth, anonymousAnalysisLimiter, controller.getStats.bind(controller));
-router.post('/generate', auth, anonymousAnalysisLimiter, controller.generate.bind(controller));
+const changelogController = new ChangelogController();
 
-// Protected Routes
-router.get('/history', auth, requireAuth, controller.getHistory.bind(controller));
-router.delete('/:id', auth, requireAuth, controller.deleteChangelog.bind(controller));
-
-export default router;
+changelogRoutes.post('/stats', auth, changelogController.getStats.bind(changelogController));
+changelogRoutes.post('/generate', auth, rateLimit, changelogController.generate.bind(changelogController));
+changelogRoutes.get('/history', auth, requireAuth, changelogController.getHistory.bind(changelogController));
+changelogRoutes.delete('/history/:id', auth, requireAuth, changelogController.deleteChangelog.bind(changelogController));

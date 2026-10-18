@@ -1,3 +1,4 @@
+import type { Mock } from "vitest";
 import { ChatService } from '../../../src/services/chat.service';
 import { RepoService } from '../../../src/services/repo.service';
 import { KeyRouterService } from '../../../src/services/keyRouter.service';
@@ -9,42 +10,46 @@ import { decrypt } from '../../../src/utils/encryption';
 import { recordDailyGeneration } from '../../../src/utils/dailyStats';
 import prisma from '../../../src/db';
 
-jest.mock('../../../src/services/repo.service');
-jest.mock('../../../src/services/keyRouter.service');
-jest.mock('ai');
-jest.mock('@ai-sdk/google');
-jest.mock('@ai-sdk/groq');
-jest.mock('../../../src/utils/chatPromptBuilder');
-jest.mock('../../../src/utils/encryption');
-jest.mock('../../../src/utils/dailyStats');
-jest.mock('../../../src/db', () => ({
-  __esModule: true,
-  default: {
+vi.mock('../../../src/services/repo.service');
+vi.mock('../../../src/services/keyRouter.service');
+vi.mock('ai');
+vi.mock('@ai-sdk/google');
+vi.mock('@ai-sdk/groq');
+vi.mock('../../../src/utils/chatPromptBuilder');
+vi.mock('../../../src/utils/encryption');
+vi.mock('../../../src/utils/dailyStats');
+vi.mock('../../../src/db', () => {
+  const prismaObj = {
     user: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     chatMessage: {
-      createMany: jest.fn(),
+      createMany: vi.fn(),
     },
     chatAnalytics: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
-    $executeRaw: jest.fn(),
-  },
-}));
+    $executeRaw: vi.fn(),
+  };
+  return {
+    __esModule: true,
+    default: prismaObj,
+    getPrisma: vi.fn().mockReturnValue(prismaObj),
+  };
+});
 
 describe('ChatService', () => {
   let chatService: ChatService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    chatService = new ChatService();
+    vi.clearAllMocks();
+    chatService = new ChatService('mock-db-url');
   });
 
   describe('analyzeRepository', () => {
     it('should just call repoService when no user is provided', async () => {
       const mockResult = { name: 'test' };
-      (RepoService.prototype.analyzeRepo as jest.Mock).mockResolvedValue(mockResult);
+      (RepoService.prototype.analyzeRepo as Mock).mockResolvedValue(mockResult);
 
       const result = await chatService.analyzeRepository('https://github.com/foo/bar');
       expect(result).toBe(mockResult);
@@ -54,9 +59,9 @@ describe('ChatService', () => {
 
     it('should bypass cache with unencrypted token if user has github access token', async () => {
       const mockUser = { githubAccessToken: 'encrypted_token', installationId: 'inst_123' };
-      (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
-      (decrypt as jest.Mock).mockReturnValue('decrypted_token');
-      (RepoService.prototype.analyzeRepo as jest.Mock).mockResolvedValue({ name: 'test-private' });
+      (prisma.user.findUnique as Mock).mockResolvedValue(mockUser);
+      (decrypt as Mock).mockReturnValue('decrypted_token');
+      (RepoService.prototype.analyzeRepo as Mock).mockResolvedValue({ name: 'test-private' });
 
       await chatService.analyzeRepository('https://github.com/foo/bar', 'user-1');
 
@@ -69,23 +74,23 @@ describe('ChatService', () => {
 
   describe('generateChatStream', () => {
     it('should throw an error if no API keys are available', async () => {
-      (KeyRouterService.prototype.getBestAvailableKey as jest.Mock).mockResolvedValue(null);
-      (RepoService.prototype.analyzeRepo as jest.Mock).mockResolvedValue({});
+      (KeyRouterService.prototype.getBestAvailableKey as Mock).mockResolvedValue(null);
+      (RepoService.prototype.analyzeRepo as Mock).mockResolvedValue({});
 
       await expect(
         chatService.generateChatStream('https://repo', 'hi', 'dev', [], 'session-1')
-      ).rejects.toThrow('No AI providers available. Please add your own API key in Settings to continue.');
+      ).rejects.toThrow('No AI Providers Available');
     });
 
     it('should invoke streamText with GEMINI correctly', async () => {
       const mockKeyInfo = { provider: 'GEMINI', key: 'gemini-key', isSystem: true };
-      const mockModel = jest.fn();
+      const mockModel = vi.fn();
       
-      (KeyRouterService.prototype.getBestAvailableKey as jest.Mock).mockResolvedValue(mockKeyInfo);
-      (RepoService.prototype.analyzeRepo as jest.Mock).mockResolvedValue({ name: 'test' });
-      (buildChatPrompt as jest.Mock).mockReturnValue('You are a dev.');
-      (createGoogleGenerativeAI as jest.Mock).mockReturnValue(() => mockModel);
-      (streamText as jest.Mock).mockReturnValue({ asyncIterator: jest.fn() });
+      (KeyRouterService.prototype.getBestAvailableKey as Mock).mockResolvedValue(mockKeyInfo);
+      (RepoService.prototype.analyzeRepo as Mock).mockResolvedValue({ name: 'test' });
+      (buildChatPrompt as Mock).mockReturnValue('You are a dev.');
+      (createGoogleGenerativeAI as Mock).mockReturnValue(() => mockModel);
+      (streamText as Mock).mockReturnValue({ asyncIterator: vi.fn() });
 
       const result = await chatService.generateChatStream('https://repo', 'my question', 'dev', [], 'session-1');
 

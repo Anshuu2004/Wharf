@@ -1,16 +1,16 @@
 export const githubMock = {
   rest: {
     users: {
-      getByUsername: jest.fn(),
+      getByUsername: vi.fn(),
     },
     repos: {
-      get: jest.fn(),
-      listForUser: jest.fn(),
-      listCommits: jest.fn(),
-      getContent: jest.fn(),
+      get: vi.fn(),
+      listForUser: vi.fn(),
+      listCommits: vi.fn(),
+      getContent: vi.fn(),
     },
   },
-  graphql: jest.fn(),
+  graphql: vi.fn(),
 };
 
 export default githubMock;

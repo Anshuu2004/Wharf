@@ -1,21 +1,22 @@
+import type { Mock } from "vitest";
 import { RepoService } from '../../../src/services/repo.service';
 import { GithubService } from '../../../src/services/github.service';
 import { cacheService } from '../../../src/services/cache.service';
 
-jest.mock('../../../src/services/github.service');
-jest.mock('../../../src/services/cache.service');
-jest.mock('../../../src/utils/parseGithubUrl', () => ({
-  parseGithubUrl: jest.fn((url: string) => {
+vi.mock('../../../src/services/github.service');
+vi.mock('../../../src/services/cache.service');
+vi.mock('../../../src/utils/parseGithubUrl', () => ({
+  parseGithubUrl: vi.fn((url: string) => {
     if (url === 'invalid') return null;
     return { owner: 'owner', repo: 'repo' };
   })
 }));
-jest.mock('../../../src/utils/logger', () => ({
+vi.mock('../../../src/utils/logger', () => ({
   loggerService: {
-    stepStart: jest.fn(),
-    stepEnd: jest.fn(),
-    info: jest.fn(),
-    error: jest.fn(),
+    stepStart: vi.fn(),
+    stepEnd: vi.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
   }
 }));
 
@@ -23,7 +24,7 @@ describe('RepoService', () => {
   let repoService: RepoService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     repoService = new RepoService();
   });
 
@@ -34,7 +35,7 @@ describe('RepoService', () => {
 
     it('should return cached analysis if bypassCache is false and cache hits', async () => {
       const mockCached = { meta: { name: 'cached' } };
-      (cacheService.getAnalysis as jest.Mock).mockResolvedValue(mockCached);
+      (cacheService.getAnalysis as Mock).mockResolvedValue(mockCached);
 
       const result = await repoService.analyzeRepo('https://github.com/owner/repo');
       expect(result).toEqual(mockCached);
@@ -42,7 +43,7 @@ describe('RepoService', () => {
     });
 
     it('should bypass cache, fetch from Github, parse and recache if cache misses or bypassCache is true', async () => {
-      (cacheService.getAnalysis as jest.Mock).mockResolvedValue(null);
+      (cacheService.getAnalysis as Mock).mockResolvedValue(null);
 
       const mockMeta = { defaultBranch: 'main', owner: 'owner', name: 'repo' };
       const mockTree = [
@@ -51,12 +52,12 @@ describe('RepoService', () => {
         { path: 'node_modules/bad', type: 'blob' }
       ];
 
-      (GithubService.prototype.fetchRepoMeta as jest.Mock).mockResolvedValue(mockMeta);
-      (GithubService.prototype.fetchRepoTree as jest.Mock).mockResolvedValue(mockTree);
-      (GithubService.prototype.bulkFetchFileContents as jest.Mock).mockImplementation(() => {
-        return Promise.resolve({
-          'package.json': '{"name": "test-pkg"}'
-        });
+      (GithubService.prototype.fetchRepoMeta as Mock).mockResolvedValue(mockMeta);
+      (GithubService.prototype.fetchRepoTree as Mock).mockResolvedValue(mockTree);
+      (GithubService.prototype.bulkFetchFileContents as Mock).mockImplementation((owner, repo, files, branch = 'HEAD') => {
+        const results: any = {};
+        if (files.includes('package.json')) results['package.json'] = '{"name": "test-pkg"}';
+        return Promise.resolve(results);
       });
 
       const result = await repoService.analyzeRepo('https://github.com/owner/repo', { bypassCache: true });

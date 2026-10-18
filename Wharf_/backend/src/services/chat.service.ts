@@ -7,20 +7,24 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import { streamText } from 'ai';
 import { buildChatPrompt } from '../utils/chatPromptBuilder';
 import { decrypt } from '../utils/encryption';
-import prisma from '../db';
+import { getPrisma } from '../db';
 import { recordDailyGeneration } from '../utils/dailyStats';
 
 export class ChatService {
   private repoService: RepoService;
   private keyRouter: KeyRouterService;
 
-  constructor() {
+  private dbUrl: string;
+
+  constructor(dbUrl: string) {
+    this.dbUrl = dbUrl;
     this.repoService = new RepoService();
-    this.keyRouter = new KeyRouterService();
+    this.keyRouter = new KeyRouterService(this.dbUrl);
   }
 
   async analyzeRepository(repoUrl: string, userId?: string) {
     if (userId) {
+      const prisma = getPrisma(this.dbUrl);
       const user = await prisma.user.findUnique({ where: { id: userId } });
       if (user?.githubAccessToken || user?.installationId) {
         const repoService = new RepoService({
@@ -43,10 +47,11 @@ export class ChatService {
     sessionId: string,
     userId?: string
   ) {
-    // 1 (A) Determine Auth Context — Needed Before We Kick Off Parallel Work
+    // 1 (A) Determine Auth Context — Needed Before Parallel Work
     let contextRepoService = this.repoService;
     let bypassCache = false;
     if (userId) {
+      const prisma = getPrisma(this.dbUrl);
       const user = await prisma.user.findUnique({ where: { id: userId } });
       if (user?.githubAccessToken || user?.installationId) {
         contextRepoService = new RepoService({
@@ -65,7 +70,7 @@ export class ChatService {
     ]);
 
     if (!keyInfo) {
-      throw new Error('No AI providers available. Please add your own API key in Settings to continue.');
+      throw new Error('No AI Providers Available. Please Add Your Own API Key In Settings To Continue.');
     }
 
     // 2. Build The System Prompt
@@ -105,53 +110,40 @@ export class ChatService {
     // Append The Question To History So Vercel SDK Handles It
     const messages = [...history, { role: 'user', content: question }];
 
-    // 4. Generate Stream With Vercel AI SDK
-    const result = streamText({
-      model,
-      system: systemPrompt,
-      messages,
-      onFinish: async (completion) => {
-        try {
-          // Save The User Message + Assistant Answer To The Database
-          await prisma.chatMessage.createMany({
-            data: [
-              {
-                sessionId,
-                role: 'user',
-                content: question,
-              },
-              {
-                sessionId,
-                role: 'assistant',
-                content: completion.text,
-                tokens: completion.usage?.totalTokens || 0,
-              },
-            ],
-          });
-
-          // Also Save Chat Analytics
-          await prisma.chatAnalytics.create({
-            data: {
-              sessionId,
-              totalTokens: completion.usage?.totalTokens || 0,
-              totalMessages: 2,
-              avgResponseTime: 0,
-            },
-          });
-
-          if (userId && completion.usage?.totalTokens) {
-            // Permanently Bank These Tokens
-            const chatTokens = completion.usage.totalTokens;
-            await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${chatTokens}, "lifetimeChats" = "lifetimeChats" + 1 WHERE id = ${userId}`;
-            await recordDailyGeneration(userId);
+    // 4. Generate Stream With Vercel AI SDK — With Provider Fallback
+    let result;
+    try {
+      result = streamText({
+        model,
+        system: systemPrompt,
+        messages,
+        onFinish: async (completion) => {
+          try {
+            const prisma = getPrisma(this.dbUrl);
+            await prisma.chatMessage.createMany({
+              data: [
+                { sessionId, role: 'user', content: question },
+                { sessionId, role: 'assistant', content: completion.text, tokens: completion.usage?.totalTokens || 0 },
+              ],
+            });
+            await prisma.chatAnalytics.create({
+              data: { sessionId, totalTokens: completion.usage?.totalTokens || 0, totalMessages: 2, avgResponseTime: 0 },
+            });
+            if (userId && completion.usage?.totalTokens) {
+              const chatTokens = completion.usage.totalTokens;
+              await prisma.$executeRaw`UPDATE "User" SET "lifetimeTokens" = "lifetimeTokens" + ${chatTokens}, "lifetimeChats" = "lifetimeChats" + 1 WHERE id = ${userId}`;
+              await recordDailyGeneration(this.dbUrl, userId);
+            }
+          } catch (dbError) {
+            console.error('[ChatService] Error saving message or analytics to DB:', dbError);
           }
-        } catch (dbError) {
-          console.error('[ChatService] Error saving message or analytics to DB:', dbError);
-        }
-      },
-    });
+        },
+      });
+    } catch (initError: any) {
+      // Error Before Streaming Even Starts (e.g. Invalid Model Config)
+      throw initError;
+    }
 
-    // Return The Result Directly Rather Than toDataStreamResponse
     return result;
   }
 
@@ -169,5 +161,3 @@ export class ChatService {
     );
   }
 }
-
-export const chatService = new ChatService();

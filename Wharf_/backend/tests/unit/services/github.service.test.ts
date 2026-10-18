@@ -5,9 +5,11 @@ import {
 } from '../../mocks/octokitStub';
 import { githubCircuitBreaker } from '../../../src/utils/circuitBreaker';
 
-jest.mock('../../../src/utils/circuitBreaker', () => ({
+vi.mock('@octokit/rest', async () => await import('../../mocks/octokitStub'));
+
+vi.mock('../../../src/utils/circuitBreaker', () => ({
   githubCircuitBreaker: {
-    fire: jest.fn((cb: any) => cb())
+    fire: vi.fn((cb: any) => cb())
   }
 }));
 
@@ -15,7 +17,7 @@ describe('GithubService', () => {
   let githubService: GithubService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     githubService = new GithubService();
   });
 
@@ -69,20 +71,20 @@ describe('GithubService', () => {
 
   describe('fetchFileContent', () => {
     it('should decode base64 file content', async () => {
-      global.fetch = jest.fn().mockResolvedValue({
+      global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         text: () => Promise.resolve('console.log("hi");')
-      });
+      }) as any;
 
       const res = await githubService.fetchFileContent('Owner', 'Repo', 'index.ts');
       expect(res).toBe('console.log("hi");');
     });
 
     it('should return null if 404', async () => {
-      global.fetch = jest.fn().mockResolvedValue({
+      global.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 404
-      });
+      }) as any;
 
       const res = await githubService.fetchFileContent('O', 'R', 'missing.json');
       expect(res).toBeNull();
