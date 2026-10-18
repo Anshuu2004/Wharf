@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/github/license/FrostByte-49/Wharf?style=flat-square&color=blue)](https://github.com/FrostByte-49/Wharf/blob/main/LICENSE)
 [![Language](https://img.shields.io/badge/language-TypeScript-blue?style=flat-square)](https://www.typescriptlang.org/)
 [![Frontend](https://img.shields.io/badge/frontend-React%20%7C%20Vite%20%7C%20Tailwind-61dafb?style=flat-square)](https://react.dev/)
-[![Backend](https://img.shields.io/badge/backend-Express%20%7C%20Prisma%20%7C%20Postgres-3178c6?style=flat-square)](https://expressjs.com/)
+[![Backend](https://img.shields.io/badge/backend-Hono%20%7C%20Cloudflare%20Workers%20%7C%20Prisma-F38020?style=flat-square)](https://workers.cloudflare.com/)
 [![AI Integration](https://img.shields.io/badge/AI-Gemini%20%7C%20Groq%20%7C%20OpenAI%20%7C%20Anthropic-orange?style=flat-square)](https://openai.com/)
 [![Last Commit](https://img.shields.io/github/last-commit/FrostByte-49/Wharf?style=flat-square&color=green)](https://github.com/FrostByte-49/Wharf/commits/main)
 [![Issues](https://img.shields.io/github/issues/FrostByte-49/Wharf?style=flat-square&color=red)](https://github.com/FrostByte-49/Wharf/issues)
@@ -16,7 +16,7 @@
 
 Wharf is an enterprise-grade, AI-powered developer workflow platform engineered to dismantle documentation debt and provide deep, automated insights into complex codebases. Developers frequently struggle with outdated README files, fragmented changelogs, missing profile summaries, and a general lack of visibility into repository health and project structure. Wharf resolves these pain points by connecting directly to version control systems, executing static analysis on codebase trees, and using state-of-the-art Large Language Models (LLMs) to synthesize production-ready documentation, interactive workspace chat logs, and deep repository health reports.
 
-Technically, Wharf leverages a highly modular multi-tier architecture consisting of a React-Vite single-page application, an Express-Prisma-TypeScript API gateway, and an identical Worker-Backend execution engine built to scale computationally heavy analysis. By integrating GitHub OAuth with precise Octokit calls, Wharf securely indexes repositories, detects project frameworks through file AST heuristics, and routes code context to custom LLM prompt pipelines. The platform utilizes advanced caching, token-optimized prompt construction, and secure encryption mechanics to ensure rapid response times, absolute data privacy, and a seamless developer experience.
+Technically, Wharf leverages a modern, distributed architecture consisting of a React-Vite single-page application and a high-performance Cloudflare Worker edge backend powered by Hono and Prisma ORM. By integrating GitHub OAuth with precise Octokit calls, Wharf securely indexes repositories, detects project frameworks through file AST heuristics, and routes code context to custom LLM prompt pipelines. The platform utilizes advanced caching via Upstash Redis, token-optimized prompt construction, and secure encryption mechanics to ensure sub-millisecond response times, absolute data privacy, and a seamless developer experience.
 
 <br>
 
@@ -75,10 +75,11 @@ Technically, Wharf leverages a highly modular multi-tier architecture consisting
 | **Vite** | Ultra-fast Frontend Bundler and Hot-Module Replacement Engine |
 | **TailwindCSS** | Utility-first CSS styling framework with responsive design constructs |
 | **Zustand** | Lightweight, high-performance global state management for reactive UI updates |
-| **Express** | Event-driven, asynchronous Node.js framework powering web APIs |
+| **Hono** | Lightweight, ultra-fast web framework tailored for Cloudflare Workers |
+| **Cloudflare Workers** | Edge serverless compute execution engine with V8 isolate performance |
 | **Prisma ORM** | Type-safe database mapping, migration management, and SQL abstraction |
-| **PostgreSQL** | Primary relational database for user profile, chat history, and repo metadata persistence |
-| **Redis** | High-speed cache layer, rate-limiter tracker, and cluster session store |
+| **PostgreSQL** | Primary relational database (Supabase) for profiles, chat history, and metadata persistence |
+| **Upstash Redis** | Serverless Redis caching layer, rate-limiter tracker, and session store |
 | **Octokit API** | Programmatic interface for GitHub OAuth, repository ingestion, and commit tracking |
 | **Vitest & Playwright** | Unit, integration, and E2E browser automation test suites |
 
@@ -94,228 +95,155 @@ Technically, Wharf leverages a highly modular multi-tier architecture consisting
 
 ```bash
 📁Wharf/                                 # Main project root directory
-├── 📁.github/                           # GitHub Actions workflows directory
-│   └── 📁workflows/                     # CI/CD pipeline configurations
-│       └── ci.yml                       # Continuous integration workflow
+├── 📁.github/                           # GitHub Actions workflows & community templates
+│   ├── 📁ISSUE_TEMPLATE/                # Issue templates
+│   │   ├── bug_report.md                # Bug report template
+│   │   ├── feature_request.md           # Feature request template
+│   │   └── config.yml                   # Issue template chooser configuration
+│   ├── 📁workflows/                     # CI/CD pipeline configurations
+│   │   └── ci.yml                       # Continuous integration workflow
+│   └── PULL_REQUEST_TEMPLATE.md         # Pull request template
 │
-├── 📁Wharf_/                            # Main application source code
-│   ├── 📁backend/                       # Backend API server
-│   │   ├── 📁prisma/                    # Database ORM and migrations
+├── 📁Wharf_/                            # Application workspaces
+│   ├── 📁backend/                       # Cloudflare Worker Backend API (Active)
+│   │   ├── 📁.wrangler/                 # Wrangler local runtime state
+│   │   ├── 📁prisma/                    # Database ORM & migrations
 │   │   │   ├── 📁migrations/            # Database schema migrations
-│   │   │   │   
 │   │   │   ├── schema.prisma            # Database schema definition
 │   │   │   └── seed.ts                  # Database seeding script
-│   │   ├── 📁scripts/                   # Utility scripts
-│   │   ├── 📁src/                       # Source code
-│   │   │   ├── 📁controllers/           # Request handlers (10 files)
-│   │   │   ├── 📁middleware/            # Express middleware (4 files)
-│   │   │   ├── 📁routes/                # API route definitions (9 files)
-│   │   │   ├── 📁services/              # Business logic layer (13 files)
-│   │   │   ├── 📁utils/                 # Helper utilities (14 files)
-│   │   │   ├── db.ts                    # Database connection
-│   │   │   └── index.ts                 # Application entry point
-│   │   ├── 📁tests/                     # Test suite
-│   │   │   ├── 📁factories/             # Test data factories (6 files)
-│   │   │   ├── 📁fixtures/              # Test fixtures (JSON files)
-│   │   │   ├── 📁integration/           # Integration tests (9 files)
-│   │   │   ├── 📁mocks/                 # Mock implementations (9 files)
-│   │   │   ├── 📁unit/                  # Unit tests
-│   │   │   │   ├── 📁controllers/       # Controller tests (10 files)
-│   │   │   │   ├── 📁middleware/        # Middleware tests (4 files)
-│   │   │   │   ├── 📁services/          # Service tests (11 files)
-│   │   │   │   └── 📁utils/             # Utility tests (11 files)
-│   │   │   ├── setup.ts                 # Test setup
-│   │   │   ├── teardown.ts              # Test teardown
-│   │   │   └── TESTING.md               # Testing documentation
-│   │   ├── .env                         # Environment variables
-│   │   ├── .env.example                 # Environment template
-│   │   ├── jest.config.ts               # Jest configuration
-│   │   ├── package.json                 # Backend dependencies
-│   │   ├── resetKeys.ts                 # API key reset utility
-│   │   └── tsconfig.json                # TypeScript configuration
-│   │
-│   ├── 📁frontend/                      # React frontend application
-│   │   ├── 📁public/                    # Static assets
-│   │   │   ├── 📁assets/
-│   │   │   │   └── 📁favicon/           # Favicon files (7 files)
-│   │   │   ├── robots.txt               # SEO robots configuration
-│   │   │   └── sitemap.xml              # SEO sitemap
-│   │   ├── 📁src/                       # Frontend source code
-│   │   │   ├── 📁components/            # React components
-│   │   │   │   ├── 📁admin/             # Admin dashboard components (17 files)
-│   │   │   │   ├── 📁changelog/         # Changelog components (6 files)
-│   │   │   │   ├── 📁chat/              # Chat interface components (10 files)
-│   │   │   │   ├── 📁generator/         # README generator components (8 files)
-│   │   │   │   ├── 📁health/            # Health score components (8 files)
-│   │   │   │   ├── 📁home/              # Landing page components (6 files)
-│   │   │   │   ├── 📁layout/            # Layout components (5 files)
-│   │   │   │   ├── 📁profile/           # Profile generator components (10 files)
-│   │   │   │   ├── 📁settings/          # Settings components (10 files)
-│   │   │   │   ├── 📁shared/            # Shared components (1 file)
-│   │   │   │   └── 📁ui/                # UI primitives (10 files)
-│   │   │   ├── 📁hooks/                 # Custom React hooks
-│   │   │   ├── 📁lib/                   # Core libraries
-│   │   │   │   └── 📁analytics/         # Analytics providers (GA4, PostHog)
-│   │   │   ├── 📁pages/                 # Page components (15 files)
-│   │   │   ├── 📁stores/                # Zustand state management
-│   │   │   ├── 📁utils/                 # Frontend utilities
-│   │   │   ├── App.tsx                  # Root component
-│   │   │   ├── index.css                # Global styles
-│   │   │   └── main.tsx                 # Application entry point
-│   │   ├── 📁tests/                     # Frontend tests
-│   │   │   ├── 📁components/            # Component tests
-│   │   │   ├── 📁e2e/                   # Playwright E2E tests (6 files)
+│   │   ├── 📁src/                       # Source code (Hono framework)
+│   │   │   ├── 📁controllers/           # Request handlers (10 controllers)
+│   │   │   ├── 📁middleware/            # Auth & security middleware
+│   │   │   ├── 📁routes/                # Route definitions
+│   │   │   ├── 📁services/              # Business logic & LLM pipelines
+│   │   │   ├── 📁utils/                 # Encryption, token counters, helpers
+│   │   │   ├── db.ts                    # Prisma PostgreSQL client
+│   │   │   └── index.ts                 # Worker entry point
+│   │   ├── 📁tests/                     # Worker test suite (Vitest + Miniflare)
 │   │   │   ├── 📁factories/             # Test data factories
 │   │   │   ├── 📁fixtures/              # Test fixtures
-│   │   │   ├── 📁mocks/                 # MSW mock handlers
-│   │   │   ├── 📁pages/                 # Page component tests (7 files)
-│   │   │   ├── setup.ts                 # Test setup
-│   │   │   └── TESTING.md               # Testing documentation
-│   │   ├── .env                         # Environment variables
+│   │   │   ├── 📁integration/           # API integration tests
+│   │   │   ├── 📁mocks/                 # Mock implementations
+│   │   │   ├── 📁unit/                  # Unit tests (controllers, services, utils)
+│   │   │   └── TESTING.md               # Backend testing documentation
+│   │   ├── .dev.vars                    # Local development secrets (git-ignored)
+│   │   ├── .dev.vars.example            # Environment variables template
+│   │   ├── package.json                 # Backend dependencies & scripts
+│   │   ├── tsconfig.json                # TypeScript configuration
+│   │   ├── vitest.config.ts             # Vitest configuration for Cloudflare Workers
+│   │   └── wrangler.toml                # Cloudflare Worker deployment configuration
+│   │
+│   ├── 📁frontend/                      # React Frontend Single Page Application (Active)
+│   │   ├── 📁public/                    # Static assets & SEO files
+│   │   ├── 📁src/                       # Frontend source code
+│   │   │   ├── 📁components/            # Modular React components
+│   │   │   ├── 📁hooks/                 # Custom React hooks
+│   │   │   ├── 📁lib/                   # Core libraries & analytics
+│   │   │   ├── 📁pages/                 # Route page components
+│   │   │   ├── 📁stores/                # Zustand global state stores
+│   │   │   ├── 📁utils/                 # Frontend utilities
+│   │   │   ├── App.tsx                  # Root application component
+│   │   │   ├── index.css                # Global Tailwind styles
+│   │   │   └── main.tsx                 # Frontend entry point
+│   │   ├── 📁tests/                     # Frontend test suite
+│   │   │   ├── 📁components/            # Component tests
+│   │   │   ├── 📁e2e/                   # Playwright E2E browser tests
+│   │   │   ├── 📁mocks/                 # MSW (Mock Service Worker) handlers
+│   │   │   └── TESTING.md               # Frontend testing documentation
+│   │   ├── .env                         # Frontend local environment
+│   │   ├── .env.example                 # Frontend environment template
 │   │   ├── eslint.config.js             # ESLint configuration
-│   │   ├── index.html                   # HTML entry point
 │   │   ├── package.json                 # Frontend dependencies
-│   │   ├── playwright.config.ts         # E2E test configuration
-│   │   ├── vercel.json                  # Vercel deployment config
+│   │   ├── playwright.config.ts         # Playwright configuration
+│   │   ├── vercel.json                  # Vercel deployment configuration
 │   │   ├── vite.config.ts               # Vite build configuration
 │   │   └── vitest.config.ts             # Vitest configuration
 │   │
-│   └── 📁worker-backend/                # Cloudflare Worker backend
-│       ├── 📁.wrangler/                 # Wrangler local state
-│       ├── 📁prisma/                    # Database ORM (same structure)
-│       │   ├── 📁migrations/            # Database migrations (4 folders)
-│       │   ├── schema.prisma            # Schema definition
-│       │   └── seed.ts                  # Seeding script
-│       ├── 📁src/                       # Worker source code
-│       │   ├── 📁controllers/           # Request handlers (10 files)
-│       │   ├── 📁middleware/            # Middleware (4 files)
-│       │   ├── 📁routes/                # Route definitions (9 files)
-│       │   ├── 📁services/              # Business logic (13 files)
-│       │   ├── 📁utils/                 # Utilities (14 files)
-│       │   ├── db.ts                    # Database connection
-│       │   └── index.ts                 # Worker entry point
-│       ├── 📁tests/                     # Test suite
-│       │   ├── 📁factories/             # Test factories (6 files)
-│       │   ├── 📁fixtures/              # Test fixtures
-│       │   ├── 📁integration/           # Integration tests (9 files)
-│       │   ├── 📁mocks/                 # Mock implementations (9 files)
-│       │   ├── 📁unit/                  # Unit tests
-│       │   │   ├── 📁controllers/       # Controller tests (10 files)
-│       │   │   ├── 📁middleware/        # Middleware tests (3 files)
-│       │   │   ├── 📁services/          # Service tests (11 files)
-│       │   │   └── 📁utils/             # Utility tests (10 files)
-│       │   ├── setup.ts                 # Test setup
-│       │   ├── teardown.ts              # Test teardown
-│       │   └── TESTING.md               # Testing documentation
-│       ├── .dev.vars                    # Development variables
-│       ├── package.json                 # Worker dependencies
-│       ├── tsconfig.json                # TypeScript configuration
-│       ├── vitest.config.ts             # Vitest configuration
-│       └── wrangler.toml                # Cloudflare Worker configuration
+│   └── 📁legacy/                        # Archived legacy code (Inactive - do NOT use)
+│       └── 📁node-backend/              # Earlier Node.js/Express implementation
 │
 ├── .gitattributes                       # Git attributes configuration
 ├── CHANGELOG.md                         # Project changelog
-├── LICENSE                              # License file
-└── README.md                            # Project README
+├── CODE_OF_CONDUCT.md                   # Contributor covenant code of conduct
+├── CONTRIBUTING.md                      # Community contribution guidelines
+├── GETTING_STARTED.md                   # Quickstart local development guide
+├── LICENSE                              # MIT License
+├── README.md                            # Project README
+└── SECURITY.md                          # Vulnerability reporting policy
 ```
 
 <br>
 
 ## ⚙️ Getting Started
 
-Follow this sequence to spin up Wharf locally. Complete the environment variable configuration before initializing any frontend or backend services.
+Follow this sequence to spin up Wharf locally. Complete the environment variable configuration before initializing frontend or backend services. See [GETTING_STARTED.md](GETTING_STARTED.md) for full setup instructions.
 
 ### 1. Environment Variable Configuration
 
-Create a `.env` file inside the `Wharf_/backend` directory using the provided `.env.example` as a template. Make sure to supply all required API keys, database connection strings, and OAuth credentials.
+Create a `.dev.vars` file inside the `Wharf_/backend` directory using `.dev.vars.example` as a template:
 
 ```bash
-# Core Express Server Settings
-PORT=5000
-NODE_ENV=development
-FRONTEND_URL=http://localhost:5173
+# Supabase PostgreSQL Database Connections
+PORT=8787
+DIRECT_URL="postgresql://postgres:postgres@localhost:5432/wharf_db"
+DATABASE_URL="postgresql://postgres:postgres@localhost:6543/wharf_db?pgbouncer=true"
 
-# Database Connections (PostgreSQL Setup)
-DATABASE_URL="postgresql://postgres:postgres_secure_pass@localhost:5432/wharf_db?schema=public"
+# Security & Sessions
+JWT_SECRET="your_development_jwt_secret_min_32_characters"
+FRONTEND_URL="http://localhost:5173"
+ENCRYPTION_SECRET="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 
-# Redis Cache Credentials
-REDIS_URL="redis://127.0.0.1:6379"
+# GitHub OAuth Credentials
+GITHUB_CLIENT_ID="your_github_client_id"
+GITHUB_CLIENT_SECRET="your_github_client_secret"
+GITHUB_CALLBACK_URL="http://127.0.0.1:8787/api/auth/github/callback"
 
-# Encryption Keys (Must be exactly 32 bytes for AES-256-GCM)
-ENCRYPTION_KEY="f3b48f93e9a4f218ce7d93b3f2e1a2d5f3b48f93e9a4f218ce7d93b3f2e1a2d5"
-
-# Security Configurations
-JWT_SECRET="super_secure_jwt_secret_key_change_in_production"
-
-# GitHub App Integration Credentials
-GITHUB_CLIENT_ID="your_github_client_id_here"
-GITHUB_CLIENT_SECRET="your_github_client_secret_here"
-GITHUB_CALLBACK_URL="http://localhost:5000/api/auth/github/callback"
-
-# LLM Providers API Credentials (If using platform-routed key system)
-OPENAI_API_KEY="sk-proj-xxxxxxxxxxxxxxxxxxxx"
-ANTHROPIC_API_KEY="sk-ant-xxxxxxxxxxxxxxxxxxxx"
+# LLM Providers Credentials
+OPENAI_API_KEY="sk-..."
+ANTHROPIC_API_KEY="sk-ant-..."
+GROQ_API_KEY="gsk_..."
+GEMINI_API_KEY="AIza..."
 ```
 
 #
 
-### 2. Relational Database Migration and Seeding
+### 2. Database Migration and Seeding
 
-With PostgreSQL running, execute the Prisma migration process to build the relational tables, index constraints, and database views. Seed the database to create basic mock profiles and testing definitions.
+Generate the Prisma client and push your schema or migrations to PostgreSQL:
 
 ```bash
 # Navigate to the backend workspace
 cd Wharf_/backend
 
-# Run Prisma schema migrations
-npx prisma migrate dev --name init
+# Ingest all dependency packages
+npm install
 
-# Run database seed runner
+# Generate Prisma client
+npx prisma generate
+
+# (Optional) Seed the database
 npx prisma db seed
 ```
 
 #
 
-### 3. Backend API Gateway Initialization
+### 3. Backend (Cloudflare Worker) Initialization
 
-Install dependencies and boot up the primary backend API server in development mode. The service will spin up on the port specified in your environment configurations (default: `5000`).
+Start the Cloudflare Worker locally via Wrangler:
 
 ```bash
-# Ensure you are in backend workspace directory
+# Ensure you are in the backend directory
 cd Wharf_/backend
 
-# Ingest all dependency packages
-npm install
-
-# Run backend service in hot-reload developer mode
+# Run local Worker dev server on http://127.0.0.1:8787
 npm run dev
 ```
 
 #
 
-### 4. Background Worker Service Initialization
+### 4. Frontend Single Page Application Boot
 
-The worker service runs asynchronous analysis pipelines and handles high-intensity processing routines. Start it alongside the main backend server.
-
-```bash
-# Navigate to the worker-backend directory
-cd ../worker-backend
-
-# Install worker requirements
-npm install
-
-# Run database code-generation tool
-npx prisma generate
-
-# Execute background execution process
-npm run dev
-```
-
-#
-
-### 5. Frontend Single Page Application Boot
-
-Install dependencies and launch the frontend client server. Vite will spin up the web app locally (default: `http://localhost:5173`).
+Install dependencies and launch the frontend client server. Vite will spin up the web app locally on `http://localhost:5173`:
 
 ```bash
 # Navigate to the React-Vite workspace
@@ -640,44 +568,50 @@ You can configure and extend Wharf's default behavior in several ways:
 
 ### How To Contribute
 
+We welcome contributions of all kinds! Please refer to our comprehensive [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) before submitting code.
+
 1. Fork the repository and create your feature branch:
 ```bash
-git checkout -b feature/amazing-developer-improvement
+git checkout -b feat/amazing-developer-improvement
 ```
 
 #
 
-2. Implement your features, ensuring that your logic is covered by unit tests:
+2. Implement your changes and verify with tests:
 ```bash
-# Run unit and integration tests
-npm run test
+# Backend tests
+cd Wharf_/backend && npm run test
+
+# Frontend tests
+cd ../frontend && npm run test:run
 ```
 
 #
 
-3. Commit your changes utilizing conventional commit style formats:
+3. Commit your changes following [Conventional Commits](https://www.conventionalcommits.org/):
 ```bash
-git commit -m "feat: integrate AST parsing for structural code quality tracking"
+git commit -m "feat(generator): integrate AST parsing for structural code quality tracking"
 ```
 
 #
 
 4. Push your branch upstream:
 ```bash
-git push origin feature/amazing-developer-improvement
+git push origin feat/amazing-developer-improvement
 ```
 
 #
 
-5. Open a Pull Request targeting the development branch of `FrostByte-49/Wharf` for review.
+5. Open a Pull Request targeting the `main` branch of `FrostByte-49/Wharf`. Fill out the [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md).
 
 #
 
 ### Areas For Contribution
 
-- **Security & Sandboxing**: Enhancing worker service constraints when checking unsafe repository dependencies.
-- **UI UX Optimization**: Creating interactive visualization models for repository directory dependency structures.
-- **LLM Pipeline Refinement**: Speeding up analysis throughput by engineering highly optimized prompt token counts.
+- **Security & Sandboxing**: Enhancing worker service constraints when checking repository dependencies.
+- **UI/UX Optimization**: Creating interactive visualizations for repository directory trees and graph structures.
+- **LLM Pipeline Refinement**: Streamlining token budgets and prompt engineering for higher context utilization.
+- **Documentation & Walkthroughs**: Adding detailed developer guides, framework templates, and test recipes.
 
 <br>
 
