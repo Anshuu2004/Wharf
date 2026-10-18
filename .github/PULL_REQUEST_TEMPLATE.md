@@ -46,6 +46,16 @@ Please describe the tests that you ran to verify your changes. Include details o
 
 <br />
 
+## ⚖️ Trade-offs & Alternatives Considered (Anti-Spam / Architecture Rationale)
+
+*To maintain code quality and prevent blindly AI-generated PR spam, please explain the reasoning behind your technical approach:*
+
+- **Why this approach?** (e.g., performance, maintainability, bundle size, edge-isolate compatibility)
+- **What alternatives did you consider and why were they rejected?**
+- **Are there any potential downsides or edge cases with this choice?**
+
+<br />
+
 ## 📸 Screenshots / Demos (If Applicable)
 
 | Before | After |
@@ -56,6 +66,7 @@ Please describe the tests that you ran to verify your changes. Include details o
 
 ## 📋 Checklist
 
+- [ ] My PR targets the `development` branch (not `main`).
 - [ ] My code adheres to the project's code style and formatting guidelines.
 - [ ] I have self-reviewed my own code.
 - [ ] I have commented my code, particularly in complex or non-obvious areas.

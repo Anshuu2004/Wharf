@@ -112,8 +112,15 @@ See our detailed [Getting Started Guide](GETTING_STARTED.md) for step-by-step in
 
 ## Git Workflow & Branching Strategy
 
-1. **Create a descriptive branch** from `main`:
+> ⚠️ **Important Branch Policy**:
+> - All Pull Requests must target the **`development`** branch.
+> - Direct commits or PRs targeting **`main`** will be closed or redirected.
+> - Once features and fixes are thoroughly tested in `development`, the repository maintainer will merge `development` into `main` for production releases.
+
+1. **Create a descriptive branch** from `development`:
    ```bash
+   git checkout development
+   git pull origin development
    git checkout -b feat/readme-streaming
    # or
    git checkout -b fix/github-oauth-callback
@@ -162,13 +169,13 @@ docs(readme): update project structure for monorepo
 
    # In Wharf_/frontend
    npx tsc --noEmit
-   npm run test:run
+   npm run test
    ```
 2. Keep your PR focused on a single change or issue.
-3. Open a Pull Request targeting the `main` branch of `FrostByte-49/Wharf`.
+3. Open a Pull Request targeting the **`development`** branch of `FrostByte-49/Wharf` (do **not** target `main`).
 4. Fill in the provided [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md).
 5. Link any related issues (e.g. `Resolves #12`).
-6. A maintainer will review your PR and provide constructive feedback!
+6. A maintainer will review your PR and provide constructive feedback! Once verified, maintainers will handle merging into `main`.
 
 <br />
 

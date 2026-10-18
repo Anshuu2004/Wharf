@@ -602,7 +602,7 @@ git push origin feat/amazing-developer-improvement
 
 #
 
-5. Open a Pull Request targeting the `main` branch of `FrostByte-49/Wharf`. Fill out the [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md).
+5. Open a Pull Request targeting the `development` branch of `FrostByte-49/Wharf` (not `main`). Fill out the [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md). Once reviewed and verified in `development`, maintainers merge updates into `main`.
 
 #
 
