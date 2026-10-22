@@ -6,8 +6,6 @@ labels: ["bug"]
 assignees: ""
 ---
 
-<br />
-
 ## 🐛 Bug Description
 A clear and concise description of what the bug is.
 
