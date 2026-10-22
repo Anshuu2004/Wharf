@@ -2,7 +2,7 @@
 
 Please provide a brief summary of the changes made in this Pull Request, the problem solved, and relevant context.
 
-Fixes #(issue) <!-- e.g. Fixes #123 -->
+Fixes #(issue)
 
 <br />
 
