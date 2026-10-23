@@ -62,11 +62,55 @@ describe('Auth Routes Integration', () => {
   });
 
   describe('GET /api/auth/github/callback', () => {
-    it('should attempt github callback (redirect or error)', async () => {
-      const response = await app.request('/api/auth/github/callback?code=mock-code');
-      // With Mocked GithubService, Should Redirect To FRONTEND_URL/dashboard (302)
-      // Or Return 400 If Code Exchange Fails - Accept Both
-      expect([302, 400]).toContain(response.status);
+    // Start a login like the browser would and keep the state cookie it sets.
+    const startLogin = async () => {
+      const login = await app.request('/api/auth/github');
+      const state = new URL(login.headers.get('location')!).searchParams.get('state')!;
+      const setCookie = login.headers.get('set-cookie')!;
+      return { state, cookie: setCookie.split(';')[0] };
+    };
+
+    it('should set a short lived, httpOnly state cookie scoped to the auth routes', async () => {
+      const login = await app.request('/api/auth/github');
+      const setCookie = login.headers.get('set-cookie')!;
+      const state = new URL(login.headers.get('location')!).searchParams.get('state');
+
+      expect(setCookie).toContain(`oauth_state=${state}`);
+      expect(setCookie).toContain('HttpOnly');
+      expect(setCookie).toContain('Path=/api/auth');
+      expect(setCookie).toContain('Max-Age=600');
+      expect(setCookie).toContain('SameSite=Lax');
+    });
+
+    it('should complete the login when the state matches the cookie', async () => {
+      const { state, cookie } = await startLogin();
+      const response = await app.request(`/api/auth/github/callback?code=mock-code&state=${state}`, {
+        headers: { Cookie: cookie },
+      });
+      expect(response.status).toBe(302);
+      expect(response.headers.get('location')).toContain('/auth/callback?token=');
+    });
+
+    it('should reject a callback without state with 403', async () => {
+      const { cookie } = await startLogin();
+      const response = await app.request('/api/auth/github/callback?code=mock-code', {
+        headers: { Cookie: cookie },
+      });
+      expect(response.status).toBe(403);
+    });
+
+    it('should reject a callback whose state does not match the cookie with 403', async () => {
+      const { cookie } = await startLogin();
+      const response = await app.request('/api/auth/github/callback?code=mock-code&state=forged', {
+        headers: { Cookie: cookie },
+      });
+      expect(response.status).toBe(403);
+    });
+
+    it('should reject a callback without the state cookie with 403', async () => {
+      const { state } = await startLogin();
+      const response = await app.request(`/api/auth/github/callback?code=mock-code&state=${state}`);
+      expect(response.status).toBe(403);
     });
   });
 
