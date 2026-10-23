@@ -2,22 +2,20 @@
 
 Please provide a brief summary of the changes made in this Pull Request, the problem solved, and relevant context.
 
-Fixes #(issue) <!-- e.g. Fixes #123 -->
+Fixes #(issue)
 
 <br />
 
 ## 🗂️ Type of Change
 
-Please delete options that are not relevant:
-
-- [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
-- [ ] ✨ New feature (non-breaking change which adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] 📝 Documentation update
-- [ ] ⚡ Performance improvement
-- [ ] 🔨 Refactoring (no functional changes, no api changes)
-- [ ] 🧪 Tests (adding missing or fixing existing tests)
-- [ ] 🔧 Chore / Build / CI configuration
+- [ ]  Bug fix (non-breaking change which fixes an issue)
+- [ ]  New feature (non-breaking change which adds functionality)
+- [ ]  Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ]  Documentation update
+- [ ]  Performance improvement
+- [ ]  Refactoring (no functional changes, no api changes)
+- [ ]  Tests (adding missing or fixing existing tests)
+- [ ]  Chore / Build / CI configuration
 
 <br />
 

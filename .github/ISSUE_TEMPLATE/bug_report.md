@@ -9,6 +9,8 @@ assignees: ""
 ## 🐛 Bug Description
 A clear and concise description of what the bug is.
 
+<br />
+
 ## 🔁 Steps to Reproduce
 Steps to reproduce the behavior:
 1. Go to '...'
