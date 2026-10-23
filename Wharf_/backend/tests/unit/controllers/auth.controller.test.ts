@@ -40,24 +40,103 @@ describe('AuthController', () => {
   });
 
   describe('githubLogin', () => {
-    it('should redirect to github oauth URL', () => {
+    it('should redirect to github oauth URL with a state that matches the state cookie', () => {
       const c = createMockContext({}, mockEnv);
-      const res = githubLogin(c);
-      
-      expect(c.redirect).toHaveBeenCalledWith('https://github.com/login/oauth/authorize?client_id=test-client-id&scope=user:email,repo');
+      githubLogin(c);
+
+      const url = new URL((c.redirect as Mock).mock.calls[0][0]);
+      expect(`${url.origin}${url.pathname}`).toBe('https://github.com/login/oauth/authorize');
+      expect(url.searchParams.get('client_id')).toBe('test-client-id');
+      expect(url.searchParams.get('scope')).toBe('user:email,repo');
+
+      const state = url.searchParams.get('state');
+      expect(state).toMatch(/^[0-9a-f-]{36}$/);
+      expect(cookieMod.setCookie).toHaveBeenCalledWith(c, 'oauth_state', state, expect.objectContaining({
+        httpOnly: true,
+        sameSite: 'Lax',
+        path: '/api/auth',
+        maxAge: 600,
+      }));
+    });
+
+    it('should use a new state for every login', () => {
+      const first = createMockContext({}, mockEnv);
+      const second = createMockContext({}, mockEnv);
+      githubLogin(first);
+      githubLogin(second);
+
+      const stateOf = (c: any) => new URL((c.redirect as Mock).mock.calls[0][0]).searchParams.get('state');
+      expect(stateOf(first)).not.toBe(stateOf(second));
+    });
+
+    it('should only mark the state cookie secure in production or over https', () => {
+      const cases = [
+        { env: { ...mockEnv }, url: 'http://localhost:8787/api/auth/github', secure: false },
+        { env: { ...mockEnv }, url: 'https://preview.wharf.dev/api/auth/github', secure: true },
+        { env: { ...mockEnv, ENVIRONMENT: 'production' }, url: undefined, secure: true },
+      ];
+      for (const { env, url, secure } of cases) {
+        vi.clearAllMocks();
+        const c = createMockContext({}, env);
+        c.req.url = url;
+        githubLogin(c);
+        expect(cookieMod.setCookie).toHaveBeenCalledWith(c, 'oauth_state', expect.any(String), expect.objectContaining({ secure }));
+      }
     });
   });
 
   describe('githubCallback', () => {
+    // cookieState null = no state cookie in the request
+    const withState = (query: Record<string, string>, cookieState: string | null = 'state-123') => {
+      (cookieMod.getCookie as Mock).mockReturnValue(cookieState ?? undefined);
+      return createMockContext({ query: { state: 'state-123', ...query } }, mockEnv);
+    };
+
+    it('should reject with 403 when the state query param is missing', async () => {
+      (cookieMod.getCookie as Mock).mockReturnValue('state-123');
+      const c = createMockContext({ query: { code: 'some-code' } }, mockEnv);
+
+      await githubCallback(c);
+      expect(c.json).toHaveBeenCalledWith({ error: 'Invalid or missing OAuth state' }, 403);
+      expect(axios.post).not.toHaveBeenCalled();
+    });
+
+    it('should reject with 403 when the state cookie is missing', async () => {
+      const c = withState({ code: 'some-code' }, null);
+
+      await githubCallback(c);
+      expect(c.json).toHaveBeenCalledWith({ error: 'Invalid or missing OAuth state' }, 403);
+      expect(axios.post).not.toHaveBeenCalled();
+    });
+
+    it('should reject with 403 when the state does not match the cookie', async () => {
+      const c = withState({ code: 'some-code', state: 'attacker-state' });
+
+      await githubCallback(c);
+      expect(c.json).toHaveBeenCalledWith({ error: 'Invalid or missing OAuth state' }, 403);
+      expect(axios.post).not.toHaveBeenCalled();
+    });
+
+    it('should clear the state cookie whether the check passes or fails', async () => {
+      const rejected = withState({ code: 'some-code', state: 'attacker-state' });
+      await githubCallback(rejected);
+      expect(cookieMod.deleteCookie).toHaveBeenCalledWith(rejected, 'oauth_state', expect.objectContaining({ path: '/api/auth' }));
+
+      vi.clearAllMocks();
+      const accepted = withState({});
+      await githubCallback(accepted);
+      expect(cookieMod.deleteCookie).toHaveBeenCalledWith(accepted, 'oauth_state', expect.objectContaining({ path: '/api/auth' }));
+    });
+
     it('should return 400 if no code is provided', async () => {
-      const c = createMockContext({ query: {} }, mockEnv);
-      
+      const c = withState({});
+
       const res = await githubCallback(c);
       expect(c.json).toHaveBeenCalledWith({ error: 'No code provided' }, 400);
     });
 
     it('should exchange code, fetch profile, upsert user and set jwt cookie via hono/cookie', async () => {
-      const c = createMockContext({ query: { code: 'some-code' } }, mockEnv);
+      const c = withState({ code: 'some-code' });
       
       const mockTokenRes = { data: { access_token: 'gh-access-token' } };
       (axios.post as Mock).mockResolvedValue(mockTokenRes);
@@ -80,7 +159,7 @@ describe('AuthController', () => {
     });
 
     it('should handle errors gracefully returning 500', async () => {
-      const c = createMockContext({ query: { code: 'err' } }, mockEnv);
+      const c = withState({ code: 'err' });
       (axios.post as Mock).mockRejectedValue(new Error('Network error'));
       
       await githubCallback(c);

@@ -8,8 +8,34 @@ import { Bindings } from '../index';
 
 type AppContext = Context<{ Bindings: Bindings; Variables: { user: any } }>;
 
+const OAUTH_STATE_COOKIE = 'oauth_state';
+const OAUTH_STATE_PATH = '/api/auth';
+const OAUTH_STATE_MAX_AGE = 10 * 60;
+
+// Browsers drop `secure` cookies on plain http://localhost, so only require
+// HTTPS in production or when the request already came in over HTTPS.
+const isSecureRequest = (c: AppContext) =>
+  c.env.ENVIRONMENT === 'production' || Boolean(c.req.url?.startsWith('https://'));
+
+// Constant time comparison so the check doesn't leak how much of the state matched.
+const statesMatch = (a: string, b: string) => {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+};
+
 export const githubLogin = (c: AppContext) => {
-  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${c.env.GITHUB_CLIENT_ID}&scope=user:email,repo`;
+  const state = crypto.randomUUID();
+  setCookie(c, OAUTH_STATE_COOKIE, state, {
+    httpOnly: true,
+    secure: isSecureRequest(c),
+    sameSite: 'Lax',
+    path: OAUTH_STATE_PATH,
+    maxAge: OAUTH_STATE_MAX_AGE,
+  });
+
+  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${c.env.GITHUB_CLIENT_ID}&scope=user:email,repo&state=${state}`;
   return c.redirect(githubAuthUrl);
 };
 
@@ -18,6 +44,16 @@ export const githubCallback = async (c: AppContext) => {
   const code = c.req.query('code');
   const installation_id = c.req.query('installation_id');
   const FRONTEND_URL = c.env.FRONTEND_URL || 'http://localhost:5173';
+
+  // Check the state before touching the code, and clear the cookie either way
+  // so a state value can only be used once.
+  const state = c.req.query('state');
+  const expectedState = getCookie(c, OAUTH_STATE_COOKIE);
+  deleteCookie(c, OAUTH_STATE_COOKIE, { path: OAUTH_STATE_PATH, secure: isSecureRequest(c) });
+
+  if (!state || !expectedState || !statesMatch(state, expectedState)) {
+    return c.json({ error: 'Invalid or missing OAuth state' }, 403);
+  }
 
   if (!code) {
     return c.json({ error: 'No code provided' }, 400);
