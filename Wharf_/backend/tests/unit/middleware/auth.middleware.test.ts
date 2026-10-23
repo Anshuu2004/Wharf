@@ -63,6 +63,14 @@ describe('Auth Middleware', () => {
       expect(c.get('user')).toBeUndefined();
       expect(mockNext).toHaveBeenCalled();
     });
+    it('should return 500 and not verify when JWT_SECRET is not set', async () => {
+      const c = createMockContext({ headers: { authorization: 'Bearer some-token' } }, {});
+      await auth(c, mockNext);
+
+      expect(honoJwt.verify).not.toHaveBeenCalled();
+      expect(c.json).toHaveBeenCalledWith({ success: false, error: 'Server misconfiguration' }, 500);
+      expect(mockNext).not.toHaveBeenCalled();
+    });
   });
 
   describe('requireAuth', () => {

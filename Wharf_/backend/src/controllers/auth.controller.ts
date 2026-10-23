@@ -1,4 +1,5 @@
 import { Context } from 'hono';
+import { getJwtSecret } from '../utils/jwtSecret';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { sign } from 'hono/jwt';
 import axios from 'axios';
@@ -68,7 +69,7 @@ export const githubCallback = async (c: AppContext) => {
       } as any,
     });
 
-    const JWT_SECRET = c.env.JWT_SECRET || 'secret';
+    const JWT_SECRET = getJwtSecret(c.env);
     const ADMIN_IDS = (c.env.ADMIN_IDS || '').split(',');
     const isAdmin = ADMIN_IDS.includes(user.id.toString());
 
